@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePatients } from '@/contexts/PatientContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,14 @@ export default function Triage() {
 
   const waitingPatients = getWaitingForTriage();
   const selectedPatient = waitingPatients.find(p => p.id === selectedPatientId);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshPatients();
+    }, 3000);
+  
+    return () => clearInterval(interval);
+  }, [refreshPatients]);
 
   const handleCall = async (patientId: string) => {
     try {
