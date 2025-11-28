@@ -13,7 +13,7 @@ import { PriorityLevel, PRIORITY_CONFIG } from '@/types/patient';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Triage() {
-  const { getWaitingForTriage, callForTriage, assignPriority } = usePatients();
+  const { getWaitingForTriage, callForTriage, assignPriority, refreshPatients } = usePatients();
   const { toast } = useToast();
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [attendanceType, setAttendanceType] = useState<'clinical' | 'psychiatric'>('clinical');
@@ -58,6 +58,14 @@ export default function Triage() {
     ? ['red', 'orange'] 
     : ['red', 'orange', 'yellow', 'green', 'blue'];
 
+    const handleCancel = async () => {
+    setSelectedPatientId(null); 
+    setAttendanceType('clinical'); // Reseta o formulário
+    setPriority('red');
+    setNotes('');
+    await refreshPatients(); 
+};
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -88,10 +96,9 @@ export default function Triage() {
                         <span className="text-2xl font-bold text-primary">{patient.ticketNumber}</span>
                         <div>
                           <p className="font-semibold text-foreground">{patient.fullName}</p>
-                          <p className="text-sm text-muted-foreground">
+                          {/* <p className="text-sm text-muted-foreground">
                             Age: {new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear()} • 
-                            Arrived: {patient.registeredAt.toLocaleTimeString()}
-                          </p>
+                          </p> */}
                         </div>
                       </div>
                     </div>
@@ -106,7 +113,7 @@ export default function Triage() {
           </CardContent>
         </Card>
 
-        <Dialog open={!!selectedPatientId} onOpenChange={(open) => !open && setSelectedPatientId(null)}>
+        <Dialog open={!!selectedPatientId} onOpenChange={(open) => !open && handleCancel()}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Triage Classification</DialogTitle>
@@ -177,7 +184,7 @@ export default function Triage() {
             </div>
 
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setSelectedPatientId(null)}>
+              <Button variant="outline" onClick={handleCancel}>
                 Cancel
               </Button>
               <Button onClick={handleConfirmTriage}>

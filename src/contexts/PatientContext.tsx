@@ -17,6 +17,7 @@ interface PatientContextType {
   completeConsultation: (patientId: string) => Promise<void>;
   getWaitingForTriage: () => Patient[];
   getWaitingForDoctor: () => Patient[];
+  refreshPatients: () => Promise<void>;
 }
 
 const PatientContext = createContext<PatientContextType | undefined>(undefined);
@@ -30,7 +31,31 @@ const mapBackendPriority = (risco: string): PriorityLevel => {
 
 export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [recentCalls, setRecentCalls] = useState<TriageCall[]>([]);
+  const [recentCalls, setRecentCalls] = useState<TriageCall[]>(() => {
+      const saved = localStorage.getItem('recentCalls');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.map((c: any) => ({ ...c, timestamp: new Date(c.timestamp) }));
+      }
+      return [];
+    });
+
+    useEffect(() => {
+    localStorage.setItem('recentCalls', JSON.stringify(recentCalls));
+    }, [recentCalls]);
+
+    useEffect(() => {
+        const handleStorageChange = (e: StorageEvent) => {
+          if (e.key === 'recentCalls' && e.newValue) {
+            const parsed = JSON.parse(e.newValue);
+            const fixedDates = parsed.map((c: any) => ({ ...c, timestamp: new Date(c.timestamp) }));
+            setRecentCalls(fixedDates);
+          }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+      }, []);
 
   const refreshPatients = useCallback(async () => {
     try {
@@ -120,7 +145,20 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const callForTriage = useCallback((patientId: string) => {
      setPatients(prev => prev.map(p => p.id === patientId ? { ...p, status: 'in-triage' } : p));
-  }, []);
+     const patient = patients.find(p => p.id === patientId);
+     if (patient) {
+      setRecentCalls(prev => [{
+        ticketNumber: patient.ticketNumber || 'SENHA', 
+        timestamp: new Date(), 
+        priority: 'green' as const, 
+        patientName: patient.fullName,
+        type: 'triage' as const, 
+        room: 'Triagem',
+      }, ...prev].slice(0, 10));
+    }
+  }, [patients]);
+
+  
 
   const getWaitingForTriage = useCallback(() => patients.filter(p => p.status === 'waiting-triage'), [patients]);
   const getWaitingForDoctor = useCallback(() => patients.filter(p => p.status === 'waiting-doctor'), [patients]);
@@ -129,7 +167,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     <PatientContext.Provider value={{ 
       patients, recentCalls, registerPatient, callForTriage, 
       assignPriority, callForDoctor, completeConsultation, 
-      getWaitingForTriage, getWaitingForDoctor 
+      getWaitingForTriage, getWaitingForDoctor, refreshPatients 
     }}>
       {children}
     </PatientContext.Provider>
