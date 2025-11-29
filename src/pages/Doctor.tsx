@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePatients } from '@/contexts/PatientContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { Activity, Phone, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Doctor() {
-  const { getWaitingForDoctor, callForDoctor, completeConsultation } = usePatients();
+  const { getWaitingForDoctor, callForDoctor, completeConsultation, refreshPatients } = usePatients();
   const { toast } = useToast();
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [room, setRoom] = useState('');
@@ -21,6 +21,14 @@ export default function Doctor() {
   const handleCall = (patientId: string) => {
     setSelectedPatientId(patientId);
   };
+
+  useEffect(() => {
+  const interval = setInterval(() => {
+    refreshPatients();
+  }, 3000);
+
+  return () => clearInterval(interval);
+}, [refreshPatients]);
 
   const handleConfirmCall = async () => {
     if (selectedPatientId && room) {
@@ -83,7 +91,6 @@ export default function Doctor() {
                             <p className="text-sm text-muted-foreground">
                               Age: {new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear()} • 
                               Type: {patient.attendanceType === 'clinical' ? 'Clínico' : 'Psiquiátrico'} •
-                              Registered: {patient.registeredAt.toLocaleTimeString()}
                             </p>
                             {patient.triageNotes && (
                               <p className="text-sm text-foreground mt-2 p-2 bg-muted rounded">

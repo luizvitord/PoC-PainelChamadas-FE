@@ -36,18 +36,12 @@ export default function PublicPanel() {
                   </div>
                   
                   <div className="text-8xl font-bold text-primary animate-pulse">
-                    {currentCall.ticketNumber}
+                    {currentCall.patientName}
                   </div>
                   
                   {currentCall.priority && (
                     <div className="flex justify-center">
                       <PriorityBadge priority={currentCall.priority} className="text-3xl px-8 py-4" />
-                    </div>
-                  )}
-                  
-                  {currentCall.type === 'doctor' && currentCall.patientName && (
-                    <div className="text-4xl font-semibold text-foreground">
-                      {currentCall.patientName}
                     </div>
                   )}
                   

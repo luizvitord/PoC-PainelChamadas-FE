@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { UserPlus, ClipboardList } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { api } from '@/services/Api';
+import { debug } from 'console';
 
 export default function Reception() {
   const { registerPatient, patients } = usePatients();
@@ -31,6 +33,26 @@ export default function Reception() {
           toast({ variant: "destructive", title: "Error", description: "Failed to register patient." });
 
       }
+  };
+
+  const handleCreatePaciente = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const { fullName, dateOfBirth, cpf } = formData;
+
+      try {
+      const newPacient = await api.paciente.create({
+        fullName: '',
+        dateOfBirth: '',
+        cpf: '',
+      });
+
+      toast({
+        title: 'Patient Registered',
+      });
+    } catch {
+      toast({ variant: "destructive", title: "Error", description: "Failed to register patient." });
+    }
   };
 
   const recentPatients = patients.slice(-5).reverse();
@@ -117,9 +139,6 @@ export default function Reception() {
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-primary text-lg">{patient.ticketNumber}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {patient.registeredAt.toLocaleTimeString()}
-                        </p>
                       </div>
                     </div>
                   ))
