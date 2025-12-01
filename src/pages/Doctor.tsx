@@ -8,12 +8,15 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { PriorityBadge } from '@/components/PriorityBadge';
 import { Activity, Phone, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import RoomSelect from '@/components/RoomSelect';
+import { set } from 'date-fns';
 
 export default function Doctor() {
   const { getWaitingForDoctor, callForDoctor, completeConsultation, refreshPatients } = usePatients();
   const { toast } = useToast();
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [room, setRoom] = useState('');
+  const [consultorios, setConsultorios] = useState([]);
 
   const waitingPatients = getWaitingForDoctor();
   const selectedPatient = waitingPatients.find(p => p.id === selectedPatientId);
@@ -29,6 +32,19 @@ export default function Doctor() {
 
   return () => clearInterval(interval);
 }, [refreshPatients]);
+
+  useEffect(() => {
+    fetch("http://localhost:1111/consultorios")
+      .then(res => res.json())
+      .then(data => setConsultorios(data))
+      .catch(err => console.error("Erro ao carregar consultórios", err));
+  }, []);
+
+  useEffect(() => {
+    if (selectedPatientId && consultorios.length > 0) {
+      setRoom(String(consultorios[0].id));
+    }
+  }, [selectedPatientId, consultorios]);
 
   const handleConfirmCall = async () => {
     if (selectedPatientId && room) {
@@ -130,16 +146,9 @@ export default function Doctor() {
                 Assign consultation room for {selectedPatient?.fullName}
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Consultation Room</Label>
-                <Input
-                  value={room}
-                  onChange={(e) => setRoom(e.target.value)}
-                  placeholder="e.g., Consultório 1"
-                />
-              </div>
+              <RoomSelect value={room} onChange={setRoom} options={consultorios} label="Consultation Room" />
             </div>
 
             <div className="flex justify-end gap-2">
