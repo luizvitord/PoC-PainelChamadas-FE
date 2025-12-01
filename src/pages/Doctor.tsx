@@ -11,12 +11,19 @@ import { useToast } from '@/hooks/use-toast';
 import RoomSelect from '@/components/RoomSelect';
 import { set } from 'date-fns';
 
+// 👉 ADIÇÃO
+import { PRIORITY_CONFIG } from "@/types/patient";
+
 export default function Doctor() {
   const { getWaitingForDoctor, callForDoctor, completeConsultation, refreshPatients } = usePatients();
   const { toast } = useToast();
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [room, setRoom] = useState('');
   const [consultorios, setConsultorios] = useState([]);
+
+  // 👉 ADIÇÃO: estados do pop-up de triagem
+  const [triageModalOpen, setTriageModalOpen] = useState(false);
+  const [triagePatient, setTriagePatient] = useState<any | null>(null);
 
   const waitingPatients = getWaitingForDoctor();
   const selectedPatient = waitingPatients.find(p => p.id === selectedPatientId);
@@ -26,12 +33,12 @@ export default function Doctor() {
   };
 
   useEffect(() => {
-  const interval = setInterval(() => {
-    refreshPatients();
-  }, 3000);
+    const interval = setInterval(() => {
+      refreshPatients();
+    }, 3000);
 
-  return () => clearInterval(interval);
-}, [refreshPatients]);
+    return () => clearInterval(interval);
+  }, [refreshPatients]);
 
   useEffect(() => {
     fetch("http://localhost:1111/consultorios")
@@ -92,9 +99,20 @@ export default function Doctor() {
                 <p className="text-muted-foreground text-center py-8">No patients waiting for consultation</p>
               ) : (
                 waitingPatients.map((patient) => (
-                  <Card key={patient.id} className="border-l-4" style={{
-                    borderLeftColor: `hsl(var(--priority-${patient.priority}))`
-                  }}>
+
+                  // 👉 ADICIONADO: onClick para abrir modal de triagem
+                  <Card
+                    key={patient.id}
+                    className="border-l-4 cursor-pointer"
+                    style={{
+                      borderLeftColor: `hsl(var(--priority-${patient.priority}))`
+                    }}
+                    onClick={() => {
+                      setTriagePatient(patient);
+                      setTriageModalOpen(true);
+                    }}
+                  >
+
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4 flex-1">
@@ -104,10 +122,11 @@ export default function Doctor() {
                               <p className="font-semibold text-lg text-foreground">{patient.fullName}</p>
                               {patient.priority && <PriorityBadge priority={patient.priority} />}
                             </div>
+
                             <p className="text-sm text-muted-foreground">
-                              Age: {new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear()} • 
                               Type: {patient.attendanceType === 'clinical' ? 'Clínico' : 'Psiquiátrico'} •
                             </p>
+
                             {patient.triageNotes && (
                               <p className="text-sm text-foreground mt-2 p-2 bg-muted rounded">
                                 <strong>Notes:</strong> {patient.triageNotes}
@@ -115,15 +134,22 @@ export default function Doctor() {
                             )}
                           </div>
                         </div>
+
                         <div className="flex gap-2">
                           {patient.status === 'waiting-doctor' && (
-                            <Button onClick={() => handleCall(patient.id)}>
+                            <Button onClick={(e) => { 
+                              e.stopPropagation(); 
+                              handleCall(patient.id); 
+                            }}>
                               <Phone className="mr-2 h-4 w-4" />
                               Call Patient
                             </Button>
                           )}
                           {patient.status === 'in-consultation' && (
-                            <Button onClick={() => handleComplete(patient.id)} variant="outline">
+                            <Button onClick={(e) => { 
+                              e.stopPropagation(); 
+                              handleComplete(patient.id); 
+                            }} variant="outline">
                               <CheckCircle className="mr-2 h-4 w-4" />
                               Finish Consultation
                             </Button>
@@ -138,6 +164,53 @@ export default function Doctor() {
           </CardContent>
         </Card>
 
+        {/*  👉 MODAL DE INFORMAÇÕES DA TRIAGEM  */}
+        <Dialog open={triageModalOpen} onOpenChange={setTriageModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Triage Information</DialogTitle>
+              <DialogDescription>
+                Details for <strong>{triagePatient?.fullName}</strong>
+              </DialogDescription>
+            </DialogHeader>
+
+            {triagePatient && (
+              <div className="space-y-3">
+
+                {/* PRIORIDADE IGUAL À TRIAGEM */}
+                <div className="flex items-center gap-2">
+                  <PriorityBadge priority={triagePatient.priority} />
+                  <span>
+                    {PRIORITY_CONFIG[triagePatient.priority].label}
+                    {" "}
+                    ({PRIORITY_CONFIG[triagePatient.priority].waitTime})
+                  </span>
+                </div>
+
+                <p>
+                  <strong>Type:</strong>{" "}
+                  {triagePatient.attendanceType === "clinical" ? "Clínico" : "Psiquiátrico"}
+                </p>
+
+                {triagePatient.triageNotes && (
+                  <p className="p-2 bg-muted rounded">
+                    <strong>Notes:</strong> {triagePatient.triageNotes}
+                  </p>
+                )}
+
+                {/* ❌ REMOVIDO: DATA DE NASCIMENTO */}
+              </div>
+            )}
+
+            <div className="flex justify-end mt-4">
+              <Button variant="outline" onClick={() => setTriageModalOpen(false)}>
+                Close
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* MODAL ORIGINAL (Call Patient) */}
         <Dialog open={!!selectedPatientId} onOpenChange={(open) => !open && setSelectedPatientId(null)}>
           <DialogContent>
             <DialogHeader>
@@ -161,6 +234,7 @@ export default function Doctor() {
             </div>
           </DialogContent>
         </Dialog>
+
       </div>
     </div>
   );
