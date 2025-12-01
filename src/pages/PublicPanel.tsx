@@ -54,7 +54,7 @@ export default function PublicPanel() {
                     ) : (
                       <>
                         <p className="text-foreground">COMPARECER AO</p>
-                        <p className="text-primary mt-2">{currentCall.room?.toUpperCase()}</p>
+                        <p className="text-primary mt-2">{`CONSULTÓRIO ${currentCall.room?.toUpperCase()}`}</p>
                       </>
                     )}
                   </div>
