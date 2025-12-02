@@ -2,6 +2,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast, useToast } from '@/hooks/use-toast';
+import { addConsultorio, getConsultorios } from '@/services/ConsultorioService';
+import { get } from 'http';
 import { Activity, DoorClosed, Monitor, Stethoscope, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -10,33 +12,53 @@ export default function Index() {
     const { toast } = useToast();
     const [openAddConsultorio, setOpenAddConsultorio] = useState(false);
     const [consultorioNumero, setConsultorioNumero] = useState("");
+    const [consultorios, setConsultorios] = useState([]);
 
-const handleAddConsultorio = async () => {
-  try {
-    const response = await fetch("http://localhost:1111/consultorios", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        numero: Number(consultorioNumero),
-      }),
-    });
+  const handleAddConsultorio = async () => {
+    const result = await addConsultorio(consultorioNumero);
 
-    if (!response.ok) {
-      throw new Error("Failed to add consultório");
+    if (result.error) {
+      toast({
+        title: "Erro",
+        description: result.error,
+        variant: "destructive",
+      });
+      return;
     }
 
-    alert("Consultório adicionado com sucesso!");
+    toast({
+      title: "Sucesso!",
+      description: "Consultório adicionado com sucesso.",
+    });
 
-    // limpar input e fechar modal
     setConsultorioNumero("");
     setOpenAddConsultorio(false);
+  };
 
-  } catch (error) {
-    toast({ title: "Consultório não registrado" });
-  }
-};
+  const loadConsultorios = async () => {
+    try {
+        const data = await getConsultorios();
+          if (data.error) {
+        toast({
+          title: "Erro ao carregar consultórios",
+          description: data.error,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setConsultorios(data); // sucesso
+
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar consultórios.",
+        variant: "destructive",
+      });
+      return;
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
@@ -105,7 +127,10 @@ const handleAddConsultorio = async () => {
               <CardDescription>Adicione um novo consultório ao Sistema</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => setOpenAddConsultorio(true)} className="w-full">
+              <Button onClick={() => {
+                 loadConsultorios();
+                setOpenAddConsultorio(true)}} 
+                className="w-full">
                 Adicionar
               </Button>
             </CardContent>
@@ -123,17 +148,33 @@ const handleAddConsultorio = async () => {
                 <input
                   type="number"
                   className="border rounded px-3 py-2 w-full"
-                  placeholder="Número do consultório"
+                  placeholder="Insira o número do consultório"
                   value={consultorioNumero}
                   onChange={(e) => setConsultorioNumero(e.target.value)}
                 />
+                <div className="mt-4">
+                  <h3 className="font-medium mb-2 text-sm text-muted-foreground">
+                    Consultórios cadastrados:
+                  </h3>
+
+                  <div className="p-2 border rounded-md bg-muted/40 max-h-32 overflow-y-auto text-sm">
+                    {consultorios.length === 0 ? (
+                      <p className="text-muted-foreground">Nenhum consultório cadastrado.</p>
+                    ) : (
+                      <ul className="space-y-1">
+                        {consultorios.map((c: any) => (
+                          <li key={c.id}>• Consultório {c.id}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 mt-4">
                 <Button variant="outline" onClick={() => setOpenAddConsultorio(false)}>
                   Cancelar
                 </Button>
-
                 <Button onClick={() => handleAddConsultorio()}>
                   Salvar
                 </Button>
