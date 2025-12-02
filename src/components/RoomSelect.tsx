@@ -31,7 +31,7 @@ export default function RoomSelect({
 
         {options.map((opt) => (
           <option key={opt.id} value={opt.id}>
-            Consultório {opt.numero}
+            Consultório {opt.id}
           </option>
         ))}
       </select>
