@@ -21,7 +21,7 @@ export default function Doctor() {
   const [consultorios, setConsultorios] = useState<any[]>([]);
 
   const waitingPatients = getWaitingForDoctor();
-  
+
   // O paciente selecionado para ser CHAMADO
   const selectedPatient = waitingPatients.find(p => p.id === selectedPatientId);
 
@@ -116,8 +116,8 @@ export default function Doctor() {
                               Type: {patient.attendanceType === 'clinical' ? 'Clínico' : 'Psiquiátrico'}
                             </p>
                             {patient.triageNotes && (
-                                <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-                                    Clinical Notes: {patient.triageNotes}
+                                <p className="text-sm text-foreground font-semibold mt-1 line-clamp-1">
+                                    Observações : {patient.triageNotes}
                                 </p>
                             )}
                           </div>
@@ -190,9 +190,9 @@ export default function Doctor() {
 
                     {selectedPatient.triageNotes && (
                         <div className="pt-2 border-t border-border/50">
-                            <span className="text-xs text-muted-foreground block mb-1">Clinical Notes:</span>
+                            <span className="text-xs text-muted-foreground block mb-1">Observações:</span>
                             <p className="text-sm italic text-foreground bg-background/50 p-2 rounded border border-border/30">
-                                "{selectedPatient.triageNotes}"
+                                {selectedPatient.triageNotes}
                             </p>
                         </div>
                     )}
