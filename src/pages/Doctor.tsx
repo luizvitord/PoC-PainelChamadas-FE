@@ -11,7 +11,6 @@ import { useToast } from '@/hooks/use-toast';
 import RoomSelect from '@/components/RoomSelect';
 import { set } from 'date-fns';
 
-// 👉 ADIÇÃO
 import { PRIORITY_CONFIG } from "@/types/patient";
 
 export default function Doctor() {
@@ -19,13 +18,11 @@ export default function Doctor() {
   const { toast } = useToast();
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [room, setRoom] = useState('');
-  const [consultorios, setConsultorios] = useState([]);
-
-  // 👉 ADIÇÃO: estados do pop-up de triagem
-  const [triageModalOpen, setTriageModalOpen] = useState(false);
-  const [triagePatient, setTriagePatient] = useState<any | null>(null);
+  const [consultorios, setConsultorios] = useState<any[]>([]);
 
   const waitingPatients = getWaitingForDoctor();
+  
+  // O paciente selecionado para ser CHAMADO
   const selectedPatient = waitingPatients.find(p => p.id === selectedPatientId);
 
   const handleCall = (patientId: string) => {
@@ -36,11 +33,11 @@ export default function Doctor() {
     const interval = setInterval(() => {
       refreshPatients();
     }, 3000);
-
     return () => clearInterval(interval);
   }, [refreshPatients]);
 
   useEffect(() => {
+    // Ajuste a URL se necessário
     fetch("http://localhost:1111/consultorios")
       .then(res => res.json())
       .then(data => setConsultorios(data))
@@ -57,7 +54,7 @@ export default function Doctor() {
     if (selectedPatientId && room) {
       try {
         await callForDoctor(selectedPatientId, room);
-        toast({ title: 'Patient Called' });
+        toast({ title: 'Patient Called', description: `Calling to Room ${room}` });
         setSelectedPatientId(null);
         setRoom('');
       } catch (error) {
@@ -99,20 +96,13 @@ export default function Doctor() {
                 <p className="text-muted-foreground text-center py-8">No patients waiting for consultation</p>
               ) : (
                 waitingPatients.map((patient) => (
-
-                  // 👉 ADICIONADO: onClick para abrir modal de triagem
                   <Card
                     key={patient.id}
-                    className="border-l-4 cursor-pointer"
+                    className="border-l-4"
                     style={{
                       borderLeftColor: `hsl(var(--priority-${patient.priority}))`
                     }}
-                    onClick={() => {
-                      setTriagePatient(patient);
-                      setTriageModalOpen(true);
-                    }}
                   >
-
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4 flex-1">
@@ -122,15 +112,13 @@ export default function Doctor() {
                               <p className="font-semibold text-lg text-foreground">{patient.fullName}</p>
                               {patient.priority && <PriorityBadge priority={patient.priority} />}
                             </div>
-
                             <p className="text-sm text-muted-foreground">
-                              Type: {patient.attendanceType === 'clinical' ? 'Clínico' : 'Psiquiátrico'} •
+                              Type: {patient.attendanceType === 'clinical' ? 'Clínico' : 'Psiquiátrico'}
                             </p>
-
                             {patient.triageNotes && (
-                              <p className="text-sm text-foreground mt-2 p-2 bg-muted rounded">
-                                <strong>Notes:</strong> {patient.triageNotes}
-                              </p>
+                                <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                                    Clinical Notes: {patient.triageNotes}
+                                </p>
                             )}
                           </div>
                         </div>
@@ -164,67 +152,63 @@ export default function Doctor() {
           </CardContent>
         </Card>
 
-        {/*  👉 MODAL DE INFORMAÇÕES DA TRIAGEM  */}
-        <Dialog open={triageModalOpen} onOpenChange={setTriageModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Triage Information</DialogTitle>
-              <DialogDescription>
-                Details for <strong>{triagePatient?.fullName}</strong>
-              </DialogDescription>
-            </DialogHeader>
-
-            {triagePatient && (
-              <div className="space-y-3">
-
-                {/* PRIORIDADE IGUAL À TRIAGEM */}
-                <div className="flex items-center gap-2">
-                  <PriorityBadge priority={triagePatient.priority} />
-                  <span>
-                    {PRIORITY_CONFIG[triagePatient.priority].label}
-                    {" "}
-                    ({PRIORITY_CONFIG[triagePatient.priority].waitTime})
-                  </span>
-                </div>
-
-                <p>
-                  <strong>Type:</strong>{" "}
-                  {triagePatient.attendanceType === "clinical" ? "Clínico" : "Psiquiátrico"}
-                </p>
-
-                {triagePatient.triageNotes && (
-                  <p className="p-2 bg-muted rounded">
-                    <strong>Notes:</strong> {triagePatient.triageNotes}
-                  </p>
-                )}
-
-                {/* ❌ REMOVIDO: DATA DE NASCIMENTO */}
-              </div>
-            )}
-
-            <div className="flex justify-end mt-4">
-              <Button variant="outline" onClick={() => setTriageModalOpen(false)}>
-                Close
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* MODAL ORIGINAL (Call Patient) */}
+        {/* MODAL: CHAMAR PACIENTE (Único modal ativo agora) */}
         <Dialog open={!!selectedPatientId} onOpenChange={(open) => !open && setSelectedPatientId(null)}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Call Patient</DialogTitle>
               <DialogDescription>
-                Assign consultation room for {selectedPatient?.fullName}
+                Review triage info before calling.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 py-4">
-              <RoomSelect value={room} onChange={setRoom} options={consultorios} label="Consultation Room" />
+            {selectedPatient && (
+                <div className="bg-secondary/50 border border-border rounded-lg p-4 space-y-3 mb-2">
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <h4 className="font-bold text-lg">{selectedPatient.fullName}</h4>
+                            <span className="text-xs text-muted-foreground uppercase tracking-wider">Patient Info</span>
+                        </div>
+                        <span className="text-2xl font-bold text-primary">{selectedPatient.ticketNumber}</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div className="flex flex-col">
+                            <span className="text-muted-foreground text-xs">Priority</span>
+                            <div className="flex items-center gap-2 mt-1">
+                                <PriorityBadge priority={selectedPatient.priority} showLabel={false} />
+                                <span>{PRIORITY_CONFIG[selectedPatient.priority]?.label}</span>
+                            </div>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-muted-foreground text-xs">Type</span>
+                            <span className="font-medium mt-1">
+                                {selectedPatient.attendanceType === 'clinical' ? 'Clínico' : 'Psiquiátrico'}
+                            </span>
+                        </div>
+                    </div>
+
+                    {selectedPatient.triageNotes && (
+                        <div className="pt-2 border-t border-border/50">
+                            <span className="text-xs text-muted-foreground block mb-1">Clinical Notes:</span>
+                            <p className="text-sm italic text-foreground bg-background/50 p-2 rounded border border-border/30">
+                                "{selectedPatient.triageNotes}"
+                            </p>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            <div className="space-y-4 py-2">
+              <RoomSelect 
+                value={room} 
+                onChange={setRoom} 
+                options={consultorios} 
+                label="Select Consultation Room" 
+              />
             </div>
 
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 mt-2">
               <Button variant="outline" onClick={() => setSelectedPatientId(null)}>
                 Cancel
               </Button>
