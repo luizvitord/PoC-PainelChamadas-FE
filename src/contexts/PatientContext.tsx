@@ -80,6 +80,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
         status: 'waiting-doctor',
         priority: mapBackendPriority(p.risco),
         attendanceType: p.tipo === 'PSIQUIATRICO' ? 'psychiatric' : 'clinical',
+        triageNotes: p.triageNotes,
         registeredAt: new Date()
       }));
 
@@ -106,13 +107,14 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } as Patient;
   }, [refreshPatients]);
 
-  const assignPriority = useCallback(async (patientId: string, priority: PriorityLevel, attendanceType: 'clinical' | 'psychiatric', notes: string) => {
+  const assignPriority = useCallback(async (patientId: string, priority: PriorityLevel, attendanceType: 'clinical' | 'psychiatric', triageNotes: string) => {
     const backendPriority = { 'red': 'VERMELHO', 'orange': 'LARANJA', 'yellow': 'AMARELO', 'green': 'VERDE', 'blue': 'AZUL' }[priority];
     const backendType = attendanceType === 'psychiatric' ? 'PSIQUIATRICO' : 'CLINICO';
-
+    
     await api.put(`/pacientes/${patientId}/classificar`, {
       risco: backendPriority,
-      tipo: backendType
+      tipo: backendType,
+      triageNotes
     });
     await refreshPatients();
   }, [refreshPatients]);
