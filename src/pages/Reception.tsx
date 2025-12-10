@@ -89,7 +89,6 @@ export default function Reception() {
                   <Input
                     id="dateOfBirth"
                     type="date"
-                    required
                     value={formData.dateOfBirth}
                     onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                   />
@@ -99,7 +98,6 @@ export default function Reception() {
                   <Label htmlFor="cpf">CPF</Label>
                   <Input
                     id="cpf"
-                    required
                     value={formData.cpf}
                     onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
                     placeholder="000.000.000-00"
