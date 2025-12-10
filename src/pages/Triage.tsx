@@ -79,12 +79,12 @@ export default function Triage() {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center gap-3">
           <Stethoscope className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold text-foreground">Triage Station</h1>
+          <h1 className="text-3xl font-bold text-foreground">Acolhimento e Classificação de Risco</h1>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Waiting for Triage</CardTitle>
+            <CardTitle>Aguardando Acolhimento</CardTitle>
             <CardDescription>
               {waitingPatients.length} patient{waitingPatients.length !== 1 ? 's' : ''} in queue
             </CardDescription>
@@ -92,7 +92,7 @@ export default function Triage() {
           <CardContent>
             <div className="space-y-3">
               {waitingPatients.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No patients waiting for triage</p>
+                <p className="text-muted-foreground text-center py-8">Nenhum paciente aguardando Acolhimento</p>
               ) : (
                 waitingPatients.map((patient) => (
                   <div
@@ -112,7 +112,7 @@ export default function Triage() {
                     </div>
                     <Button onClick={() => handleCall(patient.id)}>
                       <Phone className="mr-2 h-4 w-4" />
-                      Call for Triage
+                      Chamar para Acolhimento
                     </Button>
                   </div>
                 ))
@@ -124,15 +124,15 @@ export default function Triage() {
         <Dialog open={!!selectedPatientId} onOpenChange={(open) => !open && handleCancel()}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Triage Classification</DialogTitle>
+              <DialogTitle>Acolhida e Classificação de Risco</DialogTitle>
               <DialogDescription>
-                Assign Manchester Triage priority for {selectedPatient?.fullName}
+                Definir a classificação de risco de {selectedPatient?.fullName}
               </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-4 py-4">
               <div className="space-y-3">
-                <Label>Attendance Type</Label>
+                <Label>Categoria de Atendimento</Label>
                 <RadioGroup value={attendanceType} onValueChange={(value) => {
                   setAttendanceType(value as 'clinical' | 'psychiatric');
                   // Reset priority to first available when switching types
@@ -153,8 +153,9 @@ export default function Triage() {
                 </RadioGroup>
               </div>
 
+                    {/* manter o (Manchester Protocol)?? */}
               <div className="space-y-2">
-                <Label>Priority Level (Manchester Protocol)</Label>
+                <Label>Grau de Prioridade (Manchester Protocol)</Label>
                 <Select value={priority} onValueChange={(value) => setPriority(value as PriorityLevel)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -181,7 +182,7 @@ export default function Triage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Clinical Notes</Label>
+                <Label>Anotações Clínicas</Label>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -193,10 +194,10 @@ export default function Triage() {
 
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={handleCancel}>
-                Cancel
+                Cancelar
               </Button>
               <Button onClick={handleConfirmTriage}>
-                Confirm Classification
+                Confirmar Classificação
               </Button>
             </div>
           </DialogContent>

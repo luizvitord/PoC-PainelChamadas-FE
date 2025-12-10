@@ -85,8 +85,8 @@ export default function Index() {
           <Card className="hover:border-primary transition-colors">
             <CardHeader>
               <Stethoscope className="h-12 w-12 text-primary mb-2" />
-              <CardTitle>Triage</CardTitle>
-              <CardDescription>Nurse triage station</CardDescription>
+              <CardTitle>Acolhimento</CardTitle>
+              <CardDescription>Acolhimento e Classificação de Risco</CardDescription>
             </CardHeader>
             <CardContent>
               <Link to="/triage">
