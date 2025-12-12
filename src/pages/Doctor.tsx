@@ -10,6 +10,7 @@ import { Activity, Phone, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import RoomSelect from '@/components/RoomSelect';
 import { set } from 'date-fns';
+import { AttendanceTypeLabel } from '@/lib/attendanceTypes';
 
 import { PRIORITY_CONFIG } from "@/types/patient";
 
@@ -24,6 +25,7 @@ export default function Doctor() {
 
   // O paciente selecionado para ser CHAMADO
   const selectedPatient = waitingPatients.find(p => p.id === selectedPatientId);
+    console.log(selectedPatient)
 
   const handleCall = (patientId: string) => {
     setSelectedPatientId(patientId);
@@ -113,7 +115,7 @@ export default function Doctor() {
                               {patient.priority && <PriorityBadge priority={patient.priority} />}
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              Type: {patient.attendanceType === 'clinical' ? 'Clínico' : 'Psiquiátrico'}
+                              Tipo: {AttendanceTypeLabel[patient.attendanceType]}
                             </p>
                             {patient.triageNotes && (
                                 <p className="text-sm text-foreground font-semibold mt-1 line-clamp-1">
@@ -167,23 +169,23 @@ export default function Doctor() {
                     <div className="flex items-start justify-between">
                         <div>
                             <h4 className="font-bold text-lg">{selectedPatient.fullName}</h4>
-                            <span className="text-xs text-muted-foreground uppercase tracking-wider">Patient Info</span>
+                            <span className="text-xs text-muted-foreground uppercase tracking-wider">Dados do Paciente</span>
                         </div>
                         <span className="text-2xl font-bold text-primary">{selectedPatient.ticketNumber}</span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-sm">
                         <div className="flex flex-col">
-                            <span className="text-muted-foreground text-xs">Priority</span>
+                            <span className="text-muted-foreground text-xs">Prioridade</span>
                             <div className="flex items-center gap-2 mt-1">
                                 <PriorityBadge priority={selectedPatient.priority} showLabel={false} />
                                 <span>{PRIORITY_CONFIG[selectedPatient.priority]?.label}</span>
                             </div>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-muted-foreground text-xs">Type</span>
+                            <span className="text-muted-foreground text-xs">Tipo</span>
                             <span className="font-medium mt-1">
-                                {selectedPatient.attendanceType === 'clinical' ? 'Clínico' : 'Psiquiátrico'}
+                              {AttendanceTypeLabel[selectedPatient.attendanceType]}
                             </span>
                         </div>
                     </div>

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Patient, PriorityLevel, TriageCall } from '@/types/patient';
+import { AttendanceTypeBackend, PriorityBackend } from '@/lib/utils/backendMaps';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:1111',
@@ -12,7 +13,7 @@ interface PatientContextType {
   recentCalls: TriageCall[];
   registerPatient: (data: { fullName: string; dateOfBirth: string; cpf: string }) => Promise<Patient>;
   callForTriage: (patientId: string) => void;
-  assignPriority: (patientId: string, priority: PriorityLevel, attendanceType: 'clinical' | 'psychiatric', notes: string) => Promise<void>;
+  assignPriority: (patientId: string, priority: PriorityLevel, attendanceType: 'clinical' | 'psychiatric' | 'samu', notes: string) => Promise<void>;
   callForDoctor: (patientId: string, room: string) => Promise<void>;
   completeConsultation: (patientId: string) => Promise<void>;
   getWaitingForTriage: () => Patient[];
@@ -38,7 +39,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return parsed.map((c: any) => ({ ...c, timestamp: new Date(c.timestamp) }));
       }
       return [];
-    });
+  });
 
     useEffect(() => {
     localStorage.setItem('recentCalls', JSON.stringify(recentCalls));
@@ -79,7 +80,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
         fullName: p.nome,
         status: 'waiting-doctor',
         priority: mapBackendPriority(p.risco),
-        attendanceType: p.tipo === 'PSIQUIATRICO' ? 'psychiatric' : 'clinical',
+        attendanceType: p.tipo === 'PSIQUIATRICO' ? 'psychiatric' : p.tipo === 'SAMU' ? 'samu' : 'clinical',
         triageNotes: p.triageNotes,
         registeredAt: new Date()
       }));
@@ -107,10 +108,10 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } as Patient;
   }, [refreshPatients]);
 
-  const assignPriority = useCallback(async (patientId: string, priority: PriorityLevel, attendanceType: 'clinical' | 'psychiatric', triageNotes: string) => {
-    const backendPriority = { 'red': 'VERMELHO', 'orange': 'LARANJA', 'yellow': 'AMARELO', 'green': 'VERDE', 'blue': 'AZUL' }[priority];
-    const backendType = attendanceType === 'psychiatric' ? 'PSIQUIATRICO' : 'CLINICO';
-    
+  const assignPriority = useCallback(async (patientId: string, priority: PriorityLevel, attendanceType: 'clinical' | 'psychiatric' | 'samu', triageNotes: string) => {
+    const backendPriority = PriorityBackend[priority];
+    const backendType = AttendanceTypeBackend[attendanceType];
+
     await api.put(`/pacientes/${patientId}/classificar`, {
       risco: backendPriority,
       tipo: backendType,
