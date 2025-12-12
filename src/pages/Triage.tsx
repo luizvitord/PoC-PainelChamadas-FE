@@ -11,14 +11,17 @@ import { PriorityBadge } from '@/components/PriorityBadge';
 import { Stethoscope, Phone } from 'lucide-react';
 import { PriorityLevel, PRIORITY_CONFIG } from '@/types/patient';
 import { useToast } from '@/hooks/use-toast';
+import { getAvailablePriorities } from '@/lib/priorityRules';
+import { AttendanceTypeLabel } from '@/lib/attendanceTypes';
 
 export default function Triage() {
   const { getWaitingForTriage, callForTriage, assignPriority, refreshPatients } = usePatients();
   const { toast } = useToast();
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
-  const [attendanceType, setAttendanceType] = useState<'clinical' | 'psychiatric'>('clinical');
-  const [priority, setPriority] = useState<PriorityLevel>('red');
+  const [attendanceType, setAttendanceType] = useState<'clinical' | 'psychiatric' | 'samu'>('psychiatric');
+  const [priority, setPriority] = useState<PriorityLevel>('green');
   const [notes, setNotes] = useState('');
+  const availableColors = getAvailablePriorities(attendanceType);
 
   const waitingPatients = getWaitingForTriage();
   const selectedPatient = waitingPatients.find(p => p.id === selectedPatientId);
@@ -48,12 +51,14 @@ export default function Triage() {
     try {
       if (selectedPatientId) {
         await assignPriority(selectedPatientId, priority, attendanceType, notes);
-        toast({
-          title: 'Triage Complete',
-          description: `Patient classified as ${PRIORITY_CONFIG[priority].label} (${attendanceType === 'clinical' ? 'Clínico' : 'Psiquiátrico'})`,
-        });
+
+          toast({
+            title: 'Triage Complete',
+            description: `Paciente classificado como ${PRIORITY_CONFIG[priority].label} (${AttendanceTypeLabel[attendanceType]})`,
+          });
+
         await setSelectedPatientId(null);
-        await setAttendanceType('clinical');
+        await setAttendanceType('psychiatric'); // Reseta o formulário
         await setPriority('red');
         setNotes('');
     }
@@ -62,17 +67,13 @@ export default function Triage() {
     }
   };
 
-  const availableColors: PriorityLevel[] = attendanceType === 'clinical' 
-    ? ['red', 'orange'] 
-    : ['red', 'orange', 'yellow', 'green', 'blue'];
-
-    const handleCancel = async () => {
+  const handleCancel = async () => {
     setSelectedPatientId(null); 
-    setAttendanceType('clinical'); // Reseta o formulário
-    setPriority('red');
+    setAttendanceType('psychiatric'); // Reseta o formulário
+    setPriority('green');
     setNotes('');
     await refreshPatients(); 
-};
+  };
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -134,10 +135,18 @@ export default function Triage() {
               <div className="space-y-3">
                 <Label>Categoria de Atendimento</Label>
                 <RadioGroup value={attendanceType} onValueChange={(value) => {
-                  setAttendanceType(value as 'clinical' | 'psychiatric');
+                 setAttendanceType(value as 'clinical' | 'psychiatric' | 'samu');
                   // Reset priority to first available when switching types
-                  setPriority(value === 'clinical' ? 'red' : 'green');
+                  if (value === 'clinical') setPriority('red');
+                  else if (value === 'psychiatric') setPriority('green');
+                  else if (value === 'samu') setPriority('orange'); // ou o que desejar
                 }}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="psychiatric" id="psychiatric" />
+                    <Label htmlFor="psychiatric" className="font-normal cursor-pointer">
+                      Psiquiátrico (Psychiatric)
+                    </Label>
+                  </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="clinical" id="clinical" />
                     <Label htmlFor="clinical" className="font-normal cursor-pointer">
@@ -145,9 +154,9 @@ export default function Triage() {
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="psychiatric" id="psychiatric" />
-                    <Label htmlFor="psychiatric" className="font-normal cursor-pointer">
-                      Psiquiátrico (Psychiatric)
+                    <RadioGroupItem value="samu" id="samu" />
+                    <Label htmlFor="samu" className="font-normal cursor-pointer">
+                      SAMU (Serviço de Atendimento Móvel de Urgência)
                     </Label>
                   </div>
                 </RadioGroup>
