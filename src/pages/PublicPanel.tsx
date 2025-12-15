@@ -39,11 +39,12 @@ export default function PublicPanel() {
                     {currentCall.patientName}
                   </div>
                   
-                  {currentCall.priority && currentCall.type !== 'triage' && (
+                  {/* Priority Badge - currently commented out */}
+                  {/* {currentCall.priority && currentCall.type !== 'triage' && (
                     <div className="flex justify-center">
                       <PriorityBadge priority={currentCall.priority} className="text-3xl px-8 py-4" />
                     </div>
-                  )}
+                  )} */}
                   
                   <div className="text-5xl font-semibold">
                     {currentCall.type === 'triage' ? (
@@ -81,9 +82,10 @@ export default function PublicPanel() {
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-2xl font-bold">{call.patientName}</span>
-                      {call.priority && call.type !== 'triage' && (
+                      {/*priority*/}
+                      {/* {call.priority && call.type !== 'triage' && (
                         <PriorityBadge priority={call.priority} showLabel={false} />
-                      )}
+                      )} */}
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {call.type === 'triage' ? 'Triagem' : call.room}
