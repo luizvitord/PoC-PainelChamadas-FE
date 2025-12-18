@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { usePatients } from '@/contexts/PatientContext';
 import { PriorityBadge } from '@/components/PriorityBadge';
 import { Building2, Stethoscope } from 'lucide-react';
@@ -7,11 +7,46 @@ export default function PublicPanel() {
   const { recentCalls } = usePatients();
   const currentCall = recentCalls[0];
   const previousCalls = recentCalls.slice(1, 4);
+  const lastSpokenCallRef = useRef<string | null>(null);
+
+const speak = (text: string) => {
+  if (!window.speechSynthesis) return;
+
+  window.speechSynthesis.cancel(); // cancela qualquer fala anterior
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'pt-BR';
+  utterance.rate = 1;
+  utterance.pitch = 1;
+
+  window.speechSynthesis.speak(utterance);
+};
 
   useEffect(() => {
     document.documentElement.classList.add('dark');
     return () => document.documentElement.classList.remove('dark');
   }, []);
+
+  useEffect(() => {
+    if (!currentCall) return;
+
+    // cria uma chave única do chamado
+    const callKey = `${currentCall.ticketNumber}-${currentCall.timestamp.getTime()}`;
+
+    // se já falou esse chamado, não fala de novo
+    if (lastSpokenCallRef.current === callKey) return;
+
+    const text =
+      currentCall.type === 'triage'
+        ? `Paciente ${currentCall.patientName}, favor comparecer ao acolhimento`
+        : `Paciente ${currentCall.patientName}, favor comparecer ao consultório ${currentCall.room}`;
+
+    speak(text);
+
+    // marca como já falado
+    lastSpokenCallRef.current = callKey;
+  }, [currentCall]);
+
 
   return (
     <div className="min-h-screen bg-background text-foreground p-8">
@@ -49,8 +84,8 @@ export default function PublicPanel() {
                   <div className="text-5xl font-semibold">
                     {currentCall.type === 'triage' ? (
                       <>
-                        <p className="text-foreground">COMPARECER À</p>
-                        <p className="text-primary mt-2">TRIAGEM</p>
+                        <p className="text-foreground">COMPARECER AO</p>
+                        <p className="text-primary mt-2">ACOLHIMENTO</p>
                       </>
                     ) : (
                       <>
