@@ -15,21 +15,63 @@ import { AttendanceTypeLabel } from '@/lib/attendanceTypes';
 import { PRIORITY_CONFIG } from "@/types/patient";
 
 export default function Doctor() {
-  const { getWaitingForDoctor, callForDoctor, completeConsultation, refreshPatients } = usePatients();
+  const { getWaitingForDoctor, callForDoctor, completeConsultation, refreshPatients, recallPatient } = usePatients();
   const { toast } = useToast();
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [room, setRoom] = useState('');
   const [consultorios, setConsultorios] = useState<any[]>([]);
+  const [activePatientId, setActivePatientId] = useState<string | null>(null);
+  const [activeRoom, setActiveRoom] = useState<string>('');
+  const [consultationLocked, setConsultationLocked] = useState(false);
+  const [activePatient, setActivePatient] = useState<any | null>(null);
+  console.log(room)
 
   const waitingPatients = getWaitingForDoctor();
 
+
   // O paciente selecionado para ser CHAMADO
-  const selectedPatient = waitingPatients.find(p => p.id === selectedPatientId);
-    console.log(selectedPatient)
+  // const activePatient = waitingPatients.find(p => p.id === selectedPatientId);
+    console.log(activePatient)
 
   const handleCall = (patientId: string) => {
     setSelectedPatientId(patientId);
   };
+
+  const handleCallPatient = async (patient: any) => {
+    if (!room) return;
+    setActivePatient(patient);
+
+    try{
+
+      await callForDoctor(patient.id, room);
+  
+      setActivePatientId(patient.id);
+      setConsultationLocked(true);
+  
+      await refreshPatients();
+    } catch(error){
+      toast({ variant: "destructive", title: "Error", description: "Failed to call patient." });
+    }
+  };
+
+const handleRecallPatient = async () => {
+  if (!activePatient) return;
+
+  try {
+    await recallPatient(activePatient.id);
+
+    toast({
+      title: 'Paciente chamado novamente',
+      description: `${activePatient.fullName} foi chamado novamente`,
+    });
+  } catch (err) {
+    toast({
+      variant: 'destructive',
+      title: 'Erro',
+      description: 'Não foi possível rechamar o paciente',
+    });
+  }
+};
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -91,6 +133,14 @@ export default function Doctor() {
             <CardDescription>
               Sorted by priority level (Manchester Protocol)
             </CardDescription>
+                        <div className="space-y-4 py-2">
+              <RoomSelect 
+                value={room} 
+                onChange={setRoom} 
+                options={consultorios} 
+                label="Select Consultation Room" 
+              />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -129,7 +179,7 @@ export default function Doctor() {
                           {patient.status === 'waiting-doctor' && (
                             <Button onClick={(e) => { 
                               e.stopPropagation(); 
-                              handleCall(patient.id); 
+                              handleCallPatient(patient);
                             }}>
                               <Phone className="mr-2 h-4 w-4" />
                               Call Patient
@@ -137,7 +187,7 @@ export default function Doctor() {
                           )}
                           {patient.status === 'in-consultation' && (
                             <Button onClick={(e) => { 
-                              e.stopPropagation(); 
+                              e.stopPropagation();
                               handleComplete(patient.id); 
                             }} variant="outline">
                               <CheckCircle className="mr-2 h-4 w-4" />
@@ -155,71 +205,72 @@ export default function Doctor() {
         </Card>
 
         {/* MODAL: CHAMAR PACIENTE (Único modal ativo agora) */}
-        <Dialog open={!!selectedPatientId} onOpenChange={(open) => !open && setSelectedPatientId(null)}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Call Patient</DialogTitle>
-              <DialogDescription>
-                Review triage info before calling.
-              </DialogDescription>
-            </DialogHeader>
+          <Dialog open={consultationLocked} onOpenChange={() => {}}>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Call Patient</DialogTitle>
+                        <DialogDescription>
+                          Review triage info before calling.
+                        </DialogDescription>
+                      </DialogHeader>
 
-            {selectedPatient && (
-                <div className="bg-secondary/50 border border-border rounded-lg p-4 space-y-3 mb-2">
-                    <div className="flex items-start justify-between">
-                        <div>
-                            <h4 className="font-bold text-lg">{selectedPatient.fullName}</h4>
-                            <span className="text-xs text-muted-foreground uppercase tracking-wider">Dados do Paciente</span>
-                        </div>
-                        <span className="text-2xl font-bold text-primary">{selectedPatient.ticketNumber}</span>
-                    </div>
+                      {activePatient && (
+                          <div className="bg-secondary/50 border border-border rounded-lg p-4 space-y-3 mb-2">
+                              <div className="flex items-start justify-between">
+                                  <div>
+                                      <h4 className="font-bold text-lg">{activePatient.fullName}</h4>
+                                      <span className="text-xs text-muted-foreground uppercase tracking-wider">Dados do Paciente</span>
+                                  </div>
+                                  <span className="text-2xl font-bold text-primary">{activePatient.ticketNumber}</span>
+                              </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div className="flex flex-col">
-                            <span className="text-muted-foreground text-xs">Prioridade</span>
-                            <div className="flex items-center gap-2 mt-1">
-                                <PriorityBadge priority={selectedPatient.priority} showLabel={false} />
-                                <span>{PRIORITY_CONFIG[selectedPatient.priority]?.label}</span>
-                            </div>
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-muted-foreground text-xs">Tipo</span>
-                            <span className="font-medium mt-1">
-                              {AttendanceTypeLabel[selectedPatient.attendanceType]}
-                            </span>
-                        </div>
-                    </div>
+                              <div className="grid grid-cols-2 gap-2 text-sm">
+                                  <div className="flex flex-col">
+                                      <span className="text-muted-foreground text-xs">Prioridade</span>
+                                      <div className="flex items-center gap-2 mt-1">
+                                          <PriorityBadge priority={activePatient.priority} showLabel={false} />
+                                          <span>{PRIORITY_CONFIG[activePatient.priority]?.label}</span>
+                                      </div>
+                                  </div>
+                                  <div className="flex flex-col">
+                                      <span className="text-muted-foreground text-xs">Tipo</span>
+                                      <span className="font-medium mt-1">
+                                        {AttendanceTypeLabel[activePatient.attendanceType]}
+                                      </span>
+                                  </div>
+                              </div>
 
-                    {selectedPatient.triageNotes && (
-                        <div className="pt-2 border-t border-border/50">
-                            <span className="text-xs text-muted-foreground block mb-1">Observações:</span>
-                            <p className="text-sm italic text-foreground bg-background/50 p-2 rounded border border-border/30">
-                                {selectedPatient.triageNotes}
-                            </p>
-                        </div>
-                    )}
-                </div>
-            )}
+                              {activePatient.triageNotes && (
+                                  <div className="pt-2 border-t border-border/50">
+                                      <span className="text-xs text-muted-foreground block mb-1">Observações:</span>
+                                      <p className="text-sm italic text-foreground bg-background/50 p-2 rounded border border-border/30">
+                                          {activePatient.triageNotes}
+                                      </p>
+                                  </div>
+                              )}
+                          </div>
+                      )}
 
-            <div className="space-y-4 py-2">
-              <RoomSelect 
-                value={room} 
-                onChange={setRoom} 
-                options={consultorios} 
-                label="Select Consultation Room" 
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 mt-2">
-              <Button variant="outline" onClick={() => setSelectedPatientId(null)}>
-                Cancel
-              </Button>
-              <Button onClick={handleConfirmCall} disabled={!room}>
-                Call to Room
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+                      <div className="flex justify-end gap-2 mt-2">
+                        {/* <Button variant="outline" onClick={() => setSelectedPatientId(null)}>
+                          Cancel
+                        </Button> */}
+                        <Button onClick={handleConfirmCall} disabled={!room}>
+                          Call to Room
+                        </Button>
+                        <Button
+                            onClick={async () => {
+                              await callForDoctor(activePatient.id, room);
+                            }}
+                          >
+                            Chamar paciente novamente
+                          </Button>
+                        <Button className="bg-red-600 hover:bg-red-700">
+                          Encerrar consulta (Desistência)
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
 
       </div>
     </div>

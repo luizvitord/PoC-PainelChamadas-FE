@@ -15,6 +15,7 @@ export interface Patient {
 }
 
 export interface TriageCall {
+  callId: string;
   ticketNumber: string;
   patientName?: string;
   type: 'triage' | 'doctor';

@@ -15,6 +15,7 @@ interface PatientContextType {
   callForTriage: (patientId: string) => void;
   assignPriority: (patientId: string, priority: PriorityLevel, attendanceType: 'clinical' | 'psychiatric' | 'samu', notes: string) => Promise<void>;
   callForDoctor: (patientId: string, room: string) => Promise<void>;
+  recallPatient: (patientId: string) => Promise<void>; 
   completeConsultation: (patientId: string) => Promise<void>;
   getWaitingForTriage: () => Patient[];
   getWaitingForDoctor: () => Patient[];
@@ -121,14 +122,13 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [refreshPatients]);
 
   const callForDoctor = useCallback(async (patientId: string, room: string) => {
-
-    const consultorioId = 1; 
     
-    await api.put(`/pacientes/${patientId}/chamar?consultorioId=${consultorioId}`);
+    await api.put(`/pacientes/${patientId}/chamar?consultorioId=${room}`);
     
     const patient = patients.find(p => p.id === patientId);
     if (patient) {
       setRecentCalls(prev => [{
+        callId: crypto.randomUUID(),
         ticketNumber: patient.ticketNumber || 'N/A',
         patientName: patient.fullName,
         type: 'doctor' as const,
@@ -140,6 +140,10 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     
     await refreshPatients();
   }, [patients, refreshPatients]);
+
+  const recallPatient = async (patientId: string) => {
+    await api.put(`/pacientes/${patientId}/rechamar`);
+  };
 
   const completeConsultation = useCallback(async (patientId: string) => {
     console.warn("Backend missing 'complete' endpoint. Optimistic update only.");
@@ -170,7 +174,8 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     <PatientContext.Provider value={{ 
       patients, recentCalls, registerPatient, callForTriage, 
       assignPriority, callForDoctor, completeConsultation, 
-      getWaitingForTriage, getWaitingForDoctor, refreshPatients 
+      getWaitingForTriage, getWaitingForDoctor, refreshPatients,
+      recallPatient
     }}>
       {children}
     </PatientContext.Provider>
