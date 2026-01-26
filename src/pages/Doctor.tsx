@@ -9,8 +9,9 @@ import { PriorityBadge } from '@/components/PriorityBadge';
 import { Activity, Phone, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import RoomSelect from '@/components/RoomSelect';
-import { set } from 'date-fns';
 import { AttendanceTypeLabel } from '@/lib/attendanceTypes';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
+
 
 import { PRIORITY_CONFIG } from "@/types/patient";
 
@@ -33,6 +34,11 @@ export default function Doctor() {
   // const activePatient = waitingPatients.find(p => p.id === selectedPatientId);
     console.log(activePatient)
 
+  const handleOpenCallModal = (patient: any) => {
+    setActivePatient(patient);
+    setConsultationLocked(true);
+  };
+
   const handleCall = (patientId: string) => {
     setSelectedPatientId(patientId);
   };
@@ -53,6 +59,29 @@ export default function Doctor() {
       toast({ variant: "destructive", title: "Error", description: "Failed to call patient." });
     }
   };
+
+  const handleConfirmCallPatient = async () => {
+  if (!activePatient || !room) return;
+
+  try {
+    await callForDoctor(activePatient.id, room);
+
+    setActivePatientId(activePatient.id);
+    setConsultationLocked(false); // fecha modal
+    await refreshPatients();
+
+    toast({
+      title: 'Paciente chamado',
+      description: `${activePatient.fullName} foi chamado para a sala ${room}`,
+    });
+  } catch (error) {
+    toast({
+      variant: 'destructive',
+      title: 'Erro',
+      description: 'Falha ao chamar o paciente',
+    });
+  }
+};
 
 const handleRecallPatient = async () => {
   if (!activePatient) return;
@@ -177,13 +206,31 @@ const handleRecallPatient = async () => {
 
                         <div className="flex gap-2">
                           {patient.status === 'waiting-doctor' && (
-                            <Button onClick={(e) => { 
-                              e.stopPropagation(); 
-                              handleCallPatient(patient);
-                            }}>
-                              <Phone className="mr-2 h-4 w-4" />
-                              Call Patient
-                            </Button>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="inline-block">
+                                  <Button
+                                    disabled={!room}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenCallModal(patient);
+                                    }}
+                                  >
+                                    <Phone className="mr-2 h-4 w-4" />
+                                    Chamar Paciente
+                                  </Button>
+                                </span>
+                              </TooltipTrigger>
+
+                              {!room && (
+                                <TooltipContent>
+                                  <p>Selecione um consultório</p>
+                                </TooltipContent>
+                              )}
+                            </Tooltip>
+                          </TooltipProvider>
+
                           )}
                           {patient.status === 'in-consultation' && (
                             <Button onClick={(e) => { 
@@ -206,7 +253,7 @@ const handleRecallPatient = async () => {
 
         {/* MODAL: CHAMAR PACIENTE (Único modal ativo agora) */}
           <Dialog open={consultationLocked} onOpenChange={() => {}}>
-                    <DialogContent className="sm:max-w-md">
+                    <DialogContent className="sm:max-w-xl w-full overflow-x-hidden">
                       <DialogHeader>
                         <DialogTitle>Call Patient</DialogTitle>
                         <DialogDescription>
@@ -215,7 +262,7 @@ const handleRecallPatient = async () => {
                       </DialogHeader>
 
                       {activePatient && (
-                          <div className="bg-secondary/50 border border-border rounded-lg p-4 space-y-3 mb-2">
+                         <div className="bg-secondary/50 border border-border rounded-lg p-4 space-y-3 mb-2 w-full min-w-0">
                               <div className="flex items-start justify-between">
                                   <div>
                                       <h4 className="font-bold text-lg">{activePatient.fullName}</h4>
@@ -224,15 +271,15 @@ const handleRecallPatient = async () => {
                                   <span className="text-2xl font-bold text-primary">{activePatient.ticketNumber}</span>
                               </div>
 
-                              <div className="grid grid-cols-2 gap-2 text-sm">
-                                  <div className="flex flex-col">
+                              <div className="grid grid-cols-2 gap-2 text-sm min-w-0">
+                                  <div className="flex flex-col min-w-0">
                                       <span className="text-muted-foreground text-xs">Prioridade</span>
                                       <div className="flex items-center gap-2 mt-1">
                                           <PriorityBadge priority={activePatient.priority} showLabel={false} />
                                           <span>{PRIORITY_CONFIG[activePatient.priority]?.label}</span>
                                       </div>
                                   </div>
-                                  <div className="flex flex-col">
+                                  <div className="flex flex-col min-w-0">
                                       <span className="text-muted-foreground text-xs">Tipo</span>
                                       <span className="font-medium mt-1">
                                         {AttendanceTypeLabel[activePatient.attendanceType]}
@@ -251,19 +298,15 @@ const handleRecallPatient = async () => {
                           </div>
                       )}
 
-                      <div className="flex justify-end gap-2 mt-2">
+                      <div className="flex flex-wrap gap-2 mt-4">
                         {/* <Button variant="outline" onClick={() => setSelectedPatientId(null)}>
                           Cancel
                         </Button> */}
-                        <Button onClick={handleConfirmCall} disabled={!room}>
+                        <Button onClick={handleConfirmCallPatient} disabled={!room}>
                           Call to Room
                         </Button>
-                        <Button
-                            onClick={async () => {
-                              await callForDoctor(activePatient.id, room);
-                            }}
-                          >
-                            Chamar paciente novamente
+                          <Button onClick={handleRecallPatient} disabled={!activePatient}>
+                            Chamar novamente
                           </Button>
                         <Button className="bg-red-600 hover:bg-red-700">
                           Encerrar consulta (Desistência)
@@ -271,7 +314,6 @@ const handleRecallPatient = async () => {
                       </div>
                     </DialogContent>
                   </Dialog>
-
       </div>
     </div>
   );
