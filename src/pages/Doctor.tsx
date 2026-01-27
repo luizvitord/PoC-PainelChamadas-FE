@@ -25,14 +25,11 @@ export default function Doctor() {
   const [activeRoom, setActiveRoom] = useState<string>('');
   const [consultationLocked, setConsultationLocked] = useState(false);
   const [activePatient, setActivePatient] = useState<any | null>(null);
-  console.log(room)
+  const [confirmFinishOpen, setConfirmFinishOpen] = useState(false);
+  const [patientToFinish, setPatientToFinish] = useState<any | null>(null);
 
   const waitingPatients = getWaitingForDoctor();
-
-
-  // O paciente selecionado para ser CHAMADO
-  // const activePatient = waitingPatients.find(p => p.id === selectedPatientId);
-    console.log(activePatient)
+  console.log("activePatient:", activePatient);
 
   const handleOpenCallModal = (patient: any) => {
     setActivePatient(patient);
@@ -65,9 +62,8 @@ export default function Doctor() {
 
   try {
     await callForDoctor(activePatient.id, room);
-
     setActivePatientId(activePatient.id);
-    setConsultationLocked(false); // fecha modal
+    // setConsultationLocked(false); // fecha modal
     await refreshPatients();
 
     toast({
@@ -87,6 +83,7 @@ const handleRecallPatient = async () => {
   if (!activePatient) return;
 
   try {
+    console.log("Rechamando paciente:", activePatient);
     await recallPatient(activePatient.id);
 
     toast({
@@ -136,12 +133,13 @@ const handleRecallPatient = async () => {
     }
   };
 
-  const handleComplete = async (patientId: string) =>{
+  const handleFinishConsultation = async (patientId: string) =>{
     try{
         await completeConsultation(patientId);
+        setConsultationLocked(false);
         toast({
-          title: 'Consultation Complete',
-          description: 'Patient consultation has been completed',
+          title: 'Finalizada',
+          description: 'Consulta finalizada com sucesso.',
         });
       } catch(error){
           toast({ variant: "destructive", title: "Error", description: "Failed to complete consultation." });
@@ -235,7 +233,7 @@ const handleRecallPatient = async () => {
                           {patient.status === 'in-consultation' && (
                             <Button onClick={(e) => { 
                               e.stopPropagation();
-                              handleComplete(patient.id); 
+                              // handleComplete(patient.id); 
                             }} variant="outline">
                               <CheckCircle className="mr-2 h-4 w-4" />
                               Finish Consultation
@@ -310,6 +308,48 @@ const handleRecallPatient = async () => {
                           </Button>
                         <Button className="bg-red-600 hover:bg-red-700">
                           Encerrar consulta (Desistência)
+                        </Button>
+                        <Button onClick={() => {
+                                  setPatientToFinish(activePatient);
+                                  setConfirmFinishOpen(true);
+                                }} className="bg-green-600 hover:bg-green-700">
+                          Finalizar consulta (Atendido)
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
+                  <Dialog open={confirmFinishOpen} onOpenChange={setConfirmFinishOpen}>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Confirmar finalização</DialogTitle>
+                        <DialogDescription>
+                          Deseja realmente finalizar esta consulta?
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      {patientToFinish && (
+                        <div className="bg-secondary/50 border rounded p-3 text-sm">
+                          <p><strong>Paciente:</strong> {patientToFinish.fullName}</p>
+                        </div>
+                      )}
+
+                      <div className="flex justify-end gap-2 mt-4">
+                        <Button
+                          variant="outline"
+                          onClick={() => setConfirmFinishOpen(false)}
+                        >
+                          Não
+                        </Button>
+
+                        <Button
+                          className="bg-green-600 hover:bg-green-700"
+                          onClick={async () => {
+                            await handleFinishConsultation(patientToFinish.id);
+                            setConfirmFinishOpen(false);
+                          }}
+                        >
+                          Sim, finalizar
                         </Button>
                       </div>
                     </DialogContent>

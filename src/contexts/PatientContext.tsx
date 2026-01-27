@@ -146,15 +146,16 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const completeConsultation = useCallback(async (patientId: string) => {
-    console.warn("Backend missing 'complete' endpoint. Optimistic update only.");
-    setPatients(prev => prev.filter(p => p.id !== patientId));
-  }, []);
+    await api.put(`/pacientes/${patientId}/finalizar`);
+    await refreshPatients();
+  }, [refreshPatients]);
 
   const callForTriage = useCallback((patientId: string) => {
      setPatients(prev => prev.map(p => p.id === patientId ? { ...p, status: 'in-triage' } : p));
      const patient = patients.find(p => p.id === patientId);
      if (patient) {
       setRecentCalls(prev => [{
+        callId: crypto.randomUUID(),
         ticketNumber: patient.ticketNumber || 'SENHA', 
         timestamp: new Date(), 
         priority: 'green' as const, 
