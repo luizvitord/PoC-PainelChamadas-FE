@@ -31,7 +31,8 @@ const speak = (text: string) => {
     if (!currentCall) return;
 
     // cria uma chave única do chamado
-    const callKey = `${currentCall.ticketNumber}-${currentCall.timestamp.getTime()}`;
+    const callKey = currentCall.callId;
+    console.log('Chamada atual:', callKey);
 
     // se já falou esse chamado, não fala de novo
     if (lastSpokenCallRef.current === callKey) return;
@@ -112,7 +113,7 @@ const speak = (text: string) => {
               ) : (
                 previousCalls.map((call, index) => (
                   <div
-                    key={`${call.ticketNumber}-${call.timestamp.getTime()}`}
+                    key={`${call.callId}`}
                     className="bg-secondary p-4 rounded-lg"
                   >
                     <div className="flex items-center justify-between mb-2">
