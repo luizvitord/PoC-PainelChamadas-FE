@@ -52,10 +52,10 @@ const speak = (text: string) => {
   return (
     <div className="min-h-screen bg-background text-foreground p-8">
       <div className="max-w-[1920px] mx-auto h-[1080px] flex flex-col">
-        {/* Header */}
-        <div className="border-b border-border pb-6 mb-8">
-          <h1 className="text-5xl font-bold text-center">Emergency Room - Call Panel</h1>
-        </div>
+        {/* Header precisa de header? */}
+        {/* <div className="border-b border-border pb-6 mb-8">
+          <h1 className="text-5xl font-bold text-center">Painel de Chamadas</h1>
+        </div> */}
 
         <div className="flex gap-8 flex-1">
           {/* Main Call Display */}
@@ -124,7 +124,7 @@ const speak = (text: string) => {
                       )} */}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {call.type === 'triage' ? 'Triagem' : call.room}
+                      {call.type === 'triage' ? 'Acolhimento' : call.room}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {call.timestamp.toLocaleTimeString()}

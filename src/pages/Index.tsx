@@ -64,69 +64,69 @@ export default function Index() {
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
       <div className="max-w-5xl w-full space-y-8">
         <div className="text-center space-y-4">
-          <h1 className="text-5xl font-bold text-foreground">Hospital Emergency Room</h1>
-          <p className="text-xl text-muted-foreground">Manchester Triage System</p>
+          <h1 className="text-5xl font-bold text-foreground">Hospital de Saúde Mental</h1>
+          <p className="text-xl text-muted-foreground">Sistema de Gerenciamento do Painel de Chamadas</p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="hover:border-primary transition-colors">
+          <Card className="hover:border-primary transition-colors flex flex-col">
             <CardHeader>
               <UserPlus className="h-12 w-12 text-primary mb-2" />
-              <CardTitle>Reception</CardTitle>
-              <CardDescription>Register new patients</CardDescription>
+              <CardTitle>Recepção</CardTitle>
+              <CardDescription>Registro de novos Pacientes</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="mt-auto">
               <Link to="/reception">
-                <Button className="w-full">Access</Button>
+                <Button className="w-full">Acessar</Button>
               </Link>
             </CardContent>
           </Card>
 
-          <Card className="hover:border-primary transition-colors">
+          <Card className="hover:border-primary transition-colors flex flex-col">
             <CardHeader>
               <Stethoscope className="h-12 w-12 text-primary mb-2" />
               <CardTitle>Acolhimento</CardTitle>
               <CardDescription>Acolhimento e Classificação de Risco</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className='mt-auto'>
               <Link to="/triage">
-                <Button className="w-full">Access</Button>
+                <Button className="w-full">Acessar</Button>
               </Link>
             </CardContent>
           </Card>
 
-          <Card className="hover:border-primary transition-colors">
+          <Card className="hover:border-primary transition-colors flex flex-col">
             <CardHeader>
               <Activity className="h-12 w-12 text-primary mb-2" />
-              <CardTitle>Doctor</CardTitle>
-              <CardDescription>Consultation dashboard</CardDescription>
+              <CardTitle>Médico</CardTitle>
+              <CardDescription>Dashboard de Consultas</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className='mt-auto'>
               <Link to="/doctor">
-                <Button className="w-full">Access</Button>
+                <Button className="w-full">Acessar</Button>
               </Link>
             </CardContent>
           </Card>
 
-          <Card className="hover:border-primary transition-colors">
+          <Card className="hover:border-primary transition-colors flex flex-col">
             <CardHeader>
               <Monitor className="h-12 w-12 text-primary mb-2" />
-              <CardTitle>Public Panel</CardTitle>
-              <CardDescription>TV display panel</CardDescription>
+              <CardTitle>Painel Público</CardTitle>
+              <CardDescription>Painel de Exibição</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className='mt-auto'>
               <Link to="/panel">
-                <Button className="w-full">Access</Button>
+                <Button className="w-full">Acessar</Button>
               </Link>
             </CardContent>
           </Card>
-          <Card className="'hover:border-primary transition-colors'">
+          <Card className="hover:border-primary transition-colors flex flex-col">
             <CardHeader>
               <DoorClosed className="h-12 w-12 text-primary mb-2" />
               <CardTitle>Adicionar Consultório</CardTitle>
               <CardDescription>Adicione um novo consultório ao Sistema</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className='mt-auto'>
               <Button onClick={() => {
                  loadConsultorios();
                 setOpenAddConsultorio(true)}} 

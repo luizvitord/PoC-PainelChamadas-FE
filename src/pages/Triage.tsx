@@ -39,11 +39,11 @@ export default function Triage() {
       await callForTriage(patientId);
       await setSelectedPatientId(patientId);
       toast({
-        title: 'Patient Called',
-        description: 'Patient has been called to triage',
+        title: 'Paciente Chamado',
+        description: 'Paciente chamado para acolhimento.',
     }); 
     } catch(error) {
-        toast({ variant: "destructive", title: "Error", description: "Failed to call patient." });
+        toast({ variant: "destructive", title: "Error", description: "Falha ao chamar paciente." });
     }
   };
 
@@ -87,7 +87,7 @@ export default function Triage() {
           <CardHeader>
             <CardTitle>Aguardando Acolhimento</CardTitle>
             <CardDescription>
-              {waitingPatients.length} patient{waitingPatients.length !== 1 ? 's' : ''} in queue
+              {waitingPatients.length} paciente{waitingPatients.length !== 1 ? 's' : ''} na fila
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -127,7 +127,10 @@ export default function Triage() {
             <DialogHeader>
               <DialogTitle>Acolhida e Classificação de Risco</DialogTitle>
               <DialogDescription>
-                Definir a classificação de risco de {selectedPatient?.fullName}
+                Definir a classificação de risco de {" "}  
+                <span className="font-bold">
+                  {selectedPatient?.fullName}
+                </span>
               </DialogDescription>
             </DialogHeader>
             
@@ -144,13 +147,13 @@ export default function Triage() {
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="psychiatric" id="psychiatric" />
                     <Label htmlFor="psychiatric" className="font-normal cursor-pointer">
-                      Psiquiátrico (Psychiatric)
+                      Psiquiátrico
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="clinical" id="clinical" />
                     <Label htmlFor="clinical" className="font-normal cursor-pointer">
-                      Clínico (Clinical)
+                      Clínico
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -164,7 +167,7 @@ export default function Triage() {
 
                     {/* manter o (Manchester Protocol)?? */}
               <div className="space-y-2">
-                <Label>Grau de Prioridade (Manchester Protocol)</Label>
+                <Label>Grau de Prioridade (Protocolo de Manchester)</Label>
                 <Select value={priority} onValueChange={(value) => setPriority(value as PriorityLevel)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -183,11 +186,11 @@ export default function Triage() {
                     })}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
+                {/* <p className="text-xs text-muted-foreground">
                   {attendanceType === 'clinical' 
                     ? 'Clinical cases: Only Red and Orange priorities available'
                     : 'Psychiatric cases: All priority levels available'}
-                </p>
+                </p> */}
               </div>
 
               <div className="space-y-2">
@@ -195,7 +198,7 @@ export default function Triage() {
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Enter triage assessment notes..."
+                  placeholder="Digite as observações do paciente para auxiliar o médico no atendimento..."
                   rows={4}
                 />
               </div>

@@ -24,13 +24,13 @@ export default function Reception() {
       const patient = await registerPatient(formData);
       
       toast({
-        title: 'Patient Registered',
-        description: `Ticket ${patient.ticketNumber} issued for ${patient.fullName}`,
+        title: 'Paciente Registrado',
+        description: `Ticket ${patient.ticketNumber} emitido para ${patient.fullName}`,
       });
       
       await setFormData({ fullName: '', dateOfBirth: '', cpf: '' }); 
       } catch(error) {
-          toast({ variant: "destructive", title: "Error", description: "Failed to register patient." });
+          toast({ variant: "destructive", title: "Error", description: "Falha ao registrar paciente." });
 
       }
   };
@@ -51,7 +51,7 @@ export default function Reception() {
         title: 'Patient Registered',
       });
     } catch {
-      toast({ variant: "destructive", title: "Error", description: "Failed to register patient." });
+      toast({ variant: "destructive", title: "Error", description: "Falha ao registrar paciente." });
     }
   };
 
@@ -62,30 +62,30 @@ export default function Reception() {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center gap-3">
           <UserPlus className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold text-foreground">Reception - Patient Registration</h1>
+          <h1 className="text-3xl font-bold text-foreground">Recepção - Cadastro de Paciente</h1>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>New Patient Check-in</CardTitle>
-              <CardDescription>Enter patient information to generate a ticket</CardDescription>
+              <CardTitle>Novo Check-in de Paciente</CardTitle>
+              <CardDescription>Insira informações do paciente para gerar um ticket</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
+                  <Label htmlFor="fullName">Nome Completo</Label>
                   <Input
                     id="fullName"
                     required
                     value={formData.fullName}
                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    placeholder="Enter patient's full name"
+                    placeholder="Digite o nome completo do paciente"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                  <Label htmlFor="dateOfBirth">Data de Nascimento</Label>
                   <Input
                     id="dateOfBirth"
                     type="date"
@@ -107,7 +107,7 @@ export default function Reception() {
 
                 <Button type="submit" className="w-full">
                   <UserPlus className="mr-2 h-4 w-4" />
-                  Check-in Patient
+                  Registrar Entrada
                 </Button>
               </form>
             </CardContent>
@@ -117,14 +117,14 @@ export default function Reception() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ClipboardList className="h-5 w-5" />
-                Recently Registered
+                Registrados Recentemente
               </CardTitle>
-              <CardDescription>Latest patient check-ins</CardDescription>
+              <CardDescription>Últimos pacientes registrados</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {recentPatients.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No patients registered yet</p>
+                  <p className="text-muted-foreground text-center py-8">Nenhum paciente registrado ainda</p>
                 ) : (
                   recentPatients.map((patient) => (
                     <div
