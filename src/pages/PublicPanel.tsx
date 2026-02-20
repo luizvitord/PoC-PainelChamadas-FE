@@ -48,6 +48,15 @@ const speak = (text: string) => {
     lastSpokenCallRef.current = callKey;
   }, [currentCall]);
 
+  useEffect(() => {
+    const loadVoices = () => {
+      const voices = speechSynthesis.getVoices();
+      console.log('Voices loaded:', voices);
+    };
+
+    speechSynthesis.onvoiceschanged = loadVoices;
+    loadVoices(); // tenta carregar imediatamente
+  }, []);
 
   return (
     <div className="min-h-screen bg-background text-foreground p-8">
