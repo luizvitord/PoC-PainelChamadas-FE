@@ -17,6 +17,7 @@ interface PatientContextType {
   callForDoctor: (patientId: string, room: string) => Promise<void>;
   recallPatient: (patientId: string) => Promise<void>; 
   completeConsultation: (patientId: string) => Promise<void>;
+  abandonConsultation: (patientId: string) => Promise<void>;
   getWaitingForTriage: () => Patient[];
   getWaitingForDoctor: () => Patient[];
   refreshPatients: () => Promise<void>;
@@ -146,9 +147,15 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const completeConsultation = useCallback(async (patientId: string) => {
+    console.log(`Finalizando consulta para paciente ID: ${patientId}`);
     await api.put(`/pacientes/${patientId}/finalizar`);
     await refreshPatients();
   }, [refreshPatients]);
+
+  const abandonConsultation = useCallback(async (patientId: string) => {
+  await api.put(`/pacientes/${patientId}/desistencia`);
+  await refreshPatients();
+}, [refreshPatients]);
 
   const callForTriage = useCallback((patientId: string) => {
      setPatients(prev => prev.map(p => p.id === patientId ? { ...p, status: 'in-triage' } : p));
@@ -174,7 +181,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
   return (
     <PatientContext.Provider value={{ 
       patients, recentCalls, registerPatient, callForTriage, 
-      assignPriority, callForDoctor, completeConsultation, 
+      assignPriority, callForDoctor, completeConsultation, abandonConsultation,
       getWaitingForTriage, getWaitingForDoctor, refreshPatients,
       recallPatient
     }}>

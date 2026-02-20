@@ -16,7 +16,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/compo
 import { PRIORITY_CONFIG } from "@/types/patient";
 
 export default function Doctor() {
-  const { getWaitingForDoctor, callForDoctor, completeConsultation, refreshPatients, recallPatient } = usePatients();
+  const { getWaitingForDoctor, callForDoctor, completeConsultation, abandonConsultation, refreshPatients, recallPatient } = usePatients();
   const { toast } = useToast();
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [room, setRoom] = useState('');
@@ -27,6 +27,9 @@ export default function Doctor() {
   const [activePatient, setActivePatient] = useState<any | null>(null);
   const [confirmFinishOpen, setConfirmFinishOpen] = useState(false);
   const [patientToFinish, setPatientToFinish] = useState<any | null>(null);
+  const [confirmAbandonOpen, setConfirmAbandonOpen] = useState(false);
+  const [patientToAbandon, setPatientToAbandon] = useState<any | null>(null);
+
 
   const waitingPatients = getWaitingForDoctor();
   console.log("activePatient:", activePatient);
@@ -53,7 +56,7 @@ export default function Doctor() {
   
       await refreshPatients();
     } catch(error){
-      toast({ variant: "destructive", title: "Error", description: "Failed to call patient." });
+      toast({ variant: "destructive", title: "Error", description: "Falha ao chamar o paciente." });
     }
   };
 
@@ -124,11 +127,11 @@ const handleRecallPatient = async () => {
     if (selectedPatientId && room) {
       try {
         await callForDoctor(selectedPatientId, room);
-        toast({ title: 'Patient Called', description: `Calling to Room ${room}` });
+        toast({ title: 'Paciente Chamado', description: `Chamando para a sala ${room}` });
         setSelectedPatientId(null);
         setRoom('');
       } catch (error) {
-        toast({ variant: "destructive", title: "Error", description: "Failed to call patient." });
+        toast({ variant: "destructive", title: "Error", description: "Falha ao chamar o paciente." });
       }
     }
   };
@@ -142,37 +145,58 @@ const handleRecallPatient = async () => {
           description: 'Consulta finalizada com sucesso.',
         });
       } catch(error){
-          toast({ variant: "destructive", title: "Error", description: "Failed to complete consultation." });
+          toast({ variant: "destructive", title: "Error", description: "Falha ao finalizar consulta." });
     }    
   };
+
+const handleAbandonConsultation = async (patientId: string) => {
+  try {
+    await abandonConsultation(patientId);
+
+    setConsultationLocked(false);
+    setActivePatient(null);
+    setActivePatientId(null);
+
+    toast({
+      title: 'Consulta encerrada',
+      description: 'Paciente marcado como desistência.',
+    });
+  } catch (error) {
+    toast({
+      variant: "destructive",
+      title: "Erro",
+      description: "Falha ao registrar desistência.",
+    });
+  }
+};
 
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center gap-3">
           <Activity className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold text-foreground">Doctor's Dashboard</h1>
+          <h1 className="text-3xl font-bold text-foreground">Dashboard do Médico</h1>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Patient Queue</CardTitle>
+            <CardTitle>Fila de Pacientes</CardTitle>
             <CardDescription>
-              Sorted by priority level (Manchester Protocol)
+              Ordenado por nível de prioridade (Protocolo de Manchester)
             </CardDescription>
                         <div className="space-y-4 py-2">
               <RoomSelect 
                 value={room} 
                 onChange={setRoom} 
                 options={consultorios} 
-                label="Select Consultation Room" 
+                label="Selecione o consultório para chamada" 
               />
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {waitingPatients.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No patients waiting for consultation</p>
+                <p className="text-muted-foreground text-center py-8">Nenhum paciente na fila de espera</p>
               ) : (
                 waitingPatients.map((patient) => (
                   <Card
@@ -216,7 +240,7 @@ const handleRecallPatient = async () => {
                                     }}
                                   >
                                     <Phone className="mr-2 h-4 w-4" />
-                                    Chamar Paciente
+                                    Selecionar para Consulta
                                   </Button>
                                 </span>
                               </TooltipTrigger>
@@ -251,11 +275,11 @@ const handleRecallPatient = async () => {
 
         {/* MODAL: CHAMAR PACIENTE (Único modal ativo agora) */}
           <Dialog open={consultationLocked} onOpenChange={() => {}}>
-                    <DialogContent className="sm:max-w-xl w-full overflow-x-hidden">
+                    <DialogContent className="sm:max-w-xl w-full overflow-x-hidden [&>button]:hidden">
                       <DialogHeader>
-                        <DialogTitle>Call Patient</DialogTitle>
+                        <DialogTitle>Chamar Paciente</DialogTitle>
                         <DialogDescription>
-                          Review triage info before calling.
+                          Revise as informações de triagem antes de chamar o paciente.
                         </DialogDescription>
                       </DialogHeader>
 
@@ -301,13 +325,18 @@ const handleRecallPatient = async () => {
                           Cancel
                         </Button> */}
                         <Button onClick={handleConfirmCallPatient} disabled={!room}>
-                          Call to Room
+                          Chamar Paciente
                         </Button>
                           <Button onClick={handleRecallPatient} disabled={!activePatient}>
                             Chamar novamente
                           </Button>
-                        <Button className="bg-red-600 hover:bg-red-700">
-                          Encerrar consulta (Desistência)
+                        <Button    
+                          onClick={() => {
+                            setPatientToAbandon(activePatient);
+                            setConfirmAbandonOpen(true);
+                          }}
+                          className="bg-red-600 hover:bg-red-700">
+                            Encerrar consulta (Desistência)
                         </Button>
                         <Button onClick={() => {
                                   setPatientToFinish(activePatient);
@@ -350,6 +379,42 @@ const handleRecallPatient = async () => {
                           }}
                         >
                           Sim, finalizar
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
+                  <Dialog open={confirmAbandonOpen} onOpenChange={setConfirmAbandonOpen}>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Confirmar desistência</DialogTitle>
+                        <DialogDescription>
+                          Deseja realmente marcar esta consulta como desistência?
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      {patientToAbandon && (
+                        <div className="bg-secondary/50 border rounded p-3 text-sm">
+                          <p><strong>Paciente:</strong> {patientToAbandon.fullName}</p>
+                        </div>
+                      )}
+
+                      <div className="flex justify-end gap-2 mt-4">
+                        <Button
+                          variant="outline"
+                          onClick={() => setConfirmAbandonOpen(false)}
+                        >
+                          Não
+                        </Button>
+
+                        <Button
+                          className="bg-red-600 hover:bg-red-700"
+                          onClick={async () => {
+                            await handleAbandonConsultation(patientToAbandon.id);
+                            setConfirmAbandonOpen(false);
+                          }}
+                        >
+                          Sim, marcar como desistência
                         </Button>
                       </div>
                     </DialogContent>
