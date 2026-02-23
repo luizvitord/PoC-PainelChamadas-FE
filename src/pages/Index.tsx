@@ -64,7 +64,7 @@ export default function Index() {
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
       <div className="max-w-5xl w-full space-y-8">
         <div className="text-center space-y-4">
-          <h1 className="text-5xl font-bold text-foreground">Hospital de Saúde Mental</h1>
+          <h1 className="text-5xl font-bold text-foreground">Hospital de Saúde Mental - Professor Frota Pinto</h1>
           <p className="text-xl text-muted-foreground">Sistema de Gerenciamento do Painel de Chamadas</p>
         </div>
 
