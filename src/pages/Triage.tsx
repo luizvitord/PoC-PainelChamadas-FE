@@ -125,7 +125,7 @@ export default function Triage() {
         <Dialog open={!!selectedPatientId} onOpenChange={(open) => !open && handleCancel()}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Acolhida e Classificação de Risco</DialogTitle>
+              <DialogTitle>Acolhimento e Classificação de Risco</DialogTitle>
               <DialogDescription>
                 Definir a classificação de risco de {" "}  
                 <span className="font-bold">

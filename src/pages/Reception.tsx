@@ -19,20 +19,46 @@ export default function Reception() {
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    try{
-      await e.preventDefault();
+    e.preventDefault(); 
+
+    const cpfLimpo = formData.cpf.replace(/\D/g, '');
+
+    if (cpfLimpo.length > 0 && cpfLimpo.length !== 11) {
+      toast({
+        variant: "destructive",
+        title: "CPF Inválido",
+        description: "O CPF deve ter 11 dígitos ou ficar vazio.",
+      });
+      return; 
+    }
+
+    // Validação da Data de Nascimento
+    if (formData.dateOfBirth) {
+      const dataNascimento = new Date(formData.dateOfBirth);
+      const hoje = new Date();
+
+      if (dataNascimento > hoje) {
+        toast({
+          variant: "destructive",
+          title: "Data Inválida",
+          description: "A data de nascimento não pode ser no futuro.",
+        });
+        return; 
+      }
+    }
+
+    try {
       const patient = await registerPatient(formData);
-      
+
       toast({
         title: 'Paciente Registrado',
         description: `Ticket ${patient.ticketNumber} emitido para ${patient.fullName}`,
       });
-      
-      await setFormData({ fullName: '', dateOfBirth: '', cpf: '' }); 
-      } catch(error) {
-          toast({ variant: "destructive", title: "Error", description: "Falha ao registrar paciente." });
 
-      }
+      setFormData({ fullName: '', dateOfBirth: '', cpf: '' }); // Removemos o await aqui também
+    } catch (error) {
+      toast({ variant: "destructive", title: "Erro", description: "Falha ao registrar paciente." });
+    }
   };
 
   const handleCreatePaciente = async (e: React.FormEvent) => {
@@ -90,6 +116,7 @@ export default function Reception() {
                     id="dateOfBirth"
                     type="date"
                     value={formData.dateOfBirth}
+                    max={new Date().toISOString().split("T")[0]}
                     onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                   />
                 </div>
