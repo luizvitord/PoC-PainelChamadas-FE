@@ -84,8 +84,10 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
         priority: mapBackendPriority(p.risco),
         attendanceType: p.tipo === 'PSIQUIATRICO' ? 'psychiatric' : p.tipo === 'SAMU' ? 'samu' : 'clinical',
         triageNotes: p.triageNotes,
-        registeredAt: new Date()
+        registeredAt: new Date(),
+        classifiedAt: p.classifiedAt ? new Date(p.classifiedAt) : null
       }));
+      console.log('Fetched patients:', [...triagePatients, ...doctorPatients]);
 
       setPatients([...triagePatients, ...doctorPatients]);
     } catch (error) {
