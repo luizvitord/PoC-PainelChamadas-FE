@@ -29,10 +29,10 @@ export default function Doctor() {
   const [patientToFinish, setPatientToFinish] = useState<any | null>(null);
   const [confirmAbandonOpen, setConfirmAbandonOpen] = useState(false);
   const [patientToAbandon, setPatientToAbandon] = useState<any | null>(null);
+  const [now, setNow] = useState(Date.now());
 
 
   const waitingPatients = getWaitingForDoctor();
-  console.log("activePatient:", activePatient);
 
   const handleOpenCallModal = (patient: any) => {
     setActivePatient(patient);
@@ -86,7 +86,6 @@ const handleRecallPatient = async () => {
   if (!activePatient) return;
 
   try {
-    console.log("Rechamando paciente:", activePatient);
     await recallPatient(activePatient.id);
 
     toast({
@@ -122,6 +121,14 @@ const handleRecallPatient = async () => {
       setRoom(String(consultorios[0].id));
     }
   }, [selectedPatientId, consultorios]);
+
+  useEffect(() => {
+  const interval = setInterval(() => {
+    setNow(Date.now());
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, []);
 
   const handleConfirmCall = async () => {
     if (selectedPatientId && room) {
@@ -181,93 +188,123 @@ const handleAbandonConsultation = async (patientId: string) => {
         <Card>
           <CardHeader>
             <CardTitle>Fila de Pacientes</CardTitle>
-            <CardDescription>
-              Ordenado por nível de prioridade (Protocolo de Manchester)
-            </CardDescription>
-                        <div className="space-y-4 py-2">
-              <RoomSelect 
-                value={room} 
-                onChange={setRoom} 
-                options={consultorios} 
-                label="Selecione o consultório para chamada" 
+            <CardDescription>Ordenado por nível de prioridade (Protocolo de Manchester)</CardDescription>
+
+            <div className="space-y-4 py-2">
+              <RoomSelect
+                value={room}
+                onChange={setRoom}
+                options={consultorios}
+                label="Selecione o consultório para chamada"
               />
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {waitingPatients.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">Nenhum paciente na fila de espera</p>
+                <p className="text-muted-foreground text-center py-8">
+                  Nenhum paciente na fila de espera
+                </p>
               ) : (
-                waitingPatients.map((patient) => (
-                  <Card
-                    key={patient.id}
-                    className="border-l-4"
-                    style={{
-                      borderLeftColor: `hsl(var(--priority-${patient.priority}))`
-                    }}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4 flex-1">
-                          <span className="text-3xl font-bold text-primary">{patient.ticketNumber}</span>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <p className="font-semibold text-lg text-foreground">{patient.fullName}</p>
-                              {patient.priority && <PriorityBadge priority={patient.priority} />}
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              Tipo: {AttendanceTypeLabel[patient.attendanceType]}
-                            </p>
-                            {patient.triageNotes && (
-                                <p className="text-sm text-foreground font-semibold mt-1 line-clamp-1">
-                                    Observações : {patient.triageNotes}
+                (
+                  waitingPatients.map((patient) => {
+                    const classifiedAtTime = patient.classifiedAt
+                      ? (patient.classifiedAt instanceof Date
+                          ? patient.classifiedAt.getTime()
+                          : new Date(patient.classifiedAt).getTime())
+                      : null;
+
+                    const isOrange = patient.priority === 'orange';
+                    const overdue = isOrange && classifiedAtTime && (now - classifiedAtTime > 10 * 60 * 1000);
+
+                    return (
+                      <Card
+                        key={patient.id}
+                        className={`border-l-4 ${overdue ? 'animate-pulse bg-orange-50' : ''}`}
+                        style={{
+                          borderLeftColor: `hsl(var(--priority-${patient.priority}))`,
+                        }}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4 flex-1">
+                              <span className="text-3xl font-bold text-primary">
+                                {patient.ticketNumber ?? '—'}
+                              </span>
+
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <p className="font-semibold text-lg text-foreground truncate">
+                                    {patient.fullName}
+                                  </p>
+
+                                  {patient.priority && <PriorityBadge priority={patient.priority} />}
+
+                                  {overdue && (
+                                    <span className="ml-2 text-xs font-bold text-orange-700">
+                                      TEMPO EXCEDIDO
+                                    </span>
+                                  )}
+                                </div>
+
+                                <p className="text-sm text-muted-foreground">
+                                  Tipo: {AttendanceTypeLabel[patient.attendanceType]}
                                 </p>
-                            )}
-                          </div>
-                        </div>
 
-                        <div className="flex gap-2">
-                          {patient.status === 'waiting-doctor' && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="inline-block">
-                                  <Button
-                                    disabled={!room}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleOpenCallModal(patient);
-                                    }}
-                                  >
-                                    <Phone className="mr-2 h-4 w-4" />
-                                    Selecionar para Consulta
-                                  </Button>
-                                </span>
-                              </TooltipTrigger>
+                                {patient.triageNotes && (
+                                  <p className="text-sm text-foreground font-semibold mt-1 line-clamp-1">
+                                    Observações: {patient.triageNotes}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
 
-                              {!room && (
-                                <TooltipContent>
-                                  <p>Selecione um consultório</p>
-                                </TooltipContent>
+                            <div className="flex gap-2">
+                              {patient.status === 'waiting-doctor' && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="inline-block">
+                                        <Button
+                                          disabled={!room}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleOpenCallModal(patient);
+                                          }}
+                                        >
+                                          <Phone className="mr-2 h-4 w-4" />
+                                          Selecionar para Consulta
+                                        </Button>
+                                      </span>
+                                    </TooltipTrigger>
+
+                                    {!room && (
+                                      <TooltipContent>
+                                        <p>Selecione um consultório</p>
+                                      </TooltipContent>
+                                    )}
+                                  </Tooltip>
+                                </TooltipProvider>
                               )}
-                            </Tooltip>
-                          </TooltipProvider>
 
-                          )}
-                          {patient.status === 'in-consultation' && (
-                            <Button onClick={(e) => { 
-                              e.stopPropagation();
-                              // handleComplete(patient.id); 
-                            }} variant="outline">
-                              <CheckCircle className="mr-2 h-4 w-4" />
-                              Finish Consultation
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                              {patient.status === 'in-consultation' && (
+                                <Button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                  variant="outline"
+                                >
+                                  <CheckCircle className="mr-2 h-4 w-4" />
+                                  Finish Consultation
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })
+                )
               )}
             </div>
           </CardContent>
