@@ -7,6 +7,7 @@ export interface Patient {
   dateOfBirth: string;
   cpf: string;
   registeredAt: Date;
+  classifiedAt?: Date | null;
   status: 'waiting-triage' | 'in-triage' | 'waiting-doctor' | 'in-consultation' | 'completed';
   priority?: PriorityLevel;
   attendanceType?: 'clinical' | 'psychiatric' | 'samu';
