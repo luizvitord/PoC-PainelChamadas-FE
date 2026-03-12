@@ -85,25 +85,32 @@ export default function Reception() {
 
   return (
     <div className="reception-shell">
-      <header className="bg-emerald-800 border-b-4 border-yellow-400 text-white shadow-sm">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-8 md:py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 rounded-md bg-white/10 px-3 py-1">
-              <span className="h-6 w-6 rounded-sm border border-white/40 bg-white/90 text-xs font-black uppercase tracking-tight text-emerald-800 flex items-center justify-center">
-                CE
-              </span>
-              <div className="leading-tight">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/80">
-                  Governo do Estado do Ceará
-                </p>
-                <p className="text-[0.7rem] text-white/70">Secretaria da Saúde</p>
+      <header className="bg-[#008140] text-white shadow-lg border-b-4 border-[#ffcc00]">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 md:px-8">
+          <div className="flex items-center gap-4">
+            <div className="bg-white px-2 py-1.5 rounded shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className="h-9 w-1 bg-[#ffcc00]" />
+                <div className="leading-tight text-left">
+                  <p className="text-[18px] font-black tracking-tight text-[#008140] leading-none">
+                    CEARÁ
+                  </p>
+                  <p className="text-[9px] font-bold text-[#008140] leading-tight">
+                    GOVERNO DO ESTADO
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="hidden border-l border-white/20 pl-4 text-left md:block">
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-emerald-100">
+
+            <div className="hidden h-8 w-px bg-white/30 md:block" />
+
+            <div className="hidden md:block">
+              <p className="font-bold text-sm uppercase tracking-tight leading-none">
                 Recepção
               </p>
-              <p className="text-sm font-semibold text-white">Entrada de Pacientes</p>
+              <p className="mt-1 text-[10px] opacity-90 uppercase font-semibold">
+                Hospital de Saúde Mental Prof. Frota Pinto
+              </p>
             </div>
           </div>
 
@@ -111,134 +118,152 @@ export default function Reception() {
             type="button"
             variant="ghost"
             size="sm"
-            className="hidden items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 text-xs font-medium uppercase tracking-[0.16em] text-white hover:bg-white/10 md:inline-flex"
+            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-[0.16em] text-white"
             onClick={() => window.history.back()}
-            aria-label="Voltar para a tela anterior"
+            aria-label="Voltar ao menu"
           >
             <ArrowLeft className="h-4 w-4" />
-            Voltar
+            Voltar ao menu
           </Button>
         </div>
       </header>
 
       <main className="reception-main">
         <div className="reception-container">
-          
-
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,2.1fr)_minmax(0,1.1fr)]">
-            <Card className="border-0 bg-white/90 shadow-md shadow-emerald-900/5">
-              <CardHeader className="pb-4 md:pb-6">
-                <CardTitle className="text-lg font-semibold tracking-tight text-emerald-900 md:text-xl">
-                  Dados do Paciente
-                </CardTitle>
-                <CardDescription className="text-xs text-muted-foreground md:text-sm">
-                  Informe os dados essenciais do paciente para gerar o ticket de atendimento.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="md:col-span-2 space-y-1.5">
-                      <Label htmlFor="fullName" className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-900/80">
-                        Nome completo
-                      </Label>
-                      <Input
-                        id="fullName"
-                        required
-                        value={formData.fullName}
-                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                        placeholder="Digite o nome sem abreviações"
-                        className="h-11 border-emerald-900/15 bg-white text-sm placeholder:text-muted-foreground/80"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="dateOfBirth" className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-900/80">
-                        Data de nascimento
-                      </Label>
-                      <Input
-                        id="dateOfBirth"
-                        type="date"
-                        value={formData.dateOfBirth}
-                        max={new Date().toISOString().split("T")[0]}
-                        onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                        className="h-11 border-emerald-900/15 bg-white text-sm"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="cpf" className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-900/80">
-                        Número do CPF
-                      </Label>
-                      <Input
-                        id="cpf"
-                        value={formData.cpf}
-                        onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
-                        placeholder="000.000.000-00"
-                        maxLength={14}
-                        className="h-11 border-emerald-900/15 bg-white text-sm placeholder:text-muted-foreground/80"
-                      />
-                    </div>
+          <div className="grid gap-8 lg:grid-cols-3">
+            {/* Coluna cadastro */}
+            <div className="lg:col-span-2">
+              <Card className="border border-gray-100 bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="flex items-center gap-3 bg-[#008140] px-5 py-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
+                    <UserPlus className="h-5 w-5 text-white" />
                   </div>
-
-                  <div className="pt-2">
-                    <Button
-                      type="submit"
-                      className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-emerald-700 text-sm font-semibold uppercase tracking-[0.18em] text-white shadow-sm hover:bg-emerald-800"
-                    >
-                      Finalizar e encaminhar para triagem
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 bg-white/95 shadow-md shadow-emerald-900/5">
-              <CardHeader className="pb-3 md:pb-4">
-                <div className="flex items-center justify-between gap-2">
-                  <div>
-                    <CardTitle className="flex items-center gap-2 text-base font-semibold tracking-tight text-emerald-900 md:text-lg">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
-                        <ClipboardList className="h-4 w-4" />
-                      </span>
-                      Atendimentos recentes
-                    </CardTitle>
-                    <CardDescription className="text-xs text-muted-foreground md:text-sm">
-                      Pacientes cadastrados recentemente na recepção.
-                    </CardDescription>
-                  </div>
+                  <h2 className="text-white text-xs font-black uppercase tracking-[0.2em]">
+                    Registrar Novo Paciente
+                  </h2>
                 </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-3">
-                  {recentPatients.length === 0 ? (
-                    <p className="py-10 text-center text-xs text-muted-foreground md:text-sm">
-                      Nenhum paciente registrado ainda.
-                    </p>
-                  ) : (
-                    recentPatients.map((patient) => (
-                      <div
-                        key={patient.id}
-                        className="flex items-center justify-between gap-4 rounded-lg border border-emerald-900/8 bg-emerald-50/60 px-4 py-3"
-                      >
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-emerald-950">{patient.fullName}</p>
-                          <p className="text-xs text-muted-foreground">CPF: {patient.cpf || 'Não informado'}</p>
-                        </div>
-                        <div className="flex flex-col items-end">
-                          <span className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-emerald-700">
-                            Senha
-                          </span>
-                          <p className="text-lg font-bold leading-none text-emerald-800">
-                            {patient.ticketNumber}
-                          </p>
-                        </div>
+
+                <CardContent className="p-6 md:p-10">
+                  <form onSubmit={handleSubmit} className="space-y-8">
+                    <div className="grid gap-6 md:grid-cols-2">
+                      <div className="md:col-span-2">
+                        <Label
+                          htmlFor="fullName"
+                          className="mb-3 block text-xs font-black uppercase tracking-[0.15em] text-gray-400"
+                        >
+                          Nome Completo
+                        </Label>
+                        <Input
+                          id="fullName"
+                          required
+                          value={formData.fullName}
+                          onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                          placeholder="Digite o nome do paciente..."
+                          className="h-auto w-full rounded-xl border border-gray-200 bg-gray-50 px-5 py-4 text-sm font-medium text-gray-700 placeholder:text-gray-400 focus:bg-white focus-visible:ring-2 focus-visible:ring-[#008140]/50"
+                        />
                       </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+
+                      <div>
+                        <Label
+                          htmlFor="dateOfBirth"
+                          className="mb-3 block text-xs font-black uppercase tracking-[0.15em] text-gray-400"
+                        >
+                          Data de Nascimento
+                        </Label>
+                        <Input
+                          id="dateOfBirth"
+                          type="date"
+                          value={formData.dateOfBirth}
+                          max={new Date().toISOString().split("T")[0]}
+                          onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                          className="h-auto w-full rounded-xl border border-gray-200 bg-gray-50 px-5 py-4 text-sm font-medium text-gray-700 focus:bg-white focus-visible:ring-2 focus-visible:ring-[#008140]/50"
+                        />
+                      </div>
+
+                      <div>
+                        <Label
+                          htmlFor="cpf"
+                          className="mb-3 block text-xs font-black uppercase tracking-[0.15em] text-gray-400"
+                        >
+                          CPF
+                        </Label>
+                        <Input
+                          id="cpf"
+                          value={formData.cpf}
+                          onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
+                          placeholder="000.000.000-00"
+                          maxLength={14}
+                          className="h-auto w-full rounded-xl border border-gray-200 bg-gray-50 px-5 py-4 text-sm font-medium text-gray-700 placeholder:text-gray-400 focus:bg-white focus-visible:ring-2 focus-visible:ring-[#008140]/50"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-4">
+                      <Button
+                        type="submit"
+                        className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#008140] py-4 px-12 text-sm font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-emerald-100 hover:bg-emerald-800 md:w-auto"
+                      >
+                        <UserPlus className="h-5 w-5" />
+                        <span>Finalizar Registro</span>
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Coluna registros recentes */}
+            <div className="lg:col-span-1">
+              <Card className="flex h-full flex-col rounded-2xl border border-gray-100 bg-white shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between border-b border-gray-50 px-5 py-4">
+                  <CardTitle className="flex items-center text-xs font-black uppercase tracking-[0.2em] text-gray-800">
+                    <span className="mr-2 h-2 w-2 rounded-full bg-[#ffcc00]" />
+                    Recém Registrados
+                  </CardTitle>
+                  <span className="text-[10px] font-bold uppercase text-gray-400">
+                    Hoje
+                  </span>
+                </CardHeader>
+
+                <CardContent className="flex flex-1 flex-col justify-between p-0">
+                  <div className="custom-scrollbar flex-1 overflow-y-auto">
+                    {recentPatients.length === 0 ? (
+                      <p className="px-6 py-10 text-center text-xs font-medium text-gray-400">
+                        Nenhum paciente registrado ainda.
+                      </p>
+                    ) : (
+                      recentPatients.map((patient) => (
+                        <div
+                          key={patient.id}
+                          className="flex items-center justify-between border-b border-gray-50 px-6 py-4 hover:bg-gray-50 transition-colors"
+                        >
+                          <div>
+                            <p className="text-sm font-bold leading-tight text-gray-700">
+                              {patient.fullName}
+                            </p>
+                            <p className="mt-1 text-[10px] font-medium text-gray-400">
+                              {patient.cpf || 'CPF não informado'}
+                            </p>
+                          </div>
+                          <span className="text-[10px] font-bold text-gray-300">
+                            {patient.ticketNumber}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="px-4 pb-4 pt-3">
+                    <button
+                      type="button"
+                      className="w-full rounded-xl bg-gray-50 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 transition-all hover:bg-gray-100 hover:text-gray-600"
+                    >
+                      Visualizar Todos
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </main>
