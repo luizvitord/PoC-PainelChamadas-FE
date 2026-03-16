@@ -15,7 +15,7 @@ interface PatientContextType {
   callForTriage: (patientId: string) => void;
   assignPriority: (patientId: string, priority: PriorityLevel, attendanceType: 'clinical' | 'psychiatric' | 'samu', notes: string) => Promise<void>;
   callForDoctor: (patientId: string, room: string) => Promise<void>;
-  recallPatient: (patientId: string) => Promise<void>;
+  recallPatient: (patientId: string, room: string) => Promise<void>;
   completeConsultation: (patientId: string) => Promise<void>;
   abandonConsultation: (patientId: string) => Promise<void>;
   getWaitingForTriage: () => Patient[];
@@ -152,9 +152,24 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await refreshPatients();
   }, [patients, refreshPatients]);
 
-  const recallPatient = async (patientId: string) => {
-    await api.put(`/pacientes/${patientId}/rechamar`);
-  };
+  const recallPatient = useCallback(async (patientId: string, room: string) => {
+  // 1. Avisa o backend
+  await api.put(`/pacientes/${patientId}/rechamar`);
+  
+  // 2. Avisa o painel (TV) criando um evento novo
+  const patient = patients.find(p => p.id === patientId);
+  if (patient) {
+    setRecentCalls(prev => [{
+      callId: crypto.randomUUID(), // Gera um ID novo pro painel apitar e falar de novo!
+      ticketNumber: patient.ticketNumber || 'N/A',
+      patientName: patient.fullName,
+      type: 'doctor' as const,
+      room: room, // Manda apenas o número da sala (ex: "1")
+      priority: patient.priority,
+      timestamp: new Date()
+    }, ...prev].slice(0, 4));
+  }
+  }, [patients]);
 
   const completeConsultation = useCallback(async (patientId: string) => {
     console.log(`Finalizando consulta para paciente ID: ${patientId}`);

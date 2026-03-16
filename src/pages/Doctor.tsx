@@ -29,8 +29,15 @@ export default function Doctor() {
   const [patientToFinish, setPatientToFinish] = useState<any | null>(null);
   const [confirmAbandonOpen, setConfirmAbandonOpen] = useState(false);
   const [patientToAbandon, setPatientToAbandon] = useState<any | null>(null);
+  
+  // Variável adicionada pela equipe (tempo excedido)
   const [now, setNow] = useState(Date.now());
 
+  // LÓGICA ATUALIZADA (Sua): Puxa do sessionStorage (se existir) para não perder ao trocar de tela
+  const [calledPatientIds, setCalledPatientIds] = useState<Set<string>>(() => {
+    const saved = sessionStorage.getItem('calledPatientIds');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
 
   const waitingPatients = getWaitingForDoctor();
 
@@ -66,6 +73,14 @@ export default function Doctor() {
   try {
     await callForDoctor(activePatient.id, room);
     setActivePatientId(activePatient.id);
+    
+    // LÓGICA ATUALIZADA: Registra que o paciente já foi chamado e salva no navegador
+    setCalledPatientIds(prev => {
+      const updatedSet = new Set(prev).add(activePatient.id);
+      sessionStorage.setItem('calledPatientIds', JSON.stringify(Array.from(updatedSet)));
+      return updatedSet;
+    });
+
     // setConsultationLocked(false); // fecha modal
     await refreshPatients();
 
@@ -83,14 +98,17 @@ export default function Doctor() {
 };
 
 const handleRecallPatient = async () => {
-  if (!activePatient) return;
+  if (!activePatient || !room) return; 
 
   try {
-    await recallPatient(activePatient.id);
+    console.log("Rechamando paciente:", activePatient);
+    
+    
+    await recallPatient(activePatient.id, room);
 
     toast({
       title: 'Paciente chamado novamente',
-      description: `${activePatient.fullName} foi chamado novamente`,
+      description: `${activePatient.fullName} foi chamado novamente para a sala ${room}`,
     });
   } catch (err) {
     toast({
@@ -361,12 +379,17 @@ const handleAbandonConsultation = async (patientId: string) => {
                         {/* <Button variant="outline" onClick={() => setSelectedPatientId(null)}>
                           Cancel
                         </Button> */}
-                        <Button onClick={handleConfirmCallPatient} disabled={!room}>
-                          Chamar Paciente
-                        </Button>
-                          <Button onClick={handleRecallPatient} disabled={!activePatient}>
+                        
+                        {activePatient && calledPatientIds.has(activePatient.id) ? (
+                          <Button onClick={handleRecallPatient} disabled={!activePatient} variant="secondary">
                             Chamar novamente
                           </Button>
+                        ) : (
+                          <Button onClick={handleConfirmCallPatient} disabled={!room}>
+                            Chamar Paciente
+                          </Button>
+                        )}
+
                         <Button    
                           onClick={() => {
                             setPatientToAbandon(activePatient);
