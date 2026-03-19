@@ -1,64 +1,73 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { toast, useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
 import { addConsultorio, getConsultorios } from '@/services/ConsultorioService';
-import { get } from 'http';
 import { DoorOpen, HeartHandshake, Monitor, Plus, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 export default function Index() {
-    const { toast } = useToast();
-    const [openAddConsultorio, setOpenAddConsultorio] = useState(false);
-    const [consultorioNumero, setConsultorioNumero] = useState("");
-    const [consultorios, setConsultorios] = useState<Array<{ id: string | number }>>([]);
+  const { toast } = useToast();
+  const [openAddConsultorio, setOpenAddConsultorio] = useState(false);
+  const [consultorioNumero, setConsultorioNumero] = useState('');
+  const [consultorios, setConsultorios] = useState<Array<{ id: string | number }>>([]);
 
   const handleAddConsultorio = async () => {
     const result = await addConsultorio(consultorioNumero);
 
     if (result.error) {
       toast({
-        title: "Erro",
+        title: 'Erro',
         description: result.error,
-        variant: "destructive",
+        variant: 'destructive',
       });
       return;
     }
 
     toast({
-      title: "Sucesso!",
-      description: "Consultório adicionado com sucesso.",
+      title: 'Sucesso!',
+      description: 'Consultório adicionado com sucesso.',
     });
 
-    setConsultorioNumero("");
+    setConsultorioNumero('');
     setOpenAddConsultorio(false);
   };
 
   const loadConsultorios = async () => {
     try {
-        const data = await getConsultorios();
-          if (data.error) {
+      const data = await getConsultorios();
+
+      if (data.error) {
         toast({
-          title: "Erro ao carregar consultórios",
+          title: 'Erro ao carregar consultórios',
           description: data.error,
-          variant: "destructive",
+          variant: 'destructive',
         });
         return;
       }
 
-      setConsultorios(data); // sucesso
-
+      setConsultorios(data);
     } catch (error) {
       toast({
-        title: "Erro",
-        description: "Erro ao carregar consultórios.",
-        variant: "destructive",
+        title: 'Erro',
+        description: 'Erro ao carregar consultórios.',
+        variant: 'destructive',
       });
-      return;
     }
   };
 
+  const cardBaseClassName =
+    'h-full min-h-[260px] rounded-2xl border-0 bg-white p-8 shadow-sm outline-none transition-all duration-300 hover:-translate-y-2 flex flex-col items-center text-center justify-between';
+
+  const iconBoxBaseClassName =
+    'mb-6 flex h-20 w-20 items-center justify-center rounded-2xl border transition-transform group-hover:scale-110';
 
   return (
     <div className="min-h-screen bg-transparent flex flex-col">
@@ -80,7 +89,9 @@ export default function Index() {
                 <rect x="0" y="0" width="4" height="42" fill="#ffcc00" />
               </svg>
             </Link>
+
             <div className="h-10 w-px bg-white/30" />
+
             <div>
               <h1 className="font-bold text-base md:text-lg uppercase tracking-tight leading-none">
                 Sistema de Gestão Hospitalar
@@ -95,48 +106,78 @@ export default function Index() {
 
       <main className="container mx-auto py-12 px-6 flex-grow flex flex-col justify-center">
         <div className="mb-12 text-center">
-          <h2 className="text-3xl font-black text-gray-800 uppercase tracking-tight">Painel de Controle</h2>
+          <h2 className="text-3xl font-black text-gray-800 uppercase tracking-tight">
+            Painel de Controle
+          </h2>
           <div className="h-1.5 w-24 bg-[#ffcc00] mx-auto mt-3 rounded-full" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto w-full">
-          <Link to="/reception" className="block group">
-            <Card className="rounded-2xl border-0 border-b-8 border-[#005a2b] bg-white shadow-sm p-8 flex flex-col items-center text-center outline-none transition-all duration-300 hover:-translate-y-2">
-              <div className="w-20 h-20 bg-green-50 rounded-2xl flex items-center justify-center mb-6 border border-green-200 transition-transform group-hover:scale-110">
-                <UserPlus className="h-11 w-11 text-[#005a2b]" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto w-full items-stretch">
+          <Link to="/reception" className="block group h-full">
+            <Card className={`${cardBaseClassName} border-b-8 border-[#005a2b]`}>
+              <div className="flex flex-col items-center">
+                <div className={`${iconBoxBaseClassName} bg-green-50 border-green-200`}>
+                  <UserPlus className="h-11 w-11 text-[#005a2b]" />
+                </div>
+                <h3 className="text-lg font-black text-gray-800 uppercase mb-2 min-h-[56px] flex items-center justify-center">
+                  Recepção
+                </h3>
               </div>
-              <h3 className="text-lg font-black text-gray-800 uppercase mb-2">Recepção</h3>
-              <p className="text-xs text-gray-500 font-medium leading-relaxed">Registro de novos Pacientes</p>
+
+              <p className="text-xs text-gray-500 font-medium leading-relaxed min-h-[40px] flex items-center justify-center">
+                Registro de novos Pacientes
+              </p>
             </Card>
           </Link>
 
-          <Link to="/triage" className="block group">
-            <Card className="rounded-2xl border-0 border-b-8 border-blue-600 bg-white shadow-sm p-8 flex flex-col items-center text-center outline-none transition-all duration-300 hover:-translate-y-2">
-              <div className="w-20 h-20 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 border border-blue-100 transition-transform group-hover:scale-110">
-                <HeartHandshake className="h-11 w-11 text-blue-600" />
+          <Link to="/triage" className="block group h-full">
+            <Card className={`${cardBaseClassName} border-b-8 border-blue-600`}>
+              <div className="flex flex-col items-center">
+                <div className={`${iconBoxBaseClassName} bg-blue-50 border-blue-100`}>
+                  <HeartHandshake className="h-11 w-11 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-black text-gray-800 uppercase mb-2 min-h-[56px] flex items-center justify-center">
+                  Acolhimento
+                </h3>
               </div>
-              <h3 className="text-lg font-black text-gray-800 uppercase mb-2">Acolhimento</h3>
-              <p className="text-xs text-gray-500 font-medium leading-relaxed">Classificação de risco e priorização de atendimento.</p>
+
+              <p className="text-xs text-gray-500 font-medium leading-relaxed min-h-[40px] flex items-center justify-center">
+                Classificação de risco e priorização de atendimento.
+              </p>
             </Card>
           </Link>
 
-          <Link to="/doctor" className="block group">
-            <Card className="rounded-2xl border-0 border-b-8 border-black bg-white shadow-sm p-8 flex flex-col items-center text-center outline-none transition-all duration-300 hover:-translate-y-2">
-              <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-6 border border-gray-300 transition-transform group-hover:scale-110">
-                <DoorOpen className="h-11 w-11 text-gray-900" />
+          <Link to="/doctor" className="block group h-full">
+            <Card className={`${cardBaseClassName} border-b-8 border-black`}>
+              <div className="flex flex-col items-center">
+                <div className={`${iconBoxBaseClassName} bg-gray-100 border-gray-300`}>
+                  <DoorOpen className="h-11 w-11 text-gray-900" />
+                </div>
+                <h3 className="text-lg font-black text-gray-800 uppercase mb-2 min-h-[56px] flex items-center justify-center">
+                  Consultório
+                </h3>
               </div>
-              <h3 className="text-lg font-black text-gray-800 uppercase mb-2">Consultório</h3>
-              <p className="text-xs text-gray-500 font-medium leading-relaxed">Atendimento médico especializado</p>
+
+              <p className="text-xs text-gray-500 font-medium leading-relaxed min-h-[40px] flex items-center justify-center">
+                Atendimento médico especializado
+              </p>
             </Card>
           </Link>
 
-          <Link to="/panel" className="block group">
-            <Card className="rounded-2xl border-0 border-b-8 border-[#ffcc00] bg-white shadow-sm p-8 flex flex-col items-center text-center outline-none transition-all duration-300 hover:-translate-y-2">
-              <div className="w-20 h-20 bg-yellow-50 rounded-2xl flex items-center justify-center mb-6 border border-yellow-100 transition-transform group-hover:scale-110">
-                <Monitor className="h-11 w-11 text-yellow-600" />
+          <Link to="/panel" className="block group h-full">
+            <Card className={`${cardBaseClassName} border-b-8 border-[#ffcc00]`}>
+              <div className="flex flex-col items-center">
+                <div className={`${iconBoxBaseClassName} bg-yellow-50 border-yellow-100`}>
+                  <Monitor className="h-11 w-11 text-yellow-600" />
+                </div>
+                <h3 className="text-lg font-black text-gray-800 uppercase mb-2 min-h-[56px] flex items-center justify-center">
+                  Painel
+                </h3>
               </div>
-              <h3 className="text-lg font-black text-gray-800 uppercase mb-2">Painel</h3>
-              <p className="text-xs text-gray-500 font-medium leading-relaxed">Visualização de chamadas e controle de fluxo da sala de espera</p>
+
+              <p className="text-xs text-gray-500 font-medium leading-relaxed min-h-[40px] flex items-center justify-center">
+                Visualização de chamadas e controle de fluxo da sala de espera
+              </p>
             </Card>
           </Link>
 
@@ -154,14 +195,21 @@ export default function Index() {
                 setOpenAddConsultorio(true);
               }
             }}
-            className="group cursor-pointer rounded-2xl border-0 border-b-8 border-orange-500 bg-white shadow-sm p-8 flex flex-col items-center text-center outline-none transition-all duration-300 hover:-translate-y-2"
+            className={`${cardBaseClassName} group cursor-pointer border-b-8 border-orange-500`}
             aria-label="Abrir gestão de novo consultório"
           >
-            <div className="w-20 h-20 bg-orange-50 rounded-2xl flex items-center justify-center mb-6 border border-orange-100 transition-transform group-hover:scale-110">
-              <Plus className="h-11 w-11 text-orange-600" />
+            <div className="flex flex-col items-center">
+              <div className={`${iconBoxBaseClassName} bg-orange-50 border-orange-100`}>
+                <Plus className="h-11 w-11 text-orange-600" />
+              </div>
+              <h3 className="text-lg font-black text-gray-800 uppercase mb-2 min-h-[56px] flex items-center justify-center">
+                Novo Consultório
+              </h3>
             </div>
-            <h3 className="text-lg font-black text-gray-800 uppercase mb-2">Novo Consultório</h3>
-            <p className="text-xs text-gray-500 font-medium leading-relaxed">Adicionar nova sala de atendimento</p>
+
+            <p className="text-xs text-gray-500 font-medium leading-relaxed min-h-[40px] flex items-center justify-center">
+              Adicionar nova sala de atendimento
+            </p>
           </Card>
         </div>
 
@@ -180,6 +228,7 @@ export default function Index() {
                 value={consultorioNumero}
                 onChange={(e) => setConsultorioNumero(e.target.value)}
               />
+
               <div className="mt-4">
                 <h3 className="font-medium mb-2 text-sm text-muted-foreground">
                   Consultórios cadastrados:
@@ -203,7 +252,7 @@ export default function Index() {
               <Button variant="outline" onClick={() => setOpenAddConsultorio(false)}>
                 Cancelar
               </Button>
-              <Button onClick={() => handleAddConsultorio()}>Salvar</Button>
+              <Button onClick={handleAddConsultorio}>Salvar</Button>
             </div>
           </DialogContent>
         </Dialog>
