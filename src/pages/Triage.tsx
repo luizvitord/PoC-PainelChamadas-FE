@@ -179,7 +179,12 @@ return (
                     <p className="text-base font-bold uppercase leading-tight text-gray-700">{patient.fullName}</p>
                     <p className="mt-1 text-sm font-medium italic text-gray-500">{patient.cpf || 'Não informado'}</p>
                   </div>
-                  <PriorityBadge priority={patient.priority} showLabel={false} />
+                  <div className="flex items-center gap-3">
+                    <PriorityBadge priority={patient.priority} showLabel={false} />
+                  <span className="text-xs text-black italic">
+                    Clique para reclassificar
+                  </span>
+                  </div>
                 </button>
               ))
             ) : (
