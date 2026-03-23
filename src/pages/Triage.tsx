@@ -1,18 +1,19 @@
-import { useEffect, useState } from 'react';
-import { usePatients } from '@/contexts/PatientContext';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import Header from '@/components/Header';
 import { PriorityBadge } from '@/components/PriorityBadge';
-import { Phone } from 'lucide-react';
-import { PriorityLevel, PRIORITY_CONFIG } from '@/types/patient';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { usePatients } from '@/contexts/PatientContext';
 import { useToast } from '@/hooks/use-toast';
-import { getAvailablePriorities } from '@/lib/priorityRules';
 import { AttendanceTypeLabel } from '@/lib/attendanceTypes';
+import { getAvailablePriorities } from '@/lib/priorityRules';
+import { PRIORITY_CONFIG, PriorityLevel } from '@/types/patient';
+import { Phone } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function Triage() {
   const { getWaitingForDoctor, getWaitingForTriage, callForTriage, assignPriority, refreshPatients } = usePatients();
@@ -103,8 +104,9 @@ export default function Triage() {
 
 
 return (
-  <div className="container mx-auto flex-grow px-6 py-10">
-    <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 lg:grid-cols-3">
+  <div className="min-h-screen bg-transparent flex flex-col">
+    <Header title="Acolhimento e Classificação de Risco" />
+    <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 lg:grid-cols-3 mt-10">
       <div className="space-y-6 lg:col-span-2">
         <Card className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
           <div className="flex items-center space-x-3 border-b border-gray-100 bg-white p-8">

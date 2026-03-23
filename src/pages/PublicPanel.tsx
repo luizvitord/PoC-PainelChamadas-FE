@@ -1,6 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import { usePatients } from '@/contexts/PatientContext';
+import { useEffect, useRef } from 'react';
 
 export default function PublicPanel() {
   const { recentCalls } = usePatients();
@@ -55,16 +54,6 @@ export default function PublicPanel() {
   return (
     <div className="flex min-h-screen flex-col">
       <main className="relative flex flex-grow flex-col gap-0 md:flex-row">
-        <Link
-          to="/"
-          className="absolute left-4 top-4 z-50 flex items-center space-x-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-black uppercase text-white transition-all hover:bg-white/25"
-        >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          <span>Voltar</span>
-        </Link>
-
         <div className="flex flex-grow flex-col gap-0 bg-[#0f1923]">
           <div className="flex flex-grow flex-col items-center justify-center bg-[#0f1923] p-12 text-center">
             {currentCall ? (

@@ -1,17 +1,16 @@
-import { useEffect, useState } from 'react';
-import { usePatients } from '@/contexts/PatientContext';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import Header from '@/components/Header';
 import { PriorityBadge } from '@/components/PriorityBadge';
-import { Phone, CheckCircle, ArrowLeft } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import RoomSelect from '@/components/RoomSelect';
+import { Button } from '@/components/ui/button';
+import { CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { usePatients } from '@/contexts/PatientContext';
+import { useToast } from '@/hooks/use-toast';
 import { AttendanceTypeLabel } from '@/lib/attendanceTypes';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
-
-
 import { PRIORITY_CONFIG } from "@/types/patient";
+import { CheckCircle, Phone } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function Doctor() {
   const { getWaitingForDoctor, callForDoctor, completeConsultation, abandonConsultation, refreshPatients, recallPatient } = usePatients();
@@ -195,34 +194,7 @@ const handleAbandonConsultation = async (patientId: string) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f8fafc]">
-      <header className="bg-[#008140] text-white p-4 shadow-lg border-b-4 border-[#ffcc00]">
-        <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <div className="bg-white p-2 rounded shadow-sm">
-              <svg width="140" height="42" viewBox="0 0 140 42" fill="none">
-                <text x="8" y="27" fill="#008140" fontWeight="900" fontSize="22">CEARÁ</text>
-                <text x="8" y="40" fill="#008140" fontWeight="bold" fontSize="10">GOVERNO DO ESTADO</text>
-                <rect x="0" y="0" width="4" height="42" fill="#ffcc00" />
-              </svg>
-            </div>
-            <div className="h-10 w-px bg-white/30"></div>
-            <div>
-              <h1 className="font-bold text-base md:text-lg uppercase tracking-tight leading-none">Consultório</h1>
-              <p className="text-xs md:text-sm opacity-90 uppercase font-semibold mt-1">Atendimento Médico Especializado</p>
-            </div>
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="flex items-center space-x-2 bg-white text-[#008140] hover:bg-gray-100 px-5 py-2.5 rounded-lg transition-all text-sm font-black uppercase shadow"
-            onClick={() => window.history.back()}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Voltar</span>
-          </Button>
-        </div>
-      </header>
+      <Header title="Painel Médico" />
 
       <main className="container mx-auto py-10 px-6 flex-grow max-w-6xl">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">

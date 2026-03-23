@@ -8,6 +8,7 @@ import { UserPlus, ClipboardList, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/services/Api';
 import { debug } from 'console';
+import Header from '@/components/Header';
 
 export default function Reception() {
   const { registerPatient, patients } = usePatients();
@@ -85,49 +86,7 @@ export default function Reception() {
 
   return (
     <div className="reception-shell">
-      <header className="bg-[#008140] text-white shadow-lg border-b-4 border-[#ffcc00]">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 md:px-8">
-          <div className="flex items-center gap-4">
-            <div className="bg-white px-2 py-1.5 rounded shadow-sm">
-              <div className="flex items-center gap-2">
-                <div className="h-9 w-1 bg-[#ffcc00]" />
-                <div className="leading-tight text-left">
-                  <p className="text-[18px] font-black tracking-tight text-[#008140] leading-none">
-                    CEARÁ
-                  </p>
-                  <p className="text-[9px] font-bold text-[#008140] leading-tight">
-                    GOVERNO DO ESTADO
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="hidden h-8 w-px bg-white/30 md:block" />
-
-            <div className="hidden md:block">
-              <p className="font-bold text-sm uppercase tracking-tight leading-none">
-                Recepção
-              </p>
-              <p className="mt-1 text-[10px] opacity-90 uppercase font-semibold">
-                Hospital de Saúde Mental Prof. Frota Pinto
-              </p>
-            </div>
-          </div>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-[0.16em] text-white"
-            onClick={() => window.history.back()}
-            aria-label="Voltar ao menu"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar ao menu
-          </Button>
-        </div>
-      </header>
-
+    <Header title="Recepção" />
       <main className="reception-main">
         <div className="reception-container">
           <div className="grid gap-8 lg:grid-cols-3">
