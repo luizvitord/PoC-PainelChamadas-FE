@@ -1,3 +1,4 @@
+import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -71,39 +72,7 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-transparent flex flex-col">
-      <header className="bg-[#008140] text-white p-4 shadow-lg border-b-4 border-[#ffcc00]">
-        <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <Link
-              to="/"
-              className="bg-white p-2 rounded shadow-sm hover:opacity-90 transition-all"
-              aria-label="Ir para a Home"
-            >
-              <svg width="140" height="42" viewBox="0 0 140 42" fill="none" aria-hidden="true">
-                <text x="8" y="27" fill="#008140" fontWeight="900" fontSize="22">
-                  CEARÁ
-                </text>
-                <text x="8" y="40" fill="#008140" fontWeight="bold" fontSize="10">
-                  GOVERNO DO ESTADO
-                </text>
-                <rect x="0" y="0" width="4" height="42" fill="#ffcc00" />
-              </svg>
-            </Link>
-
-            <div className="h-10 w-px bg-white/30" />
-
-            <div>
-              <h1 className="font-bold text-base md:text-lg uppercase tracking-tight leading-none">
-                Sistema de Gestão Hospitalar
-              </h1>
-              <p className="text-xs md:text-sm opacity-90 uppercase font-semibold mt-1">
-                Hospital de Saúde Mental Prof. Frota Pinto
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <Header title="Sistema de Gestão do Painel de Chamadas" showBackButton={false} />
       <main className="container mx-auto py-12 px-6 flex-grow flex flex-col justify-center">
         <div className="mb-12 text-center">
           <h2 className="text-3xl font-black text-gray-800 uppercase tracking-tight">
