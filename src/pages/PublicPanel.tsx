@@ -1,7 +1,5 @@
-import { useEffect, useRef } from 'react';
 import { usePatients } from '@/contexts/PatientContext';
-import { PriorityBadge } from '@/components/PriorityBadge';
-import { Building2, Stethoscope } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 export default function PublicPanel() {
   const { recentCalls } = usePatients();
@@ -9,23 +7,18 @@ export default function PublicPanel() {
   const previousCalls = recentCalls.slice(1, 4);
   const lastSpokenCallRef = useRef<string | null>(null);
 
-const speak = (text: string) => {
-  if (!window.speechSynthesis) return;
+  const speak = (text: string) => {
+    if (!window.speechSynthesis) return;
 
-  window.speechSynthesis.cancel(); // cancela qualquer fala anterior
+    window.speechSynthesis.cancel(); // cancela qualquer fala anterior
 
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'pt-BR';
-  utterance.rate = 1;
-  utterance.pitch = 1;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'pt-BR';
+    utterance.rate = 1;
+    utterance.pitch = 1;
 
-  window.speechSynthesis.speak(utterance);
-};
-
-  useEffect(() => {
-    document.documentElement.classList.add('dark');
-    return () => document.documentElement.classList.remove('dark');
-  }, []);
+    window.speechSynthesis.speak(utterance);
+  };
 
   useEffect(() => {
     if (!currentCall) return;
@@ -59,92 +52,68 @@ const speak = (text: string) => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-8">
-      <div className="max-w-[1920px] mx-auto h-[1080px] flex flex-col">
-        {/* Header precisa de header? */}
-        {/* <div className="border-b border-border pb-6 mb-8">
-          <h1 className="text-5xl font-bold text-center">Painel de Chamadas</h1>
-        </div> */}
-
-        <div className="flex gap-8 flex-1">
-          {/* Main Call Display */}
-          <div className="flex-1 flex items-center justify-center">
+    <div className="flex min-h-screen flex-col">
+      <main className="relative flex flex-grow flex-col gap-0 md:flex-row">
+        <div className="flex flex-grow flex-col gap-0 bg-[#0f1923]">
+          <div className="flex flex-grow flex-col items-center justify-center bg-[#0f1923] p-12 text-center">
             {currentCall ? (
-              <div className="text-center space-y-8 p-12 border-2 border-primary rounded-3xl bg-card w-full max-w-4xl">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-center gap-4">
-                    {currentCall.type === 'triage' ? (
-                      <Stethoscope className="h-16 w-16 text-primary" />
-                    ) : (
-                      <Building2 className="h-16 w-16 text-primary" />
-                    )}
-                  </div>
-                  
-                  <div className="text-8xl font-bold text-primary animate-pulse">
-                    {currentCall.patientName}
-                  </div>
-                  
-                  {/* Priority Badge - currently commented out */}
-                  {/* {currentCall.priority && currentCall.type !== 'triage' && (
-                    <div className="flex justify-center">
-                      <PriorityBadge priority={currentCall.priority} className="text-3xl px-8 py-4" />
-                    </div>
-                  )} */}
-                  
-                  <div className="text-5xl font-semibold">
-                    {currentCall.type === 'triage' ? (
-                      <>
-                        <p className="text-foreground">COMPARECER AO</p>
-                        <p className="text-primary mt-2">ACOLHIMENTO</p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-foreground">COMPARECER AO</p>
-                        <p className="text-primary mt-2">{`CONSULTÓRIO ${currentCall.room?.toUpperCase()}`}</p>
-                      </>
-                    )}
+              <>
+                <p className="mb-6 text-lg font-bold uppercase tracking-widest text-gray-400">Chamada Atual</p>
+                <div className="mb-10 h-1 w-32 rounded-full bg-[#ffcc00]" />
+                <h3 className="mb-8 max-w-4xl break-words text-6xl font-black uppercase leading-tight tracking-tighter text-white md:text-7xl lg:text-8xl">
+                  {(currentCall.patientName || '').toUpperCase()}
+                </h3>
+                <div className="mb-10 h-1 w-32 rounded-full bg-[#ffcc00]" />
+                <div className="mb-6 space-y-2 text-5xl font-semibold">
+                  <p className="text-white">COMPARECER AO</p>
+                  <div className="rounded-3xl bg-[#008140] px-20 py-8 shadow-xl">
+                    <p className="text-4xl font-black uppercase tracking-widest text-white md:text-5xl">
+                      {currentCall.type === 'triage' ? (
+                        <>ACOLHIMENTO</>
+                      ) : (
+                        <>{`CONSULTÓRIO ${currentCall.room?.toUpperCase()}`}</>
+                      )}
+                    </p>
                   </div>
                 </div>
-              </div>
+              </>
             ) : (
-              <div className="text-center text-muted-foreground">
-                <p className="text-4xl">Aguardando chamadas...</p>
-              </div>
+              <p className="text-4xl text-gray-400">Aguardando chamadas...</p>
             )}
           </div>
+        </div>
 
-          {/* Recent Calls Sidebar */}
-          <div className="w-96 bg-card border border-border rounded-2xl p-6">
-            <h2 className="text-2xl font-bold mb-6 text-center">Últimas Chamadas</h2>
-            <div className="space-y-4">
-              {previousCalls.length === 0 ? (
-                <p className="text-muted-foreground text-center">Nenhuma chamada recente</p>
-              ) : (
-                previousCalls.map((call, index) => (
-                  <div
-                    key={`${call.callId}`}
-                    className="bg-secondary p-4 rounded-lg"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-2xl font-bold">{call.patientName}</span>
-                      {/*priority*/}
-                      {/* {call.priority && call.type !== 'triage' && (
-                        <PriorityBadge priority={call.priority} showLabel={false} />
-                      )} */}
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {call.type === 'triage' ? 'Acolhimento' : call.room}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {call.timestamp.toLocaleTimeString()}
-                    </p>
-                  </div>
-                ))
-              )}
-            </div>
+        <div className="flex w-full flex-col bg-[#1a2535] md:w-80">
+          <div className="border-b border-white/10 p-7">
+            <h3 className="text-center text-base font-black uppercase tracking-widest text-white">Últimas Chamadas</h3>
+          </div>
+          <div className="flex-grow space-y-4 overflow-y-auto p-6">
+            {previousCalls.length === 0 ? (
+              <p className="text-center text-gray-400">Nenhuma chamada recente</p>
+            ) : (
+              previousCalls.map((call) => (
+                <div
+                  key={call.callId}
+                  className="flex flex-col gap-1 rounded-2xl border border-white/10 bg-white/10 p-5"
+                >
+                  <p className="text-lg font-black uppercase leading-tight break-words text-white">
+                    {(call.patientName || '').toUpperCase()}
+                  </p>
+                  <p className="mt-1 text-base font-black uppercase text-[#ffcc00]">
+                    {call.type === 'triage' ? 'Acolhimento' : call.room}
+                  </p>
+                </div>
+              ))
+            )}
           </div>
         </div>
-      </div>
+      </main>
+
+      <footer className="overflow-hidden whitespace-nowrap border-t border-white/10 bg-[#0f1923] p-3 text-white">
+        <div className="animate-marquee inline-block text-sm font-bold uppercase tracking-widest text-gray-400">
+          SESA - Secretaria da Saúde do Estado do Ceará | Hospital de Saúde Mental Prof. Frota Pinto | Atendimento Humanizado e Eficiente | Ceará em Desenvolvimento
+        </div>
+      </footer>
     </div>
   );
 }
