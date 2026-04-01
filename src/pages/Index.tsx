@@ -68,15 +68,15 @@ export default function Index() {
     'h-full min-h-[260px] rounded-2xl border-0 bg-white p-8 shadow-sm outline-none transition-all duration-300 hover:-translate-y-2 flex flex-col items-center text-center justify-between';
 
   const iconBoxBaseClassName =
-    'mb-6 flex h-20 w-20 items-center justify-center rounded-2xl border transition-transform group-hover:scale-110';
+    'mb-4 flex h-20 w-20 items-center justify-center rounded-2xl border transition-transform group-hover:scale-110';
 
   return (
     <div className="min-h-screen bg-transparent flex flex-col">
-    <Header title="Sistema de Gestão do Painel de Chamadas" showBackButton={false} />
+    <Header title="Sistema de Gestão do Painel de Chamadas" />
       <main className="container mx-auto py-12 px-6 flex-grow flex flex-col justify-center">
         <div className="mb-12 text-center">
           <h2 className="text-3xl font-black text-gray-800 uppercase tracking-tight">
-            Painel de Controle
+            Menu Principal
           </h2>
           <div className="h-1.5 w-24 bg-[#ffcc00] mx-auto mt-3 rounded-full" />
         </div>
