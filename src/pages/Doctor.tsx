@@ -1,16 +1,19 @@
-import Header from '@/components/Header';
-import { PriorityBadge } from '@/components/PriorityBadge';
-import RoomSelect from '@/components/RoomSelect';
-import { Button } from '@/components/ui/button';
-import { CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { usePatients } from '@/contexts/PatientContext';
-import { useToast } from '@/hooks/use-toast';
-import { AttendanceTypeLabel } from '@/lib/attendanceTypes';
-import { PRIORITY_CONFIG } from "@/types/patient";
-import { CheckCircle, Phone } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { usePatients } from '@/contexts/PatientContext';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { PriorityBadge } from '@/components/PriorityBadge';
+import { Activity, Phone, CheckCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import RoomSelect from '@/components/RoomSelect';
+import { AttendanceTypeLabel } from '@/lib/attendanceTypes';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
+
+
+import { PRIORITY_CONFIG } from "@/types/patient";
 
 export default function Doctor() {
   const { getWaitingForDoctor, callForDoctor, completeConsultation, abandonConsultation, refreshPatients, recallPatient } = usePatients();
@@ -30,11 +33,6 @@ export default function Doctor() {
   // Variável adicionada pela equipe (tempo excedido)
   const [now, setNow] = useState(Date.now());
 
-  // LÓGICA ATUALIZADA (Sua): Puxa do sessionStorage (se existir) para não perder ao trocar de tela
-  const [calledPatientIds, setCalledPatientIds] = useState<Set<string>>(() => {
-    const saved = sessionStorage.getItem('calledPatientIds');
-    return saved ? new Set(JSON.parse(saved)) : new Set();
-  });
 
   const waitingPatients = getWaitingForDoctor();
 
@@ -70,14 +68,6 @@ export default function Doctor() {
   try {
     await callForDoctor(activePatient.id, room);
     setActivePatientId(activePatient.id);
-    
-    // LÓGICA ATUALIZADA: Registra que o paciente já foi chamado e salva no navegador
-    setCalledPatientIds(prev => {
-      const updatedSet = new Set(prev).add(activePatient.id);
-      sessionStorage.setItem('calledPatientIds', JSON.stringify(Array.from(updatedSet)));
-      return updatedSet;
-    });
-
     // setConsultationLocked(false); // fecha modal
     await refreshPatients();
 
@@ -95,7 +85,7 @@ export default function Doctor() {
 };
 
 const handleRecallPatient = async () => {
-  if (!activePatient || !room) return; 
+  if (!activePatient) return;
 
   try {
     console.log("Rechamando paciente:", activePatient);
@@ -105,7 +95,7 @@ const handleRecallPatient = async () => {
 
     toast({
       title: 'Paciente chamado novamente',
-      description: `${activePatient.fullName} foi chamado novamente para a sala ${room}`,
+      description: `${activePatient.fullName} foi chamado novamente`,
     });
   } catch (err) {
     toast({
@@ -323,8 +313,7 @@ const handleAbandonConsultation = async (patientId: string) => {
               </table>
             </div>
           </CardContent>
-        </div>
-      </main>
+        </Card>
 
         {/* MODAL: CHAMAR PACIENTE (Único modal ativo agora) */}
           <Dialog open={consultationLocked} onOpenChange={() => {}}>
@@ -377,17 +366,12 @@ const handleAbandonConsultation = async (patientId: string) => {
                         {/* <Button variant="outline" onClick={() => setSelectedPatientId(null)}>
                           Cancel
                         </Button> */}
-                        
-                        {activePatient && calledPatientIds.has(activePatient.id) ? (
-                          <Button onClick={handleRecallPatient} disabled={!activePatient} variant="secondary">
+                        <Button onClick={handleConfirmCallPatient} disabled={!room}>
+                          Chamar Paciente
+                        </Button>
+                          <Button onClick={handleRecallPatient} disabled={!activePatient}>
                             Chamar novamente
                           </Button>
-                        ) : (
-                          <Button onClick={handleConfirmCallPatient} disabled={!room}>
-                            Chamar Paciente
-                          </Button>
-                        )}
-
                         <Button    
                           onClick={() => {
                             setPatientToAbandon(activePatient);
@@ -477,6 +461,7 @@ const handleAbandonConsultation = async (patientId: string) => {
                       </div>
                     </DialogContent>
                   </Dialog>
+      </div>
     </div>
   );
 }
