@@ -1,6 +1,11 @@
 import { useEffect, useRef } from 'react';
 
 import { PublicPanelCallViewModel } from '../types';
+import { selectPreferredSpeechVoice } from '../utils/selectPreferredSpeechVoice';
+
+const PANEL_SPEECH_RATE = 0.86;
+const PANEL_SPEECH_PITCH = 1;
+const PANEL_SPEECH_VOLUME = 1;
 
 function supportsSpeechSynthesis() {
   return typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
@@ -44,11 +49,13 @@ export function usePanelSpeech(currentCall: PublicPanelCallViewModel | null) {
 
     const synthesis = window.speechSynthesis;
     const utterance = new SpeechSynthesisUtterance(currentCall.speechText);
-    const preferredVoice = voicesRef.current.find((voice) => voice.lang.toLowerCase().startsWith('pt-br'));
+    const availableVoices = synthesis.getVoices();
+    const preferredVoice = selectPreferredSpeechVoice(availableVoices.length > 0 ? availableVoices : voicesRef.current);
 
     utterance.lang = 'pt-BR';
-    utterance.rate = 1;
-    utterance.pitch = 1;
+    utterance.rate = PANEL_SPEECH_RATE;
+    utterance.pitch = PANEL_SPEECH_PITCH;
+    utterance.volume = PANEL_SPEECH_VOLUME;
 
     if (preferredVoice) {
       utterance.voice = preferredVoice;
