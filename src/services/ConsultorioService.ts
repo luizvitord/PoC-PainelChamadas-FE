@@ -1,46 +1,77 @@
-const API_URL = "http://localhost:1111/consultorios";
+const API_URL = 'http://localhost:1111/consultorios';
 
-export async function addConsultorio(numero) {
-     // validação básica
-  if (!numero || String(numero).length !== 1) {
-    return { error: "O consultório deve ter exatamente 1 dígito." };
+export interface Consultorio {
+  id: string | number;
+  numero?: string | number;
+}
+
+export interface ConsultorioErrorResponse {
+  error: string;
+}
+
+function normalizeConsultorioNumero(consultorio: Consultorio) {
+  return String(consultorio.numero ?? consultorio.id).trim();
+}
+
+export function validateConsultorioNumero(numero: string, consultorios: Consultorio[] = []) {
+  const normalizedNumero = String(numero).trim();
+
+  if (!normalizedNumero || normalizedNumero.length !== 1) {
+    return { error: 'O consultório deve ter exatamente 1 dígito.' };
   }
 
-  const n = Number(numero);
+  const n = Number(normalizedNumero);
 
-  if (isNaN(n)) {
-    return { error: "Insira um número válido para o consultório." };
+  if (Number.isNaN(n)) {
+    return { error: 'Insira um número válido para o consultório.' };
   }
 
-  // verificar se já existe
-  const existing = await fetch(API_URL + `/${n}`);
+  if (n < 1 || n > 9) {
+    return { error: 'Insira um número entre 1 e 9 para o consultório.' };
+  }
 
-  if (existing.ok) {
+  if (consultorios.some((consultorio) => normalizeConsultorioNumero(consultorio) === String(n))) {
     return { error: `O consultório nº ${n} já existe.` };
   }
 
-  // criar
+  return { value: n };
+}
+
+export async function addConsultorio(numero: string, consultorios: Consultorio[] = []) {
+  const validation = validateConsultorioNumero(numero, consultorios);
+
+  if (validation.error) {
+    return { error: validation.error };
+  }
+
   const response = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ numero: n }),
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ numero: validation.value }),
   });
 
   if (!response.ok) {
     const data = await response.json().catch(() => null);
-    return { error: data?.message || "Erro ao cadastrar consultório" };
+    return { error: data?.message || 'Erro ao cadastrar consultório' };
   }
 
   return { success: true };
 }
 
-export async function getConsultorios() {
+export function isConsultorioErrorResponse(
+  response: Consultorio[] | ConsultorioErrorResponse,
+): response is ConsultorioErrorResponse {
+  return 'error' in response;
+}
 
+export async function getConsultorios() {
   const response = await fetch(API_URL);
-    if (!response.ok) {
-       const data = await response.json().catch(() => null);
-        return { error: data?.message || "GET Error" };
-    }
-    const data = await response.json();
-    return data;
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null);
+    return { error: data?.message || 'GET Error' };
+  }
+
+  const data = await response.json();
+  return data as Consultorio[];
 }
