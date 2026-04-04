@@ -14,14 +14,20 @@ function normalizeConsultorioNumero(consultorio: Consultorio) {
 }
 
 export function validateConsultorioNumero(numero: string, consultorios: Consultorio[] = []) {
-  if (!numero || String(numero).length !== 1) {
+  const normalizedNumero = String(numero).trim();
+
+  if (!normalizedNumero || normalizedNumero.length !== 1) {
     return { error: 'O consultório deve ter exatamente 1 dígito.' };
   }
 
-  const n = Number(numero);
+  const n = Number(normalizedNumero);
 
   if (Number.isNaN(n)) {
     return { error: 'Insira um número válido para o consultório.' };
+  }
+
+  if (n < 1 || n > 9) {
+    return { error: 'Insira um número entre 1 e 9 para o consultório.' };
   }
 
   if (consultorios.some((consultorio) => normalizeConsultorioNumero(consultorio) === String(n))) {

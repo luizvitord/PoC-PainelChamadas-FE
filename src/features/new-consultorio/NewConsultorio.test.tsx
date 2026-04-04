@@ -1,7 +1,7 @@
 import { createEvent, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { NewConsultorio } from './NewConsultorio.tsx';
+import { NewConsultorio } from './NewConsultorio';
 
 const toastMock = vi.fn();
 const getConsultoriosMock = vi.fn();
@@ -40,6 +40,24 @@ describe('NewConsultorio', () => {
     expect(items).toHaveLength(1);
     expect(items[0]).toHaveTextContent('Consultório 1');
     expect(getConsultoriosMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not open the modal when loading consultorios fails', async () => {
+    getConsultoriosMock.mockResolvedValue({ error: 'Falha ao carregar consultórios' });
+
+    render(<NewConsultorio />);
+
+    fireEvent.click(screen.getByLabelText('Abrir gestão de novo consultório'));
+
+    await waitFor(() => {
+      expect(toastMock).toHaveBeenCalledWith({
+        title: 'Erro ao carregar consultórios',
+        description: 'Falha ao carregar consultórios',
+        variant: 'destructive',
+      });
+    });
+
+    expect(screen.queryByText('Adicionar Consultório')).not.toBeInTheDocument();
   });
 
   it('submits the room number and closes the modal on success', async () => {
@@ -87,6 +105,29 @@ describe('NewConsultorio', () => {
         variant: 'destructive',
       });
     });
+  });
+
+  it('shows an error toast when consultorio creation fails unexpectedly', async () => {
+    getConsultoriosMock.mockResolvedValue([]);
+    addConsultorioMock.mockRejectedValue(new Error('network failure'));
+
+    render(<NewConsultorio />);
+
+    fireEvent.click(screen.getByLabelText('Abrir gestão de novo consultório'));
+
+    const input = await screen.findByLabelText('Número do Consultório');
+    fireEvent.change(input, { target: { value: '4' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+
+    await waitFor(() => {
+      expect(toastMock).toHaveBeenCalledWith({
+        title: 'Erro',
+        description: 'Erro ao cadastrar consultório.',
+        variant: 'destructive',
+      });
+    });
+
+    expect(screen.getByText('Adicionar Consultório')).toBeInTheDocument();
   });
 
   it('clears the room number input when the value is zero or negative', async () => {

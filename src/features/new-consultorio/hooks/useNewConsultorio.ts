@@ -47,22 +47,27 @@ export function useNewConsultorio() {
           description: data.error,
           variant: 'destructive',
         });
-        return;
+        return false;
       }
 
       setConsultorios(data);
+      return true;
     } catch {
       toast({
         title: 'Erro',
         description: 'Erro ao carregar consultórios.',
         variant: 'destructive',
       });
+      return false;
     }
   };
 
   const handleOpen = async () => {
-    await loadConsultorios();
-    setIsOpen(true);
+    const loaded = await loadConsultorios();
+
+    if (loaded) {
+      setIsOpen(true);
+    }
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -74,30 +79,38 @@ export function useNewConsultorio() {
   };
 
   const handleAddConsultorio = async () => {
-    const result = await addConsultorio(consultorioNumero, consultorios);
+    try {
+      const result = await addConsultorio(consultorioNumero, consultorios);
 
-    if (result.error) {
+      if (result.error) {
+        toast({
+          title: 'Erro',
+          description: result.error,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast({
+        title: 'Sucesso!',
+        description: 'Consultório adicionado com sucesso.',
+      });
+
+      const updatedConsultorios = await getConsultorios();
+
+      if (!isConsultorioErrorResponse(updatedConsultorios)) {
+        setConsultorios(updatedConsultorios);
+      }
+
+      setConsultorioNumero('');
+      setIsOpen(false);
+    } catch {
       toast({
         title: 'Erro',
-        description: result.error,
+        description: 'Erro ao cadastrar consultório.',
         variant: 'destructive',
       });
-      return;
     }
-
-    toast({
-      title: 'Sucesso!',
-      description: 'Consultório adicionado com sucesso.',
-    });
-
-    const updatedConsultorios = await getConsultorios();
-
-    if (!isConsultorioErrorResponse(updatedConsultorios)) {
-      setConsultorios(updatedConsultorios);
-    }
-
-    setConsultorioNumero('');
-    setIsOpen(false);
   };
 
   return {
