@@ -14,6 +14,8 @@ function supportsSpeechSynthesis() {
 export function usePanelSpeech(currentCall: PublicPanelCallViewModel | null) {
   const lastSpokenCallIdRef = useRef<string | null>(null);
   const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
+  const callId = currentCall?.callId ?? null;
+  const speechText = currentCall?.speechText ?? '';
 
   useEffect(() => {
     if (!supportsSpeechSynthesis()) {
@@ -39,16 +41,16 @@ export function usePanelSpeech(currentCall: PublicPanelCallViewModel | null) {
   }, []);
 
   useEffect(() => {
-    if (!currentCall || !supportsSpeechSynthesis()) {
+    if (!callId || !speechText || !supportsSpeechSynthesis()) {
       return;
     }
 
-    if (lastSpokenCallIdRef.current === currentCall.callId) {
+    if (lastSpokenCallIdRef.current === callId) {
       return;
     }
 
     const synthesis = window.speechSynthesis;
-    const utterance = new SpeechSynthesisUtterance(currentCall.speechText);
+    const utterance = new SpeechSynthesisUtterance(speechText);
     const availableVoices = synthesis.getVoices();
     const preferredVoice = selectPreferredSpeechVoice(availableVoices.length > 0 ? availableVoices : voicesRef.current);
 
@@ -63,6 +65,6 @@ export function usePanelSpeech(currentCall: PublicPanelCallViewModel | null) {
 
     synthesis.cancel();
     synthesis.speak(utterance);
-    lastSpokenCallIdRef.current = currentCall.callId;
-  }, [currentCall?.callId, currentCall?.speechText, currentCall]);
+    lastSpokenCallIdRef.current = callId;
+  }, [callId, speechText]);
 }
