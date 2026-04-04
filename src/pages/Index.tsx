@@ -1,6 +1,6 @@
 import Header from '@/components/Header';
 import { Card } from '@/components/ui/card';
-import { NewConsultorio } from '@/features/new-consultorio/NewConsultorio.tsx';
+import { NewConsultorio } from '@/features/new-consultorio/NewConsultorio';
 import { DoorOpen, HeartHandshake, Monitor, UserPlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 

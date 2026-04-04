@@ -7,12 +7,22 @@ describe('validateConsultorioNumero', () => {
     expect(validateConsultorioNumero('', [])).toEqual({ error: 'O consultório deve ter exatamente 1 dígito.' });
   });
 
+  it('rejects whitespace values', () => {
+    expect(validateConsultorioNumero(' ', [])).toEqual({ error: 'O consultório deve ter exatamente 1 dígito.' });
+  });
+
   it('rejects non numeric values', () => {
     expect(validateConsultorioNumero('a', [])).toEqual({ error: 'Insira um número válido para o consultório.' });
   });
 
   it('rejects values with more than one digit', () => {
     expect(validateConsultorioNumero('12', [])).toEqual({ error: 'O consultório deve ter exatamente 1 dígito.' });
+  });
+
+  it('rejects values outside the accepted range', () => {
+    expect(validateConsultorioNumero('0', [])).toEqual({
+      error: 'Insira um número entre 1 e 9 para o consultório.',
+    });
   });
 
   it('rejects duplicate room numbers using the numero field', () => {
