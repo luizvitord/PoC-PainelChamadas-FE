@@ -1,3 +1,4 @@
+import BackButton from '@/components/BackButton';
 import Header from '@/components/Header';
 import { PriorityBadge } from '@/components/PriorityBadge';
 import RoomSelect from '@/components/RoomSelect';
@@ -195,7 +196,10 @@ const handleAbandonConsultation = async (patientId: string) => {
   return (
     <div className="min-h-screen flex flex-col bg-[#f8fafc]">
       <Header title="Painel Médico" />
-
+     {/* Back button */}
+    <div className="container mx-auto px-6 pt-6 max-w-6xl">
+      <BackButton />
+    </div>
       <main className="container mx-auto py-10 px-6 flex-grow max-w-6xl">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
           <div className="p-7 border-b border-gray-100 flex items-center justify-between gap-4">

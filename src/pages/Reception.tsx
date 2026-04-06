@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { api } from '@/services/Api';
 import { debug } from 'console';
 import Header from '@/components/Header';
+import BackButton from '@/components/BackButton';
 
 export default function Reception() {
   const { registerPatient, patients } = usePatients();
@@ -87,6 +88,10 @@ export default function Reception() {
   return (
     <div className="reception-shell">
     <Header title="Recepção" />
+    {/* Back button */}
+    <div className="mx-auto w-full max-w-7xl px-4 md:px-8 pt-6">
+      <BackButton />
+    </div>
       <main className="reception-main">
         <div className="reception-container">
           <div className="grid gap-8 lg:grid-cols-3">
@@ -97,7 +102,7 @@ export default function Reception() {
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
                     <UserPlus className="h-5 w-5 text-white" />
                   </div>
-                  <h2 className="text-white text-xs font-black uppercase tracking-[0.2em]">
+                  <h2 className="text-white text-base font-black uppercase tracking-[0.1em]">
                     Registrar Novo Paciente
                   </h2>
                 </div>
@@ -108,7 +113,7 @@ export default function Reception() {
                       <div className="md:col-span-2">
                         <Label
                           htmlFor="fullName"
-                          className="mb-3 block text-xs font-black uppercase tracking-[0.15em] text-gray-400"
+                          className="mb-3 block text-sm font-black uppercase tracking-[0.1em] text-gray-500"
                         >
                           Nome Completo
                         </Label>
@@ -125,7 +130,7 @@ export default function Reception() {
                       <div>
                         <Label
                           htmlFor="dateOfBirth"
-                          className="mb-3 block text-xs font-black uppercase tracking-[0.15em] text-gray-400"
+                          className="mb-3 block text-sm font-black uppercase tracking-[0.1em] text-gray-500"
                         >
                           Data de Nascimento
                         </Label>
@@ -142,7 +147,7 @@ export default function Reception() {
                       <div>
                         <Label
                           htmlFor="cpf"
-                          className="mb-3 block text-xs font-black uppercase tracking-[0.15em] text-gray-400"
+                          className="mb-3 block text-sm font-black uppercase tracking-[0.1em] text-gray-500"
                         >
                           CPF
                         </Label>
@@ -160,7 +165,7 @@ export default function Reception() {
                     <div className="pt-4">
                       <Button
                         type="submit"
-                        className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#008140] py-4 px-12 text-sm font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-emerald-100 hover:bg-emerald-800 md:w-auto"
+                        className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#008140] py-6 px-12 text-sm font-black uppercase tracking-[0.1em] text-white shadow-lg shadow-emerald-100 hover:bg-emerald-800"
                       >
                         <UserPlus className="h-5 w-5" />
                         <span>Finalizar Registro</span>
@@ -175,11 +180,11 @@ export default function Reception() {
             <div className="lg:col-span-1">
               <Card className="flex h-full flex-col rounded-2xl border border-gray-100 bg-white shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between border-b border-gray-50 px-5 py-4">
-                  <CardTitle className="flex items-center text-xs font-black uppercase tracking-[0.2em] text-gray-800">
+                  <CardTitle className="flex items-center text-sm font-black uppercase tracking-[0.1em] text-gray-800">
                     <span className="mr-2 h-2 w-2 rounded-full bg-[#ffcc00]" />
                     Recém Registrados
                   </CardTitle>
-                  <span className="text-[10px] font-bold uppercase text-gray-400">
+                  <span className="text-[10px] font-bold uppercase text-gray-500">
                     Hoje
                   </span>
                 </CardHeader>
@@ -187,7 +192,7 @@ export default function Reception() {
                 <CardContent className="flex flex-1 flex-col justify-between p-0">
                   <div className="custom-scrollbar flex-1 overflow-y-auto">
                     {recentPatients.length === 0 ? (
-                      <p className="px-6 py-10 text-center text-xs font-medium text-gray-400">
+                      <p className="px-6 py-10 text-center text-sm font-medium text-gray-500 ">
                         Nenhum paciente registrado ainda.
                       </p>
                     ) : (
@@ -215,7 +220,7 @@ export default function Reception() {
                   <div className="px-4 pb-4 pt-3">
                     <button
                       type="button"
-                      className="w-full rounded-xl bg-gray-50 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 transition-all hover:bg-gray-100 hover:text-gray-600"
+                      className="w-full rounded-xl bg-gray-50 py-3 text-[12px] font-black uppercase tracking-[0.1em] text-gray-400 transition-all hover:bg-gray-100 hover:text-gray-600"
                     >
                       Visualizar Todos
                     </button>

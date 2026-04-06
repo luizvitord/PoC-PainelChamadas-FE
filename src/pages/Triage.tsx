@@ -1,3 +1,4 @@
+import BackButton from '@/components/BackButton';
 import Header from '@/components/Header';
 import { PriorityBadge } from '@/components/PriorityBadge';
 import { Button } from '@/components/ui/button';
@@ -106,6 +107,10 @@ export default function Triage() {
 return (
   <div className="min-h-screen bg-transparent flex flex-col">
     <Header title="Acolhimento e Classificação de Risco" />
+    {/* Back button */}
+    <div className="container mx-auto pt-6 max-w-6xl">
+      <BackButton />
+    </div>
     <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 lg:grid-cols-3 mt-10">
       <div className="space-y-6 lg:col-span-2">
         <Card className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
