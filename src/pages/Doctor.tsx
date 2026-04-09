@@ -1,19 +1,17 @@
-import { useEffect, useState } from 'react';
-import { usePatients } from '@/contexts/PatientContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import BackButton from '@/components/BackButton';
+import Header from '@/components/Header';
 import { PriorityBadge } from '@/components/PriorityBadge';
-import { Activity, Phone, CheckCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import RoomSelect from '@/components/RoomSelect';
+import { Button } from '@/components/ui/button';
+import { CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { usePatients } from '@/contexts/PatientContext';
+import { useToast } from '@/hooks/use-toast';
 import { AttendanceTypeLabel } from '@/lib/attendanceTypes';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
-
-
 import { PRIORITY_CONFIG } from "@/types/patient";
+import { CheckCircle, Phone } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function Doctor() {
   const { getWaitingForDoctor, callForDoctor, completeConsultation, abandonConsultation, refreshPatients, recallPatient } = usePatients();
@@ -196,19 +194,19 @@ const handleAbandonConsultation = async (patientId: string) => {
 };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center gap-3">
-          <Activity className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold text-foreground">Dashboard do Médico</h1>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Fila de Pacientes</CardTitle>
-            <CardDescription>Ordenado por nível de prioridade (Protocolo de Manchester)</CardDescription>
-
-            <div className="space-y-4 py-2">
+    <div className="min-h-screen flex flex-col bg-[#f8fafc]">
+      <Header title="Painel Médico" />
+     {/* Back button */}
+    <div className="container mx-auto px-6 pt-6 max-w-6xl">
+      <BackButton />
+    </div>
+      <main className="container mx-auto py-10 px-6 flex-grow max-w-6xl">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+          <div className="p-7 border-b border-gray-100 flex items-center justify-between gap-4">
+            <h2 className="text-gray-800 font-black uppercase tracking-wider text-base flex items-center">
+              <span className="w-3 h-3 bg-indigo-500 rounded-full mr-2"></span>Fila de Espera Médica
+            </h2>
+            <div className="w-[360px] max-w-full">
               <RoomSelect
                 value={room}
                 onChange={setRoom}
@@ -216,68 +214,69 @@ const handleAbandonConsultation = async (patientId: string) => {
                 label="Selecione o consultório para chamada"
               />
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {waitingPatients.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">
-                  Nenhum paciente na fila de espera
-                </p>
-              ) : (
-                (
-                  waitingPatients.map((patient) => {
-                    const classifiedAtTime = patient.classifiedAt
-                      ? (patient.classifiedAt instanceof Date
-                          ? patient.classifiedAt.getTime()
-                          : new Date(patient.classifiedAt).getTime())
-                      : null;
+          </div>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    <th className="px-6 py-5 text-sm font-black text-gray-600 uppercase tracking-wider">Chegada</th>
+                    <th className="px-6 py-5 text-sm font-black text-gray-600 uppercase tracking-wider">Tipo</th>
+                    <th className="px-6 py-5 text-sm font-black text-gray-600 uppercase tracking-wider">Paciente</th>
+                    <th className="px-6 py-5 text-sm font-black text-gray-600 uppercase tracking-wider">Classificação</th>
+                    <th className="px-6 py-5 text-sm font-black text-gray-600 uppercase tracking-wider text-center">Ação</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {waitingPatients.length === 0 ? (
+                    <tr>
+                      <td className="px-6 py-10 text-center text-sm font-black uppercase tracking-wider text-gray-300" colSpan={5}>
+                        Nenhum paciente na fila de espera
+                      </td>
+                    </tr>
+                  ) : (
+                    waitingPatients.map((patient) => {
+                      const classifiedAtTime = patient.classifiedAt
+                        ? (patient.classifiedAt instanceof Date
+                            ? patient.classifiedAt.getTime()
+                            : new Date(patient.classifiedAt).getTime())
+                        : null;
 
-                    const isOrange = patient.priority === 'orange';
-                    const overdue = isOrange && classifiedAtTime && (now - classifiedAtTime > 10 * 60 * 1000);
+                      const isOrange = patient.priority === 'orange';
+                      const overdue = isOrange && classifiedAtTime && (now - classifiedAtTime > 10 * 60 * 1000);
+                      const chegada = patient.classifiedAt || patient.registeredAt;
 
-                    return (
-                      <Card
-                        key={patient.id}
-                        className={`border-l-4 ${overdue ? 'animate-pulse bg-orange-50' : ''}`}
-                        style={{
-                          borderLeftColor: `hsl(var(--priority-${patient.priority}))`,
-                        }}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4 flex-1">
-                              <span className="text-3xl font-bold text-primary">
-                                {patient.ticketNumber ?? '—'}
+                      return (
+                        <tr key={patient.id} className={`hover:bg-red-50/30 transition-colors ${overdue ? 'animate-pulse bg-orange-50/60' : ''}`}>
+                          <td className="px-6 py-5 whitespace-nowrap">
+                            <span className="text-sm font-black text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                              {new Date(chegada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </td>
+                          <td className="px-6 py-5">
+                            <span className="text-sm font-black text-gray-600 uppercase border border-gray-300 px-2 py-1 rounded bg-white">
+                              {AttendanceTypeLabel[patient.attendanceType]}
+                            </span>
+                          </td>
+                          <td className="px-6 py-5">
+                            <p className="font-bold text-gray-800 uppercase text-base">{patient.fullName}</p>
+                            {patient.triageNotes && (
+                              <p className="text-sm text-gray-600 font-semibold mt-1 line-clamp-1">
+                                Observações: {patient.triageNotes}
+                              </p>
+                            )}
+                          </td>
+                          <td className="px-6 py-5">
+                            <div className="flex items-center space-x-2">
+                              <PriorityBadge priority={patient.priority} showLabel={false} />
+                              <span className="text-sm font-black uppercase text-gray-700">
+                                {patient.priority ? PRIORITY_CONFIG[patient.priority].label : 'Não classificado'}
                               </span>
-
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <p className="font-semibold text-lg text-foreground truncate">
-                                    {patient.fullName}
-                                  </p>
-
-                                  {patient.priority && <PriorityBadge priority={patient.priority} />}
-
-                                  {overdue && (
-                                    <span className="ml-2 text-xs font-bold text-orange-700">
-                                      TEMPO EXCEDIDO
-                                    </span>
-                                  )}
-                                </div>
-
-                                <p className="text-sm text-muted-foreground">
-                                  Tipo: {AttendanceTypeLabel[patient.attendanceType]}
-                                </p>
-
-                                {patient.triageNotes && (
-                                  <p className="text-sm text-foreground font-semibold mt-1 line-clamp-1">
-                                    Observações: {patient.triageNotes}
-                                  </p>
-                                )}
-                              </div>
+                              {overdue && <span className="text-xs font-bold text-orange-700">TEMPO EXCEDIDO</span>}
                             </div>
-
-                            <div className="flex gap-2">
+                          </td>
+                          <td className="px-6 py-5 text-center">
+                            <div className="flex justify-center gap-2">
                               {patient.status === 'waiting-doctor' && (
                                 <TooltipProvider>
                                   <Tooltip>
@@ -289,6 +288,7 @@ const handleAbandonConsultation = async (patientId: string) => {
                                             e.stopPropagation();
                                             handleOpenCallModal(patient);
                                           }}
+                                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black px-5 py-2.5 rounded-lg uppercase tracking-wider transition-all"
                                         >
                                           <Phone className="mr-2 h-4 w-4" />
                                           Selecionar para Consulta
@@ -311,22 +311,24 @@ const handleAbandonConsultation = async (patientId: string) => {
                                     e.stopPropagation();
                                   }}
                                   variant="outline"
+                                  className="text-sm font-black uppercase tracking-wider rounded-lg px-5 py-2.5"
                                 >
                                   <CheckCircle className="mr-2 h-4 w-4" />
                                   Finish Consultation
                                 </Button>
                               )}
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })
-                )
-              )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
           </CardContent>
-        </Card>
+        </div>
+      </main>
 
         {/* MODAL: CHAMAR PACIENTE (Único modal ativo agora) */}
           <Dialog open={consultationLocked} onOpenChange={() => {}}>
@@ -479,7 +481,6 @@ const handleAbandonConsultation = async (patientId: string) => {
                       </div>
                     </DialogContent>
                   </Dialog>
-      </div>
     </div>
   );
 }

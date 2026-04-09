@@ -147,4 +147,17 @@ All colors MUST be HSL.
     background: #e2e8f0;
     border-radius: 10px;
   }
+
+  @keyframes marquee {
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
 }

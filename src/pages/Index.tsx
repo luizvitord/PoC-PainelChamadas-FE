@@ -1,3 +1,4 @@
+import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -65,49 +66,19 @@ export default function Index() {
 
   const cardBaseClassName =
     'h-full min-h-[260px] rounded-2xl border-0 bg-white p-8 shadow-sm outline-none transition-all duration-300 hover:-translate-y-2 flex flex-col items-center text-center justify-between';
-
   const iconBoxBaseClassName =
-    'mb-6 flex h-20 w-20 items-center justify-center rounded-2xl border transition-transform group-hover:scale-110';
+    'mb-4 flex h-20 w-20 items-center justify-center rounded-2xl border transition-transform group-hover:scale-110';
+
+  const cardTitleClassName = "text-[1.25rem] font-black uppercase tracking-[0.05em] text-gray-800 flex items-center justify-center min-h-[56px]";
+  const cardDescClassName = "text-[1rem] font-semibold text-gray-600 leading-[1.3] min-h-[40px] flex items-center justify-center";
 
   return (
     <div className="min-h-screen bg-transparent flex flex-col">
-      <header className="bg-[#008140] text-white p-4 shadow-lg border-b-4 border-[#ffcc00]">
-        <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <Link
-              to="/"
-              className="bg-white p-2 rounded shadow-sm hover:opacity-90 transition-all"
-              aria-label="Ir para a Home"
-            >
-              <svg width="140" height="42" viewBox="0 0 140 42" fill="none" aria-hidden="true">
-                <text x="8" y="27" fill="#008140" fontWeight="900" fontSize="22">
-                  CEARÁ
-                </text>
-                <text x="8" y="40" fill="#008140" fontWeight="bold" fontSize="10">
-                  GOVERNO DO ESTADO
-                </text>
-                <rect x="0" y="0" width="4" height="42" fill="#ffcc00" />
-              </svg>
-            </Link>
-
-            <div className="h-10 w-px bg-white/30" />
-
-            <div>
-              <h1 className="font-bold text-base md:text-lg uppercase tracking-tight leading-none">
-                Sistema de Gestão Hospitalar
-              </h1>
-              <p className="text-xs md:text-sm opacity-90 uppercase font-semibold mt-1">
-                Hospital de Saúde Mental Prof. Frota Pinto
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <Header title="Sistema de Gestão do Painel de Chamadas" />
       <main className="container mx-auto py-12 px-6 flex-grow flex flex-col justify-center">
         <div className="mb-12 text-center">
           <h2 className="text-3xl font-black text-gray-800 uppercase tracking-tight">
-            Painel de Controle
+            Menu Principal
           </h2>
           <div className="h-1.5 w-24 bg-[#ffcc00] mx-auto mt-3 rounded-full" />
         </div>
@@ -119,12 +90,12 @@ export default function Index() {
                 <div className={`${iconBoxBaseClassName} bg-green-50 border-green-200`}>
                   <UserPlus className="h-11 w-11 text-[#005a2b]" />
                 </div>
-                <h3 className="text-lg font-black text-gray-800 uppercase mb-2 min-h-[56px] flex items-center justify-center">
+                <h3 className={cardTitleClassName}>
                   Recepção
                 </h3>
               </div>
 
-              <p className="text-xs text-gray-500 font-medium leading-relaxed min-h-[40px] flex items-center justify-center">
+              <p className={cardDescClassName}>
                 Registro de novos Pacientes
               </p>
             </Card>
@@ -136,12 +107,12 @@ export default function Index() {
                 <div className={`${iconBoxBaseClassName} bg-blue-50 border-blue-100`}>
                   <HeartHandshake className="h-11 w-11 text-blue-600" />
                 </div>
-                <h3 className="text-lg font-black text-gray-800 uppercase mb-2 min-h-[56px] flex items-center justify-center">
+                <h3 className={cardTitleClassName}>
                   Acolhimento
                 </h3>
               </div>
 
-              <p className="text-xs text-gray-500 font-medium leading-relaxed min-h-[40px] flex items-center justify-center">
+              <p className={cardDescClassName}>
                 Classificação de risco e priorização de atendimento.
               </p>
             </Card>
@@ -153,12 +124,12 @@ export default function Index() {
                 <div className={`${iconBoxBaseClassName} bg-gray-100 border-gray-300`}>
                   <DoorOpen className="h-11 w-11 text-gray-900" />
                 </div>
-                <h3 className="text-lg font-black text-gray-800 uppercase mb-2 min-h-[56px] flex items-center justify-center">
+                <h3 className={cardTitleClassName}>
                   Consultório
                 </h3>
               </div>
 
-              <p className="text-xs text-gray-500 font-medium leading-relaxed min-h-[40px] flex items-center justify-center">
+              <p className={cardDescClassName}>
                 Atendimento médico especializado
               </p>
             </Card>
@@ -170,12 +141,12 @@ export default function Index() {
                 <div className={`${iconBoxBaseClassName} bg-yellow-50 border-yellow-100`}>
                   <Monitor className="h-11 w-11 text-yellow-600" />
                 </div>
-                <h3 className="text-lg font-black text-gray-800 uppercase mb-2 min-h-[56px] flex items-center justify-center">
+                <h3 className={cardTitleClassName}>
                   Painel
                 </h3>
               </div>
 
-              <p className="text-xs text-gray-500 font-medium leading-relaxed min-h-[40px] flex items-center justify-center">
+              <p className={cardDescClassName}>
                 Visualização de chamadas e controle de fluxo da sala de espera
               </p>
             </Card>
@@ -202,12 +173,12 @@ export default function Index() {
               <div className={`${iconBoxBaseClassName} bg-orange-50 border-orange-100`}>
                 <Plus className="h-11 w-11 text-orange-600" />
               </div>
-              <h3 className="text-lg font-black text-gray-800 uppercase mb-2 min-h-[56px] flex items-center justify-center">
+              <h3 className={cardTitleClassName}>
                 Novo Consultório
               </h3>
             </div>
 
-            <p className="text-xs text-gray-500 font-medium leading-relaxed min-h-[40px] flex items-center justify-center">
+            <p className={cardDescClassName}>
               Adicionar nova sala de atendimento
             </p>
           </Card>
