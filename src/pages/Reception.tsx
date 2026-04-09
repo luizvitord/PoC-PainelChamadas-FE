@@ -89,7 +89,7 @@ export default function Reception() {
     <div className="reception-shell">
     <Header title="Recepção" />
     {/* Back button */}
-    <div className="mx-auto w-full max-w-7xl px-4 md:px-8 pt-6">
+    <div className="mx-auto w-full max-w-screen-2xl px-3 pt-6">
       <BackButton />
     </div>
       <main className="reception-main">
