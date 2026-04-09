@@ -14,3 +14,7 @@ export interface PublicPanelViewModel {
   currentCall: PublicPanelCallViewModel | null;
   previousCalls: PublicPanelCallViewModel[];
 }
+
+export interface PublicPanelDataModel {
+  recentCalls: PublicPanelCallViewModel[];
+}
