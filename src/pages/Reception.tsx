@@ -132,7 +132,7 @@ export default function Reception() {
                           htmlFor="dateOfBirth"
                           className="mb-3 block text-lg font-black uppercase tracking-[0.1em] text-gray-500"
                         >
-                          Data de Nascimento
+                          Data de Nascimento <p className="text-xs text-gray-300">(não obrigatório)</p>
                         </Label>
                         <Input
                           id="dateOfBirth"
@@ -149,7 +149,7 @@ export default function Reception() {
                           htmlFor="cpf"
                           className="mb-3 block text-lg font-black uppercase tracking-[0.1em] text-gray-500"
                         >
-                          CPF
+                          CPF <p className="text-xs text-gray-300">(não obrigatório)</p>
                         </Label>
                         <Input
                           id="cpf"
