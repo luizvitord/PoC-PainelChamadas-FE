@@ -196,16 +196,16 @@ const handleAbandonConsultation = async (patientId: string) => {
   return (
     <div className="min-h-screen bg-slate-50 font-['Barlow_Condensed',sans-serif]">
       <Header title="Painel Médico" />
-      <div className="mx-auto w-full max-w-6xl px-6 pt-6">
+      <div className="mx-auto w-full max-w-screen-2xl px-3 pt-6">
         <BackButton />
       </div>
 
-      <div className="section-main mx-auto w-full max-w-6xl px-6 py-8">
+      <div className="section-main mx-auto w-full max-w-screen-2xl px-3 py-8">
         <div className="card overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
           <div className="card-header flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-7 py-6">
             <div className="flex items-center gap-3">
               <div className="card-header-bar h-9 w-1.5 rounded bg-indigo-600" />
-              <h2 className="text-xl font-black uppercase tracking-[0.06em] text-slate-800">Fila de Espera Médica</h2>
+              <h2 className="text-2xl font-black uppercase tracking-[0.06em] text-slate-800">Fila de Espera Médica</h2>
             </div>
             <div className="room-select-wrap flex w-full max-w-[360px] items-center justify-end gap-2">
               <RoomSelect
@@ -222,17 +222,17 @@ const handleAbandonConsultation = async (patientId: string) => {
               <table className="w-full text-left">
                 <thead className="border-b border-slate-100 bg-slate-50">
                   <tr>
-                    <th className="px-6 py-4 text-sm font-black uppercase tracking-[0.1em] text-slate-600">Chegada</th>
-                    <th className="px-6 py-4 text-sm font-black uppercase tracking-[0.1em] text-slate-600">Tipo</th>
-                    <th className="px-6 py-4 text-sm font-black uppercase tracking-[0.1em] text-slate-600">Paciente</th>
-                    <th className="px-6 py-4 text-sm font-black uppercase tracking-[0.1em] text-slate-600">Classificação</th>
+                    <th className="px-6 py-4 text-lg font-black uppercase tracking-[0.1em] text-slate-600">Chegada</th>
+                    <th className="px-6 py-4 text-lg font-black uppercase tracking-[0.1em] text-slate-600">Tipo</th>
+                    <th className="px-6 py-4 text-lg font-black uppercase tracking-[0.1em] text-slate-600">Paciente</th>
+                    <th className="px-6 py-4 text-lg font-black uppercase tracking-[0.1em] text-slate-600">Classificação</th>
                     <th className="px-6 py-4 text-center text-sm font-black uppercase tracking-[0.1em] text-slate-600">Ação</th>
                   </tr>
                 </thead>
                 <tbody>
                   {waitingPatients.length === 0 ? (
                     <tr>
-                      <td className="px-6 py-10 text-center text-sm font-black uppercase tracking-[0.15em] text-slate-300" colSpan={5}>
+                      <td className="px-6 py-10 text-center text-lg font-black uppercase tracking-[0.15em] text-slate-300" colSpan={5}>
                         Nenhum paciente na fila de espera
                       </td>
                     </tr>
@@ -251,17 +251,17 @@ const handleAbandonConsultation = async (patientId: string) => {
                       return (
                         <tr key={patient.id} className={`border-b border-slate-100 ${overdue ? 'animate-pulse bg-orange-50/60' : ''}`}>
                           <td className="px-6 py-4">
-                            <span className="inline-flex rounded-md bg-slate-100 px-2 py-1 text-sm font-black text-slate-600">
+                            <span className="inline-flex rounded-md bg-slate-100 px-2 py-1 text-lg font-black text-slate-600">
                               {new Date(chegada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            <span className="inline-flex rounded-md border border-slate-300 bg-white px-2 py-1 text-sm font-black uppercase text-slate-600">
+                            <span className="inline-flex rounded-md border border-slate-300 bg-white px-2 py-1 text-lg font-black uppercase text-slate-600">
                               {AttendanceTypeLabel[patient.attendanceType]}
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            <div className="text-[0.95rem] font-bold uppercase text-slate-800">{patient.fullName}</div>
+                            <div className="text-xl font-bold uppercase text-slate-800">{patient.fullName}</div>
                             {patient.triageNotes && (
                               <div className="mt-0.5 line-clamp-1 text-xs text-slate-500">
                                 {patient.triageNotes}
@@ -271,7 +271,7 @@ const handleAbandonConsultation = async (patientId: string) => {
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
                               <PriorityBadge priority={patient.priority} showLabel={false} />
-                              <span className="text-sm font-black uppercase text-slate-700">
+                              <span className="text-lg font-black uppercase text-slate-700">
                                 {patient.priority ? PRIORITY_CONFIG[patient.priority].label : 'Não classificado'}
                               </span>
                               {overdue && <span className="text-[0.65rem] font-bold text-orange-600">TEMPO EXCEDIDO</span>}
@@ -289,7 +289,7 @@ const handleAbandonConsultation = async (patientId: string) => {
                                           e.stopPropagation();
                                           handleOpenCallModal(patient);
                                         }}
-                                        className="h-9 rounded-lg bg-indigo-600 px-4 text-sm font-black uppercase tracking-[0.06em] text-white hover:bg-indigo-700"
+                                        className="h-auto rounded-lg bg-indigo-600 px-6 py-4 text-lg font-black uppercase tracking-[0.06em] text-white hover:bg-indigo-700"
                                       >
                                         <Phone className="mr-2 h-4 w-4" />
                                         Selecionar para Consulta
@@ -311,7 +311,7 @@ const handleAbandonConsultation = async (patientId: string) => {
                                   e.stopPropagation();
                                 }}
                                 variant="outline"
-                                className="h-9 rounded-lg px-4 text-sm font-black uppercase tracking-[0.06em]"
+                                className="h-auto rounded-lg px-6 py-4 text-lg font-black uppercase tracking-[0.06em]"
                               >
                                 <CheckCircle className="mr-2 h-4 w-4" />
                                 Finalizar Consulta

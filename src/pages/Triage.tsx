@@ -124,26 +124,26 @@ export default function Triage() {
 return (
   <div className="min-h-screen bg-[#f8fafc] font-['Barlow_Condensed']">
     <Header title="Acolhimento e Classificação de Risco" />
-    <div className="mx-auto w-full max-w-[1100px] px-6 pt-6">
+    <div className="mx-auto w-full max-w-screen-2xl px-3 pt-6">
       <BackButton />
     </div>
 
-    <div className="mx-auto w-full max-w-[1100px] px-6 py-8">
+    <div className="mx-auto w-full max-w-screen-2xl px-3 py-8">
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <Card className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
             <div className="flex items-center space-x-3 border-b border-gray-100 bg-gray-50 p-7">
               <div className="h-7 w-2 rounded-full bg-[#3182ce]"></div>
-              <h2 className="text-lg font-black uppercase tracking-wider text-gray-800">Pacientes em Espera</h2>
+              <h2 className="text-2xl font-black uppercase tracking-wider text-gray-800">Pacientes em Espera</h2>
             </div>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50">
-                      <th className="px-8 py-5 text-base font-black uppercase tracking-wider text-gray-600">Chegada</th>
-                      <th className="px-8 py-5 text-base font-black uppercase tracking-wider text-gray-600">Paciente</th>
-                      <th className="px-8 py-5 text-base font-black uppercase tracking-wider text-gray-600">Documento</th>
+                      <th className="px-8 py-5 text-lg font-black uppercase tracking-wider text-gray-600">Chegada</th>
+                      <th className="px-8 py-5 text-lg font-black uppercase tracking-wider text-gray-600">Paciente</th>
+                      <th className="px-8 py-5 text-lg font-black uppercase tracking-wider text-gray-600">Documento</th>
                       <th className="px-8 py-5 text-center text-base font-black uppercase tracking-wider text-gray-600">Ação</th>
                     </tr>
                   </thead>
@@ -162,12 +162,12 @@ return (
                               {new Date(patient.registeredAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </td>
-                          <td className="px-8 py-6 text-lg font-bold uppercase text-gray-800">{patient.fullName}</td>
-                          <td className="px-8 py-6 text-base italic text-gray-600">{patient.cpf || 'Não informado'}</td>
+                          <td className="px-8 py-6 text-xl font-bold uppercase text-gray-800">{patient.fullName}</td>
+                          <td className="px-8 py-6 text-lg italic text-gray-600">{patient.cpf || 'Não informado'}</td>
                           <td className="px-8 py-6 text-center">
                             <Button
                               onClick={() => handleCall(patient.id)}
-                              className="mx-auto flex items-center space-x-2 rounded-lg bg-[#008140] px-6 py-3 text-base font-black uppercase tracking-wider text-white transition-all hover:bg-green-700"
+                              className="mx-auto flex items-center space-x-2 rounded-lg bg-[#008140] px-6 py-4 text-xl font-black uppercase tracking-wider text-white transition-all hover:bg-green-700"
                             >
                               <Phone className="h-4 w-4" />
                               <span>Chamar Paciente</span>
@@ -187,7 +187,7 @@ return (
           <Card className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
             <div className="flex items-center space-x-3 border-b border-gray-100 bg-gray-50 p-7">
               <div className="h-7 w-2 rounded-full bg-[#ffcc00]"></div>
-              <h2 className="text-lg font-black uppercase tracking-wider text-gray-800">Atendimentos Recentes</h2>
+              <h2 className="text-2xl font-black uppercase tracking-wider text-gray-800">Atendimentos Recentes</h2>
             </div>
             <CardContent className="sidebar-list max-h-[420px] flex-grow divide-y divide-gray-100 overflow-y-auto p-0">
               {waitingPatientsForDoctor.length > 0 ? (
@@ -199,8 +199,8 @@ return (
                     className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-gray-50"
                   >
                     <div>
-                      <p className="text-lg font-bold uppercase leading-tight text-gray-700">{patient.fullName}</p>
-                      <p className="mt-1 text-base font-medium italic text-gray-500">{patient.cpf || 'CPF não informado'}</p>
+                      <p className="text-xl font-bold uppercase leading-tight text-gray-700">{patient.fullName}</p>
+                      <p className="mt-1 text-lg font-medium italic text-gray-500">{patient.cpf || 'CPF não informado'}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <PriorityBadge priority={patient.priority} showLabel={false} />
