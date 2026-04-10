@@ -7,7 +7,7 @@ export default function BackButton({ label = "Voltar" }) {
       variant="default"
       size="lg"
       onClick={() => window.history.back()}
-      className="bg-[#008140] text-white text-xl hover:bg-[#005a2b] font-semibold shadow-md hover:shadow-lg transition-all"
+      className="bg-[#008140] uppercase text-white text-xl hover:bg-[#005a2b] font-semibold shadow-md hover:shadow-lg transition-all"
     >
       <ArrowLeft />
       {label}
