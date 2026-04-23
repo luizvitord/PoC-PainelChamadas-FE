@@ -1,69 +1,10 @@
 import Header from '@/components/Header';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
-import { addConsultorio, getConsultorios } from '@/services/ConsultorioService';
-import { DoorOpen, HeartHandshake, Monitor, Plus, UserPlus } from 'lucide-react';
-import { useState } from 'react';
+import { NewConsultorio } from '@/features/new-consultorio/NewConsultorio';
+import { DoorOpen, HeartHandshake, Monitor, UserPlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Index() {
-  const { toast } = useToast();
-  const [openAddConsultorio, setOpenAddConsultorio] = useState(false);
-  const [consultorioNumero, setConsultorioNumero] = useState('');
-  const [consultorios, setConsultorios] = useState<Array<{ id: string | number }>>([]);
-
-  const handleAddConsultorio = async () => {
-    const result = await addConsultorio(consultorioNumero);
-
-    if (result.error) {
-      toast({
-        title: 'Erro',
-        description: result.error,
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    toast({
-      title: 'Sucesso!',
-      description: 'Consultório adicionado com sucesso.',
-    });
-
-    setConsultorioNumero('');
-    setOpenAddConsultorio(false);
-  };
-
-  const loadConsultorios = async () => {
-    try {
-      const data = await getConsultorios();
-
-      if (data.error) {
-        toast({
-          title: 'Erro ao carregar consultórios',
-          description: data.error,
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      setConsultorios(data);
-    } catch (error) {
-      toast({
-        title: 'Erro',
-        description: 'Erro ao carregar consultórios.',
-        variant: 'destructive',
-      });
-    }
-  };
-
   const cardBaseClassName =
     'h-full min-h-[260px] rounded-2xl border-0 bg-white p-8 shadow-sm outline-none transition-all duration-300 hover:-translate-y-2 flex flex-col items-center text-center justify-between';
   const iconBoxBaseClassName =
@@ -152,81 +93,8 @@ export default function Index() {
             </Card>
           </Link>
 
-          <Card
-            role="button"
-            tabIndex={0}
-            onClick={() => {
-              loadConsultorios();
-              setOpenAddConsultorio(true);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                loadConsultorios();
-                setOpenAddConsultorio(true);
-              }
-            }}
-            className={`${cardBaseClassName} group cursor-pointer border-b-8 border-orange-500`}
-            aria-label="Abrir gestão de novo consultório"
-          >
-            <div className="flex flex-col items-center">
-              <div className={`${iconBoxBaseClassName} bg-orange-50 border-orange-100`}>
-                <Plus className="h-11 w-11 text-orange-600" />
-              </div>
-              <h3 className={cardTitleClassName}>
-                Novo Consultório
-              </h3>
-            </div>
-
-            <p className={cardDescClassName}>
-              Adicionar nova sala de atendimento
-            </p>
-          </Card>
+          <NewConsultorio />
         </div>
-
-        <Dialog open={openAddConsultorio} onOpenChange={setOpenAddConsultorio}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Adicionar Consultório</DialogTitle>
-              <DialogDescription>Insira o número do novo consultório.</DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              <input
-                type="number"
-                className="border rounded px-3 py-2 w-full"
-                placeholder="Insira o número do consultório"
-                value={consultorioNumero}
-                onChange={(e) => setConsultorioNumero(e.target.value)}
-              />
-
-              <div className="mt-4">
-                <h3 className="font-medium mb-2 text-sm text-muted-foreground">
-                  Consultórios cadastrados:
-                </h3>
-
-                <div className="p-2 border rounded-md bg-muted/40 max-h-32 overflow-y-auto text-sm">
-                  {consultorios.length === 0 ? (
-                    <p className="text-muted-foreground">Nenhum consultório cadastrado.</p>
-                  ) : (
-                    <ul className="space-y-1">
-                      {consultorios.map((c) => (
-                        <li key={c.id}>• Consultório {c.id}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 mt-4">
-              <Button variant="outline" onClick={() => setOpenAddConsultorio(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleAddConsultorio}>Salvar</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </main>
     </div>
   );
