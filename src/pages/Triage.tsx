@@ -122,7 +122,7 @@ export default function Triage() {
 
 
 return (
-  <div className="min-h-screen bg-[#f8fafc] font-['Barlow_Condensed']">
+  <div className="min-h-screen bg-[#f8fafc]">
     <Header title="Acolhimento e Classificação de Risco" />
     <div className="mx-auto w-full max-w-screen-2xl px-3 pt-6">
       <BackButton />
@@ -278,7 +278,7 @@ return (
                 Grau de Prioridade (Protocolo de Manchester)
               </Label>
 
-              <div className="rounded-[12px] border border-[#22a35d] bg-[#f8fafc] font-['Barlow_Condensed'] shadow-[0_0_0_4px_rgba(0,129,64,0.12)]">
+              <div className="rounded-[12px] border border-[#22a35d] bg-[#f8fafc] shadow-[0_0_0_4px_rgba(0,129,64,0.12)]">
                 <button
                   type="button"
                   onClick={() => setIsManchesterOpen((prev) => !prev)}
@@ -288,7 +288,7 @@ return (
                     <span className={`inline-flex min-w-[74px] items-center justify-center rounded-full px-3 py-1 text-[1.05rem] font-black uppercase leading-none tracking-wide ${priorityPillClass[priority]}`}>
                       {priorityPillLabel[priority]}
                     </span>
-                    <span className="font-['Barlow_Condensed'] text-[1.08rem] font-bold leading-tight text-[#1f2a44]">
+                    <span className="text-[1.08rem] font-bold leading-tight text-[#1f2a44]">
                       {PRIORITY_CONFIG[priority].label} ({PRIORITY_CONFIG[priority].waitTime})
                     </span>
                   </div>
@@ -316,10 +316,10 @@ return (
                         <div className="flex w-6 justify-center text-[#4f73df]">
                           {priority === level ? <Check className="h-5 w-5" /> : null}
                         </div>
-                        <span className={`inline-flex min-w-[110px] items-center justify-center rounded-full px-3 py-1 font-['Barlow_Condensed'] text-[0.95rem] font-black uppercase leading-none tracking-wide ${priorityPillClass[level]}`}>
+                        <span className={`inline-flex min-w-[110px] items-center justify-center rounded-full px-3 py-1 text-[0.95rem] font-black uppercase leading-none tracking-wide ${priorityPillClass[level]}`}>
                           {priorityPillLabel[level]}
                         </span>
-                        <span className="font-['Barlow_Condensed'] text-[1.08rem] font-bold leading-tight text-[#1f2a44]">
+                        <span className="text-[1.08rem] font-bold leading-tight text-[#1f2a44]">
                           {PRIORITY_CONFIG[level].label} ({PRIORITY_CONFIG[level].waitTime})
                         </span>
                       </button>
