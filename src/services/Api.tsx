@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:1111'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:1111'
 
 export const api = {
     paciente: {

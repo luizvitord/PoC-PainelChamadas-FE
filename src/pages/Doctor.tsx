@@ -126,7 +126,7 @@ const handleRecallPatient = async () => {
 
   useEffect(() => {
     // Ajuste a URL se necessário
-    fetch("http://localhost:1111/consultorios")
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:1111'}/consultorios`)
       .then(res => res.json())
       .then(data => setConsultorios(data))
       .catch(err => console.error("Erro ao carregar consultórios", err));
