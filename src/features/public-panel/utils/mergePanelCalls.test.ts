@@ -15,6 +15,13 @@ function call(callId: string, timestamp: string, shouldAnnounce = false): Triage
   };
 }
 
+function invalidDateCall(callId: string): TriageCall {
+  return {
+    ...call(callId, '2026-04-28T10:00:00'),
+    timestamp: new Date('not-a-date'),
+  };
+}
+
 describe('mergePanelCalls', () => {
   it('orders calls by timestamp descending regardless of arrival order', () => {
     const mergedCalls = mergePanelCalls([
@@ -46,7 +53,7 @@ describe('mergePanelCalls', () => {
     expect(mergedCalls[0].shouldAnnounce).toBe(true);
   });
 
-  it('applies the requested limit after sorting', () => {
+  it('applies the requested limit to non-pending history after sorting', () => {
     const mergedCalls = mergePanelCalls([
       call('1', '2026-04-28T10:00:00'),
       call('2', '2026-04-28T10:01:00'),
@@ -54,5 +61,34 @@ describe('mergePanelCalls', () => {
     ], 2);
 
     expect(mergedCalls.map((item) => item.callId)).toEqual(['3', '2']);
+  });
+
+  it('keeps pending announcements even when the history limit is reached', () => {
+    const mergedCalls = mergePanelCalls([
+      call('1', '2026-04-28T10:00:00'),
+      call('2', '2026-04-28T10:01:00'),
+      call('3', '2026-04-28T10:02:00', true),
+    ], 1);
+
+    expect(mergedCalls.map((item) => item.callId)).toEqual(['3', '2']);
+  });
+
+  it('treats invalid timestamps as the oldest calls when sorting', () => {
+    const mergedCalls = mergePanelCalls([
+      invalidDateCall('99'),
+      call('1', '2026-04-28T10:00:00'),
+      call('2', '2026-04-28T10:01:00'),
+    ], 10);
+
+    expect(mergedCalls.map((item) => item.callId)).toEqual(['2', '1', '99']);
+  });
+
+  it('does not replace a valid duplicate timestamp with an invalid one', () => {
+    const mergedCalls = mergePanelCalls([
+      call('5', '2026-04-28T10:00:00', false),
+      invalidDateCall('5'),
+    ], 10);
+
+    expect(mergedCalls[0].timestamp).toEqual(new Date('2026-04-28T10:00:00'));
   });
 });

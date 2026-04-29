@@ -23,9 +23,23 @@ export function mapBackendPanelCall(call: BackendPanelCall, shouldAnnounce = fal
     type,
     room: mapRoom(call, type),
     priority: mapPriority(call.priority),
-    timestamp: call.createdAt ? new Date(call.createdAt) : new Date(),
+    timestamp: mapCreatedAt(call.createdAt),
     shouldAnnounce,
   };
+}
+
+function mapCreatedAt(createdAt: BackendPanelCall['createdAt']) {
+  if (!createdAt) {
+    return new Date();
+  }
+
+  const parsedDate = new Date(createdAt);
+
+  if (Number.isFinite(parsedDate.getTime())) {
+    return parsedDate;
+  }
+
+  return new Date(0);
 }
 
 function mapRoom(call: BackendPanelCall, type: TriageCall['type']) {

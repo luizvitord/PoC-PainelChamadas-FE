@@ -366,6 +366,39 @@ describe('usePanelSpeech', () => {
     ]);
   });
 
+  it('keeps only the bounded displayed calls needed for the recent list', () => {
+    vi.useFakeTimers();
+
+    const calls = Array.from({ length: 9 }, (_, index) => ({
+      ...doctorCall,
+      callId: `shown-${index}`,
+      displayName: `PACIENTE ${index}`,
+      speechText: `Paciente ${index}. Favor comparecer ao consultório número 3.`,
+      shouldAnnounce: true,
+    })).reverse();
+
+    const { result } = renderHook(({ recentCalls }) => usePanelSpeech(recentCalls), {
+      initialProps: { recentCalls: calls },
+    });
+
+    for (let index = 0; index < 8; index += 1) {
+      act(() => {
+        speakMock.mock.calls[index][0].onend?.();
+        vi.advanceTimersByTime(5000);
+      });
+    }
+
+    expect(result.current.currentCall?.callId).toBe('shown-8');
+    expect(result.current.previousCalls.map((call) => call.callId)).toEqual([
+      'shown-7',
+      'shown-6',
+      'shown-5',
+      'shown-4',
+      'shown-3',
+      'shown-2',
+    ]);
+  });
+
   it('keeps previously loaded recent calls when a new call becomes active', () => {
     const previousHistoryCall: PublicPanelCallViewModel = {
       callId: 'call-history',

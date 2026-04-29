@@ -8,9 +8,13 @@ export function mergePanelCalls(calls: TriageCall[], limit: number) {
     callsById.set(call.callId, mergeDuplicateCall(existingCall, call));
   }
 
-  return Array.from(callsById.values())
-    .sort(comparePanelCallsDesc)
+  const sortedCalls = Array.from(callsById.values()).sort(comparePanelCallsDesc);
+  const pendingAnnouncementCalls = sortedCalls.filter((call) => call.shouldAnnounce);
+  const historicalCalls = sortedCalls
+    .filter((call) => !call.shouldAnnounce)
     .slice(0, limit);
+
+  return [...pendingAnnouncementCalls, ...historicalCalls].sort(comparePanelCallsDesc);
 }
 
 function mergeDuplicateCall(existingCall: TriageCall | undefined, nextCall: TriageCall) {
@@ -21,18 +25,24 @@ function mergeDuplicateCall(existingCall: TriageCall | undefined, nextCall: Tria
   return {
     ...existingCall,
     ...nextCall,
+    timestamp: getTimestamp(nextCall) > 0 ? nextCall.timestamp : existingCall.timestamp,
     shouldAnnounce: Boolean(existingCall.shouldAnnounce || nextCall.shouldAnnounce),
   };
 }
 
 function comparePanelCallsDesc(left: TriageCall, right: TriageCall) {
-  const timestampDiff = right.timestamp.getTime() - left.timestamp.getTime();
+  const timestampDiff = getTimestamp(right) - getTimestamp(left);
 
   if (timestampDiff !== 0) {
     return timestampDiff;
   }
 
   return compareCallIdsDesc(left.callId, right.callId);
+}
+
+function getTimestamp(call: TriageCall) {
+  const timestamp = call.timestamp.getTime();
+  return Number.isFinite(timestamp) ? timestamp : 0;
 }
 
 function compareCallIdsDesc(leftCallId: string, rightCallId: string) {

@@ -9,6 +9,7 @@ const PANEL_SPEECH_PITCH = 1;
 const PANEL_SPEECH_VOLUME = 1;
 const PANEL_MIN_CALL_DISPLAY_MS = 5000;
 const PANEL_IGNORED_SPEECH_CHECK_MS = 750;
+const PANEL_DISPLAYED_CALL_IDS_LIMIT = PANEL_RECENT_CALLS_LIMIT + 1;
 
 function supportsSpeechSynthesis() {
   return (
@@ -68,7 +69,7 @@ export function usePanelSpeech(recentCalls: PublicPanelCallViewModel[]): PublicP
     setDisplayedCallIds((currentCallIds) => [
       nextCall.callId,
       ...currentCallIds.filter((callId) => callId !== nextCall.callId),
-    ]);
+    ].slice(0, PANEL_DISPLAYED_CALL_IDS_LIMIT));
 
     const finishPresentation = () => {
       if (presentationTokenRef.current !== presentationToken) {
@@ -223,12 +224,13 @@ export function usePanelSpeech(recentCalls: PublicPanelCallViewModel[]): PublicP
   }, []);
 
   useEffect(() => {
+    const displayedCallIdsSet = new Set(displayedCallIds);
     const callsToAnnounce = recentCalls
       .filter((call) => call.shouldAnnounce)
       .filter((call) => (
         !spokenCallIdsRef.current.has(call.callId) &&
         !queuedCallIdsRef.current.has(call.callId) &&
-        !displayedCallIds.includes(call.callId) &&
+        !displayedCallIdsSet.has(call.callId) &&
         activeCallId !== call.callId
       ))
       .reverse();

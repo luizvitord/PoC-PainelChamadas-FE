@@ -8,11 +8,13 @@ import { mapCallToViewModel } from '../utils/mapCallToViewModel';
 import { mergePanelCalls } from '../utils/mergePanelCalls';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:1111';
-const PANEL_CALLS_LIMIT = 10;
+const PANEL_CALLS_RETAIN_LIMIT = 250;
+const KNOWN_CALL_IDS_LIMIT = 500;
 
 export function usePublicPanelData(): PublicPanelDataModel {
   const [recentCalls, setRecentCalls] = useState<TriageCall[]>([]);
   const knownCallIdsRef = useRef(new Set<string>());
+  const knownCallIdOrderRef = useRef<string[]>([]);
   const initialHistoryLoadedRef = useRef(false);
 
   useEffect(() => {
@@ -29,10 +31,10 @@ export function usePublicPanelData(): PublicPanelDataModel {
             return mapBackendPanelCall(backendCall, shouldAnnounce);
           });
 
-          loadedCalls.forEach((call) => knownCallIdsRef.current.add(call.callId));
+          rememberKnownCallIds(loadedCalls.map((call) => call.callId));
           initialHistoryLoadedRef.current = true;
 
-          setRecentCalls((prev) => mergePanelCalls([...loadedCalls, ...prev], PANEL_CALLS_LIMIT));
+          setRecentCalls((prev) => mergePanelCalls([...loadedCalls, ...prev], PANEL_CALLS_RETAIN_LIMIT));
         }
       } catch (error) {
         console.error('Falha ao carregar chamadas recentes do painel:', error);
@@ -50,9 +52,9 @@ export function usePublicPanelData(): PublicPanelDataModel {
     const handlePatientCalled = (event: MessageEvent<string>) => {
       try {
         const call = mapBackendPanelCall(JSON.parse(event.data) as BackendPanelCall, true);
-        knownCallIdsRef.current.add(call.callId);
+        rememberKnownCallIds([call.callId]);
 
-        setRecentCalls((prev) => mergePanelCalls([call, ...prev], PANEL_CALLS_LIMIT));
+        setRecentCalls((prev) => mergePanelCalls([call, ...prev], PANEL_CALLS_RETAIN_LIMIT));
       } catch (error) {
         console.error('Falha ao processar chamada recebida por SSE:', error);
       }
@@ -76,4 +78,23 @@ export function usePublicPanelData(): PublicPanelDataModel {
   return {
     recentCalls: recentCalls.map(mapCallToViewModel),
   };
+
+  function rememberKnownCallIds(callIds: string[]) {
+    callIds.forEach((callId) => {
+      if (knownCallIdsRef.current.has(callId)) {
+        return;
+      }
+
+      knownCallIdsRef.current.add(callId);
+      knownCallIdOrderRef.current.push(callId);
+    });
+
+    while (knownCallIdOrderRef.current.length > KNOWN_CALL_IDS_LIMIT) {
+      const callIdToDelete = knownCallIdOrderRef.current.shift();
+
+      if (callIdToDelete) {
+        knownCallIdsRef.current.delete(callIdToDelete);
+      }
+    }
+  }
 }
