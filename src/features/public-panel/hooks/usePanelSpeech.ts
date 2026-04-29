@@ -7,12 +7,19 @@ import { selectPreferredSpeechVoice } from '../utils/selectPreferredSpeechVoice'
 const PANEL_SPEECH_RATE = 0.86;
 const PANEL_SPEECH_PITCH = 1;
 const PANEL_SPEECH_VOLUME = 1;
+const PANEL_MIN_CALL_DISPLAY_MS = 5000;
+const PANEL_IGNORED_SPEECH_CHECK_MS = 750;
+const PANEL_DISPLAYED_CALL_IDS_LIMIT = PANEL_RECENT_CALLS_LIMIT + 1;
 
 function supportsSpeechSynthesis() {
-  return typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.speechSynthesis !== 'undefined' &&
+    typeof window.SpeechSynthesisUtterance !== 'undefined'
+  );
 }
 
-interface QueuedSpeech {
+interface QueuedCall {
   callId: string;
   speechText: string;
 }
@@ -24,44 +31,95 @@ interface SpeechSynthesisEventTarget {
 
 export function usePanelSpeech(recentCalls: PublicPanelCallViewModel[]): PublicPanelViewModel {
   const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
-  const queueRef = useRef<QueuedSpeech[]>([]);
+  const queueRef = useRef<QueuedCall[]>([]);
   const queuedCallIdsRef = useRef(new Set<string>());
   const spokenCallIdsRef = useRef(new Set<string>());
   const callRegistryRef = useRef(new Map<string, PublicPanelCallViewModel>());
-  const isSpeakingRef = useRef(false);
+  const isPresentingRef = useRef(false);
+  const presentationTokenRef = useRef<symbol | null>(null);
+  const presentationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ignoredSpeechTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [activeCallId, setActiveCallId] = useState<string | null>(null);
-  const [announcedCallIds, setAnnouncedCallIds] = useState<string[]>([]);
-  const latestCall = recentCalls[0] ?? null;
+  const [displayedCallIds, setDisplayedCallIds] = useState<string[]>([]);
 
-  const speakNextRef = useRef<() => void>(() => undefined);
+  const presentNextRef = useRef<() => void>(() => undefined);
 
   recentCalls.forEach((call) => {
     callRegistryRef.current.set(call.callId, call);
   });
 
-  speakNextRef.current = () => {
-    if (!supportsSpeechSynthesis() || isSpeakingRef.current || queueRef.current.length === 0) {
+  presentNextRef.current = () => {
+    if (isPresentingRef.current || queueRef.current.length === 0) {
+      return;
+    }
+
+    const nextCall = queueRef.current.shift();
+
+    if (!nextCall) {
+      return;
+    }
+
+    const presentationToken = Symbol(nextCall.callId);
+    const presentationStartedAt = Date.now();
+
+    queuedCallIdsRef.current.delete(nextCall.callId);
+    presentationTokenRef.current = presentationToken;
+    isPresentingRef.current = true;
+    setActiveCallId(nextCall.callId);
+    setDisplayedCallIds((currentCallIds) => [
+      nextCall.callId,
+      ...currentCallIds.filter((callId) => callId !== nextCall.callId),
+    ].slice(0, PANEL_DISPLAYED_CALL_IDS_LIMIT));
+
+    const finishPresentation = () => {
+      if (presentationTokenRef.current !== presentationToken) {
+        return;
+      }
+
+      if (ignoredSpeechTimeoutRef.current) {
+        clearTimeout(ignoredSpeechTimeoutRef.current);
+        ignoredSpeechTimeoutRef.current = null;
+      }
+
+      spokenCallIdsRef.current.add(nextCall.callId);
+      isPresentingRef.current = false;
+      presentationTokenRef.current = null;
+      presentationTimeoutRef.current = null;
+      presentNextRef.current();
+    };
+
+    const finishAfterMinimumDuration = () => {
+      if (ignoredSpeechTimeoutRef.current) {
+        clearTimeout(ignoredSpeechTimeoutRef.current);
+        ignoredSpeechTimeoutRef.current = null;
+      }
+
+      const elapsed = Date.now() - presentationStartedAt;
+      const remaining = Math.max(PANEL_MIN_CALL_DISPLAY_MS - elapsed, 0);
+
+      if (presentationTimeoutRef.current) {
+        clearTimeout(presentationTimeoutRef.current);
+      }
+
+      presentationTimeoutRef.current = setTimeout(finishPresentation, remaining);
+    };
+
+    if (!supportsSpeechSynthesis()) {
+      finishAfterMinimumDuration();
       return;
     }
 
     const synthesis = window.speechSynthesis;
-    const nextSpeech = queueRef.current.shift();
 
-    if (!nextSpeech) {
+    const utterance = new SpeechSynthesisUtterance(nextCall.speechText);
+    const availableVoices = synthesis.getVoices();
+    const voices = availableVoices.length > 0 ? availableVoices : voicesRef.current;
+    const preferredVoice = selectPreferredSpeechVoice(voices);
+
+    if (voices.length === 0) {
+      finishAfterMinimumDuration();
       return;
     }
-
-    queuedCallIdsRef.current.delete(nextSpeech.callId);
-    isSpeakingRef.current = true;
-    setActiveCallId(nextSpeech.callId);
-    setAnnouncedCallIds((currentCallIds) => [
-      nextSpeech.callId,
-      ...currentCallIds.filter((callId) => callId !== nextSpeech.callId),
-    ]);
-
-    const utterance = new SpeechSynthesisUtterance(nextSpeech.speechText);
-    const availableVoices = synthesis.getVoices();
-    const preferredVoice = selectPreferredSpeechVoice(availableVoices.length > 0 ? availableVoices : voicesRef.current);
 
     utterance.lang = 'pt-BR';
     utterance.rate = PANEL_SPEECH_RATE;
@@ -72,21 +130,44 @@ export function usePanelSpeech(recentCalls: PublicPanelCallViewModel[]): PublicP
       utterance.voice = preferredVoice;
     }
 
-    const finishSpeech = () => {
-      spokenCallIdsRef.current.add(nextSpeech.callId);
-      isSpeakingRef.current = false;
-      speakNextRef.current();
-    };
+    utterance.onend = finishAfterMinimumDuration;
+    utterance.onerror = finishAfterMinimumDuration;
 
-    utterance.onend = finishSpeech;
-    utterance.onerror = finishSpeech;
+    try {
+      synthesis.speak(utterance);
 
-    synthesis.speak(utterance);
+      ignoredSpeechTimeoutRef.current = setTimeout(() => {
+        if (
+          presentationTokenRef.current === presentationToken &&
+          !synthesis.speaking &&
+          !synthesis.pending
+        ) {
+          finishAfterMinimumDuration();
+        }
+      }, PANEL_IGNORED_SPEECH_CHECK_MS);
+    } catch (error) {
+      console.error('Falha ao iniciar text-to-speech do painel:', error);
+      finishAfterMinimumDuration();
+    }
   };
 
   useEffect(() => {
     if (!supportsSpeechSynthesis()) {
-      return undefined;
+      return () => {
+        queueRef.current = [];
+        queuedCallIdsRef.current.clear();
+        spokenCallIdsRef.current.clear();
+        isPresentingRef.current = false;
+        presentationTokenRef.current = null;
+        if (presentationTimeoutRef.current) {
+          clearTimeout(presentationTimeoutRef.current);
+          presentationTimeoutRef.current = null;
+        }
+        if (ignoredSpeechTimeoutRef.current) {
+          clearTimeout(ignoredSpeechTimeoutRef.current);
+          ignoredSpeechTimeoutRef.current = null;
+        }
+      };
     }
 
     const synthesis = window.speechSynthesis;
@@ -106,7 +187,16 @@ export function usePanelSpeech(recentCalls: PublicPanelCallViewModel[]): PublicP
         queueRef.current = [];
         queuedCallIdsRef.current.clear();
         spokenCallIdsRef.current.clear();
-        isSpeakingRef.current = false;
+        isPresentingRef.current = false;
+        presentationTokenRef.current = null;
+        if (presentationTimeoutRef.current) {
+          clearTimeout(presentationTimeoutRef.current);
+          presentationTimeoutRef.current = null;
+        }
+        if (ignoredSpeechTimeoutRef.current) {
+          clearTimeout(ignoredSpeechTimeoutRef.current);
+          ignoredSpeechTimeoutRef.current = null;
+        }
         synthesis.cancel();
       };
     }
@@ -119,39 +209,46 @@ export function usePanelSpeech(recentCalls: PublicPanelCallViewModel[]): PublicP
       queueRef.current = [];
       queuedCallIdsRef.current.clear();
       spokenCallIdsRef.current.clear();
-      isSpeakingRef.current = false;
+      isPresentingRef.current = false;
+      presentationTokenRef.current = null;
+      if (presentationTimeoutRef.current) {
+        clearTimeout(presentationTimeoutRef.current);
+        presentationTimeoutRef.current = null;
+      }
+      if (ignoredSpeechTimeoutRef.current) {
+        clearTimeout(ignoredSpeechTimeoutRef.current);
+        ignoredSpeechTimeoutRef.current = null;
+      }
       synthesis.cancel();
     };
   }, []);
 
   useEffect(() => {
-    if (!latestCall || !supportsSpeechSynthesis()) {
-      return;
-    }
+    const displayedCallIdsSet = new Set(displayedCallIds);
+    const callsToAnnounce = recentCalls
+      .filter((call) => call.shouldAnnounce)
+      .filter((call) => (
+        !spokenCallIdsRef.current.has(call.callId) &&
+        !queuedCallIdsRef.current.has(call.callId) &&
+        !displayedCallIdsSet.has(call.callId) &&
+        activeCallId !== call.callId
+      ))
+      .reverse();
 
-    if (
-      spokenCallIdsRef.current.has(latestCall.callId) ||
-      queuedCallIdsRef.current.has(latestCall.callId) ||
-      activeCallId === latestCall.callId
-    ) {
-      return;
-    }
+    callsToAnnounce.forEach((call) => {
+      queueRef.current.push({ callId: call.callId, speechText: call.speechText });
+      queuedCallIdsRef.current.add(call.callId);
+    });
 
-    queueRef.current.push({ callId: latestCall.callId, speechText: latestCall.speechText });
-    queuedCallIdsRef.current.add(latestCall.callId);
-    speakNextRef.current();
-  }, [activeCallId, latestCall]);
+    presentNextRef.current();
+  }, [activeCallId, displayedCallIds, recentCalls]);
 
-  if (!supportsSpeechSynthesis()) {
-    return {
-      currentCall: recentCalls[0] ?? null,
-      previousCalls: recentCalls.slice(1, PANEL_RECENT_CALLS_LIMIT + 1),
-    };
-  }
-
-  const currentCall = activeCallId ? callRegistryRef.current.get(activeCallId) ?? null : null;
-  const previousCalls = announcedCallIds
-    .filter((callId) => callId !== activeCallId)
+  const currentCall = activeCallId ? callRegistryRef.current.get(activeCallId) ?? null : recentCalls[0] ?? null;
+  const historicalCallIds = recentCalls
+    .filter((call) => !call.shouldAnnounce)
+    .map((call) => call.callId);
+  const previousCalls = [...displayedCallIds, ...historicalCallIds]
+    .filter((callId, index, callIds) => callId !== currentCall?.callId && callIds.indexOf(callId) === index)
     .map((callId) => callRegistryRef.current.get(callId))
     .filter((call): call is PublicPanelCallViewModel => Boolean(call))
     .slice(0, PANEL_RECENT_CALLS_LIMIT);

@@ -17,5 +17,6 @@ export function mapCallToViewModel(call: TriageCall): PublicPanelCallViewModel {
     recentDestinationLabel: buildRecentDestinationLabel(call),
     speechText: buildSpeechText(call),
     type: call.type,
+    shouldAnnounce: call.shouldAnnounce,
   };
 }

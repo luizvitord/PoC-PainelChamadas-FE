@@ -1,6 +1,6 @@
 import axios from 'axios';
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Patient, PriorityLevel, TriageCall } from '@/types/patient';
+import { Patient, PriorityLevel } from '@/types/patient';
 import { AttendanceTypeBackend, PriorityBackend } from '@/lib/utils/backendMaps';
 
 const api = axios.create({
@@ -10,9 +10,8 @@ const api = axios.create({
 
 interface PatientContextType {
   patients: Patient[];
-  recentCalls: TriageCall[];
   registerPatient: (data: { fullName: string; dateOfBirth: string; cpf: string }) => Promise<Patient>;
-  callForTriage: (patientId: string) => void;
+  callForTriage: (patientId: string) => Promise<void>;
   assignPriority: (patientId: string, priority: PriorityLevel, attendanceType: 'clinical' | 'psychiatric' | 'samu', notes: string) => Promise<void>;
   callForDoctor: (patientId: string, room: string) => Promise<void>;
   recallPatient: (patientId: string, room: string) => Promise<void>;
@@ -25,40 +24,15 @@ interface PatientContextType {
 
 const PatientContext = createContext<PatientContextType | undefined>(undefined);
 
-const mapBackendPriority = (risco: string): PriorityLevel => {
+const mapBackendPriority = (risco?: string | null): PriorityLevel => {
   const map: Record<string, PriorityLevel> = {
     'VERMELHO': 'red', 'LARANJA': 'orange', 'AMARELO': 'yellow', 'VERDE': 'green', 'AZUL': 'blue'
   };
-  return map[risco] || 'green';
+  return risco ? map[risco] || 'green' : 'green';
 };
 
 export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [recentCalls, setRecentCalls] = useState<TriageCall[]>(() => {
-    const saved = localStorage.getItem('recentCalls');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return parsed.map((c: any) => ({ ...c, timestamp: new Date(c.timestamp) }));
-    }
-    return [];
-  });
-
-  useEffect(() => {
-    localStorage.setItem('recentCalls', JSON.stringify(recentCalls));
-  }, [recentCalls]);
-
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'recentCalls' && e.newValue) {
-        const parsed = JSON.parse(e.newValue);
-        const fixedDates = parsed.map((c: any) => ({ ...c, timestamp: new Date(c.timestamp) }));
-        setRecentCalls(fixedDates);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
 
   const refreshPatients = useCallback(async () => {
     try {
@@ -133,43 +107,13 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [refreshPatients]);
 
   const callForDoctor = useCallback(async (patientId: string, room: string) => {
-
     await api.put(`/pacientes/${patientId}/chamar?consultorioId=${room}`);
-
-    const patient = patients.find(p => p.id === patientId);
-    if (patient) {
-      setRecentCalls(prev => [{
-        callId: crypto.randomUUID(),
-        ticketNumber: patient.ticketNumber || 'N/A',
-        patientName: patient.fullName,
-        type: 'doctor' as const,
-        room,
-        priority: patient.priority,
-        timestamp: new Date()
-      }, ...prev].slice(0, 4));
-    }
-
     await refreshPatients();
-  }, [patients, refreshPatients]);
+  }, [refreshPatients]);
 
   const recallPatient = useCallback(async (patientId: string, room: string) => {
-  // 1. Avisa o backend
-  await api.put(`/pacientes/${patientId}/rechamar`);
-  
-  // 2. Avisa o painel (TV) criando um evento novo
-  const patient = patients.find(p => p.id === patientId);
-  if (patient) {
-    setRecentCalls(prev => [{
-      callId: crypto.randomUUID(), // Gera um ID novo pro painel apitar e falar de novo!
-      ticketNumber: patient.ticketNumber || 'N/A',
-      patientName: patient.fullName,
-      type: 'doctor' as const,
-      room: room, // Manda apenas o número da sala (ex: "1")
-      priority: patient.priority,
-      timestamp: new Date()
-    }, ...prev].slice(0, 4));
-  }
-  }, [patients]);
+    await api.put(`/pacientes/${patientId}/rechamar`);
+  }, []);
 
   const completeConsultation = useCallback(async (patientId: string) => {
     console.log(`Finalizando consulta para paciente ID: ${patientId}`);
@@ -182,21 +126,10 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await refreshPatients();
   }, [refreshPatients]);
 
-  const callForTriage = useCallback((patientId: string) => {
+  const callForTriage = useCallback(async (patientId: string) => {
+    await api.put(`/pacientes/${patientId}/chamar-triagem`);
     setPatients(prev => prev.map(p => p.id === patientId ? { ...p, status: 'in-triage' } : p));
-    const patient = patients.find(p => p.id === patientId);
-    if (patient) {
-      setRecentCalls(prev => [{
-        callId: crypto.randomUUID(),
-        ticketNumber: patient.ticketNumber || 'SENHA',
-        timestamp: new Date(),
-        priority: 'green' as const,
-        patientName: patient.fullName,
-        type: 'triage' as const,
-        room: 'Triagem',
-      }, ...prev].slice(0, 10));
-    }
-  }, [patients]);
+  }, []);
 
 
 
@@ -205,7 +138,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   return (
     <PatientContext.Provider value={{
-      patients, recentCalls, registerPatient, callForTriage,
+      patients, registerPatient, callForTriage,
       assignPriority, callForDoctor, completeConsultation, abandonConsultation,
       getWaitingForTriage, getWaitingForDoctor, refreshPatients,
       recallPatient
