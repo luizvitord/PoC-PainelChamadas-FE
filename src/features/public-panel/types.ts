@@ -8,6 +8,7 @@ export interface PublicPanelCallViewModel {
   recentDestinationLabel: string;
   speechText: string;
   type: TriageCall['type'];
+  shouldAnnounce?: boolean;
 }
 
 export interface PublicPanelViewModel {

@@ -23,6 +23,7 @@ export interface TriageCall {
   room?: string;
   priority?: PriorityLevel;
   timestamp: Date;
+  shouldAnnounce?: boolean;
 }
 
 export const PRIORITY_CONFIG: Record<PriorityLevel, { label: string; waitTime: string; order: number }> = {
