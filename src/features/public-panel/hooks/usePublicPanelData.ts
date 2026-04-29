@@ -62,7 +62,7 @@ export function usePublicPanelData(): PublicPanelDataModel {
     source.addEventListener('patient-called', handlePatientCalled as EventListener);
 
     source.onerror = () => {
-      console.warn('Conexao SSE do painel interrompida; o navegador tentara reconectar automaticamente.');
+      console.warn('Conexão SSE do painel interrompida; o navegador tentará reconectar automaticamente.');
     };
 
     return () => {
