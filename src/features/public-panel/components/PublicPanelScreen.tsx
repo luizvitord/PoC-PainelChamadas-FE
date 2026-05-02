@@ -43,7 +43,7 @@ export function PublicPanelScreen({ currentCall, previousCalls }: PublicPanelScr
                   <article key={call.callId} className="rounded-xl border border-slate-300 bg-white px-4 py-4">
                     <p className="break-words text-lg font-black uppercase leading-tight text-slate-900">{call.displayName}</p>
                     <p className="mt-1 text-sm font-bold uppercase tracking-[0.1em] text-[#006434]">
-                      {call.recentDestinationLabel}
+                      {call.currentDestinationLabel}
                     </p>
                   </article>
                 ))
