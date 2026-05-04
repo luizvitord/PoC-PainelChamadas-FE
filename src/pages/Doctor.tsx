@@ -12,6 +12,7 @@ import { AttendanceTypeLabel } from '@/lib/attendanceTypes';
 import { PRIORITY_CONFIG } from "@/types/patient";
 import { CheckCircle, Phone } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { CalledPatientTimer } from '@/components/CalledPatientTimer';
 
 export default function Doctor() {
   const { getWaitingForDoctor, callForDoctor, completeConsultation, abandonConsultation, refreshPatients, recallPatient } = usePatients();
@@ -27,6 +28,8 @@ export default function Doctor() {
   const [patientToFinish, setPatientToFinish] = useState<any | null>(null);
   const [confirmAbandonOpen, setConfirmAbandonOpen] = useState(false);
   const [patientToAbandon, setPatientToAbandon] = useState<any | null>(null);
+  const [calledAt, setCalledAt] = useState<number | null>(null);
+  const [timerOpen, setTimerOpen] = useState(false);
   
   // Variável adicionada pela equipe (tempo excedido)
   const [now, setNow] = useState(Date.now());
@@ -70,6 +73,8 @@ export default function Doctor() {
 
   try {
     await callForDoctor(activePatient.id, room);
+    setCalledAt(Date.now());
+    setTimerOpen(true);
     setActivePatientId(activePatient.id);
     
     // LÓGICA ATUALIZADA: Registra que o paciente já foi chamado e salva no navegador
@@ -146,18 +151,18 @@ const handleRecallPatient = async () => {
   return () => clearInterval(interval);
 }, []);
 
-  const handleConfirmCall = async () => {
-    if (selectedPatientId && room) {
-      try {
-        await callForDoctor(selectedPatientId, room);
-        toast({ title: 'Paciente Chamado', description: `Chamando para a sala ${room}` });
-        setSelectedPatientId(null);
-        setRoom('');
-      } catch (error) {
-        toast({ variant: "destructive", title: "Error", description: "Falha ao chamar o paciente." });
-      }
-    }
-  };
+  // const handleConfirmCall = async () => {
+  //   if (selectedPatientId && room) {
+  //     try {
+  //       await callForDoctor(selectedPatientId, room);
+  //       toast({ title: 'Paciente Chamado', description: `Chamando para a sala ${room}` });
+  //       setSelectedPatientId(null);
+  //       setRoom('');
+  //     } catch (error) {
+  //       toast({ variant: "destructive", title: "Error", description: "Falha ao chamar o paciente." });
+  //     }
+  //   }
+  // };
 
   const handleFinishConsultation = async (patientId: string) =>{
     try{
@@ -401,6 +406,10 @@ const handleAbandonConsultation = async (patientId: string) => {
               Finalizar Consulta
             </Button>
           </div>
+          {/* Timer — aparece após chamar */}
+          {calledAt && calledPatientIds.has(activePatient?.id) && (
+            <CalledPatientTimer calledAt={calledAt} />
+          )}
         </DialogContent>
       </Dialog>
 
