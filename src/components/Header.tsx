@@ -31,10 +31,10 @@ export default function Header({ title }) {
       <div className="w-px h-[46px] bg-white/25 flex-shrink-0" />
 
       <div className="flex-1 flex flex-col">
-        <span className="text-[1.45rem] font-black uppercase tracking-[0.08em] leading-none">
+        <span className="text-[1.45rem] font-black uppercase tracking-[0.03em] leading-none">
           {title}
         </span>
-        <span className="text-[0.82rem] font-semibold uppercase opacity-75 tracking-[0.1em] mt-1">
+        <span className="text-[16px] font-semibold uppercase opacity-80 tracking-[0.08em] mt-1">
           Hospital de Saúde Mental Prof. Frota Pinto
         </span>
       </div>

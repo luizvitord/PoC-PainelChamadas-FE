@@ -89,7 +89,7 @@ export default function Reception() {
     <div className="reception-shell">
     <Header title="Recepção" />
     {/* Back button */}
-    <div className="mx-auto w-full max-w-7xl px-4 md:px-8 pt-6">
+    <div className="mx-auto w-full max-w-screen-2xl px-3 pt-6">
       <BackButton />
     </div>
       <main className="reception-main">
@@ -98,22 +98,22 @@ export default function Reception() {
             {/* Coluna cadastro */}
             <div className="lg:col-span-2">
               <Card className="border border-gray-100 bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="flex items-center gap-3 bg-[#008140] px-5 py-4">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
-                    <UserPlus className="h-5 w-5 text-white" />
+                <div className="flex items-center gap-4 bg-[#008140] px-6 py-5">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10">
+                    <UserPlus className="h-7 w-7 text-white" />
                   </div>
-                  <h2 className="text-white text-base font-black uppercase tracking-[0.1em]">
+                  <h2 className="text-white text-2xl font-black uppercase tracking-[0.1em]">
                     Registrar Novo Paciente
                   </h2>
                 </div>
 
-                <CardContent className="p-6 md:p-10">
-                  <form onSubmit={handleSubmit} className="space-y-8">
-                    <div className="grid gap-6 md:grid-cols-2">
+                <CardContent className="p-8 md:p-12">
+                  <form onSubmit={handleSubmit} className="space-y-10">
+                    <div className="grid gap-8 md:grid-cols-2">
                       <div className="md:col-span-2">
                         <Label
                           htmlFor="fullName"
-                          className="mb-3 block text-sm font-black uppercase tracking-[0.1em] text-gray-500"
+                          className="mb-3 block text-lg font-black uppercase tracking-[0.1em] text-gray-500"
                         >
                           Nome Completo
                         </Label>
@@ -123,16 +123,16 @@ export default function Reception() {
                           value={formData.fullName}
                           onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                           placeholder="Digite o nome do paciente..."
-                          className="h-auto w-full rounded-xl border border-gray-200 bg-gray-50 px-5 py-4 text-sm font-medium text-gray-700 placeholder:text-gray-400 focus:bg-white focus-visible:ring-2 focus-visible:ring-[#008140]/50"
+                          className="h-auto w-full rounded-xl border border-gray-200 bg-gray-50 px-5 py-5 text-xl font-medium text-gray-700 placeholder:text-gray-400 focus:bg-white focus-visible:ring-2 focus-visible:ring-[#008140]/50"
                         />
                       </div>
 
                       <div>
                         <Label
                           htmlFor="dateOfBirth"
-                          className="mb-3 block text-sm font-black uppercase tracking-[0.1em] text-gray-500"
+                          className="mb-3 block text-lg font-black uppercase tracking-[0.1em] text-gray-500"
                         >
-                          Data de Nascimento
+                          Data de Nascimento <p className="text-xs text-gray-300">(não obrigatório)</p>
                         </Label>
                         <Input
                           id="dateOfBirth"
@@ -140,16 +140,16 @@ export default function Reception() {
                           value={formData.dateOfBirth}
                           max={new Date().toISOString().split("T")[0]}
                           onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                          className="h-auto w-full rounded-xl border border-gray-200 bg-gray-50 px-5 py-4 text-sm font-medium text-gray-700 focus:bg-white focus-visible:ring-2 focus-visible:ring-[#008140]/50"
+                          className="h-auto w-full rounded-xl border border-gray-200 bg-gray-50 px-5 py-5 text-xl font-medium text-gray-700 focus:bg-white focus-visible:ring-2 focus-visible:ring-[#008140]/50"
                         />
                       </div>
 
                       <div>
                         <Label
                           htmlFor="cpf"
-                          className="mb-3 block text-sm font-black uppercase tracking-[0.1em] text-gray-500"
+                          className="mb-3 block text-lg font-black uppercase tracking-[0.1em] text-gray-500"
                         >
-                          CPF
+                          CPF <p className="text-xs text-gray-300">(não obrigatório)</p>
                         </Label>
                         <Input
                           id="cpf"
@@ -157,7 +157,7 @@ export default function Reception() {
                           onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
                           placeholder="000.000.000-00"
                           maxLength={14}
-                          className="h-auto w-full rounded-xl border border-gray-200 bg-gray-50 px-5 py-4 text-sm font-medium text-gray-700 placeholder:text-gray-400 focus:bg-white focus-visible:ring-2 focus-visible:ring-[#008140]/50"
+                          className="h-auto w-full rounded-xl border border-gray-200 bg-gray-50 px-5 py-5 text-xl font-medium text-gray-700 placeholder:text-gray-400 focus:bg-white focus-visible:ring-2 focus-visible:ring-[#008140]/50"
                         />
                       </div>
                     </div>
@@ -165,9 +165,9 @@ export default function Reception() {
                     <div className="pt-4">
                       <Button
                         type="submit"
-                        className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#008140] py-6 px-12 text-sm font-black uppercase tracking-[0.1em] text-white shadow-lg shadow-emerald-100 hover:bg-emerald-800"
+                        className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#008140] py-7 px-12 text-xl font-black uppercase tracking-[0.1em] text-white shadow-lg shadow-emerald-100 hover:bg-emerald-800"
                       >
-                        <UserPlus className="h-5 w-5" />
+                        <UserPlus className="h-6 w-6" />
                         <span>Finalizar Registro</span>
                       </Button>
                     </div>
@@ -179,12 +179,12 @@ export default function Reception() {
             {/* Coluna registros recentes */}
             <div className="lg:col-span-1">
               <Card className="flex h-full flex-col rounded-2xl border border-gray-100 bg-white shadow-sm">
-                <CardHeader className="flex flex-row items-center justify-between border-b border-gray-50 px-5 py-4">
-                  <CardTitle className="flex items-center text-sm font-black uppercase tracking-[0.1em] text-gray-800">
-                    <span className="mr-2 h-2 w-2 rounded-full bg-[#ffcc00]" />
+                <CardHeader className="flex flex-row items-center justify-between border-b border-gray-50 px-6 py-5">
+                  <CardTitle className="flex items-center text-lg font-black uppercase tracking-[0.1em] text-gray-800">
+                    <span className="mr-2 h-2.5 w-2.5 rounded-full bg-[#ffcc00]" />
                     Recém Registrados
                   </CardTitle>
-                  <span className="text-[10px] font-bold uppercase text-gray-500">
+                  <span className="text-xs font-bold uppercase text-gray-500">
                     Hoje
                   </span>
                 </CardHeader>
@@ -192,24 +192,24 @@ export default function Reception() {
                 <CardContent className="flex flex-1 flex-col justify-between p-0">
                   <div className="custom-scrollbar flex-1 overflow-y-auto">
                     {recentPatients.length === 0 ? (
-                      <p className="px-6 py-10 text-center text-sm font-medium text-gray-500 ">
+                      <p className="px-6 py-10 text-center text-base font-medium text-gray-500 ">
                         Nenhum paciente registrado ainda.
                       </p>
                     ) : (
                       recentPatients.map((patient) => (
                         <div
                           key={patient.id}
-                          className="flex items-center justify-between border-b border-gray-50 px-6 py-4 hover:bg-gray-50 transition-colors"
+                          className="flex items-center justify-between border-b border-gray-50 px-6 py-5 hover:bg-gray-50 transition-colors"
                         >
                           <div>
-                            <p className="text-sm font-bold leading-tight text-gray-700">
+                            <p className="text-lg font-bold leading-tight text-gray-700">
                               {patient.fullName}
                             </p>
-                            <p className="mt-1 text-[10px] font-medium text-gray-400">
+                            <p className="mt-1 text-base font-medium text-gray-400">
                               {patient.cpf || 'CPF não informado'}
                             </p>
                           </div>
-                          <span className="text-[10px] font-bold text-gray-300">
+                          <span className="text-sm font-bold text-gray-300">
                             {patient.ticketNumber}
                           </span>
                         </div>
@@ -220,7 +220,7 @@ export default function Reception() {
                   <div className="px-4 pb-4 pt-3">
                     <button
                       type="button"
-                      className="w-full rounded-xl bg-gray-50 py-3 text-[12px] font-black uppercase tracking-[0.1em] text-gray-400 transition-all hover:bg-gray-100 hover:text-gray-600"
+                      className="w-full rounded-xl bg-gray-50 py-4 text-base font-black uppercase tracking-[0.1em] text-gray-400 transition-all hover:bg-gray-100 hover:text-gray-600"
                     >
                       Visualizar Todos
                     </button>
