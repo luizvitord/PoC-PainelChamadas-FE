@@ -110,15 +110,26 @@ All colors MUST be HSL.
 }
 
 @layer base {
+  :root {
+    --font-app: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
   * {
     @apply border-border;
   }
 
   body {
     @apply bg-background text-foreground;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: var(--font-app);
     background-color: hsl(var(--background));
     background-image: url("https://www.transparenttextures.com/patterns/cubes.png");
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font-family: inherit;
   }
 }
 

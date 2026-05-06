@@ -60,7 +60,7 @@ export default function Triage() {
         await assignPriority(selectedPatientId, priority, attendanceType, notes);
 
           toast({
-            title: 'Triage Complete',
+            title: 'Triagem Concluída',
             description: `Paciente classificado como ${PRIORITY_CONFIG[priority].label} (${AttendanceTypeLabel[attendanceType]})`,
           });
 
@@ -70,7 +70,7 @@ export default function Triage() {
         setNotes('');
     }
     } catch(error){
-        toast({ variant: "destructive", title: "Error", description: "Failed to classify patient." });
+      toast({ variant: "destructive", title: "Erro", description: "Falha ao classificar o paciente." });
     }
   };
 

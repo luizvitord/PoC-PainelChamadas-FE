@@ -194,7 +194,7 @@ const handleAbandonConsultation = async (patientId: string) => {
 };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-['Barlow_Condensed',sans-serif]">
+    <div className="min-h-screen bg-slate-50">
       <Header title="Painel Médico" />
       <div className="mx-auto w-full max-w-6xl px-6 pt-6">
         <BackButton />
