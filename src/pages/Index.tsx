@@ -1,23 +1,66 @@
 import Header from '@/components/Header';
-import { Card } from '@/components/ui/card';
+import { MenuCard } from '@/components/MenuCard';
 import { NewConsultorio } from '@/features/new-consultorio/NewConsultorio';
-import { ChartColumn, DoorOpen, HeartHandshake, Lock, Monitor, UserPlus } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ChartColumn, DoorOpen, HeartHandshake, Monitor, UserPlus } from 'lucide-react';
+
+const MENU_ITEMS = [
+  {
+    to: '/reception',
+    icon: UserPlus,
+    title: 'Recepção',
+    description: 'Registro de novos Pacientes',
+    borderColor: 'border-[#005a2b]',
+    iconBg: 'bg-green-50',
+    iconBorder: 'border-green-200',
+    iconColor: 'text-[#005a2b]',
+  },
+  {
+    to: '/triage',
+    icon: HeartHandshake,
+    title: 'Acolhimento',
+    description: 'Classificação de risco e priorização de atendimento.',
+    borderColor: 'border-blue-600',
+    iconBg: 'bg-blue-50',
+    iconBorder: 'border-blue-100',
+    iconColor: 'text-blue-600',
+  },
+  {
+    to: '/doctor',
+    icon: DoorOpen,
+    title: 'Consultório',
+    description: 'Atendimento médico especializado',
+    borderColor: 'border-black',
+    iconBg: 'bg-gray-100',
+    iconBorder: 'border-gray-300',
+    iconColor: 'text-gray-900',
+  },
+  {
+    to: '/panel',
+    icon: Monitor,
+    title: 'Painel',
+    description: 'Visualização de chamadas e controle de fluxo da sala de espera',
+    borderColor: 'border-[#ffcc00]',
+    iconBg: 'bg-yellow-50',
+    iconBorder: 'border-yellow-100',
+    iconColor: 'text-yellow-600',
+  },
+  {
+    to: '/indicators',
+    icon: ChartColumn,
+    title: 'Indicadores',
+    description: 'Visualização de indicadores do atendimento',
+    borderColor: 'border-purple-600',
+    iconBg: 'bg-purple-50',
+    iconBorder: 'border-purple-100',
+    iconColor: 'text-purple-600',
+    restricted: true,
+  },
+] as const;
 
 export default function Index() {
-  const cardBaseClassName =
-    'h-full min-h-[260px] rounded-2xl border-0 bg-white p-8 shadow-sm outline-none transition-all duration-300 hover:-translate-y-2 flex flex-col items-center text-center justify-between';
-  const cardRestrictedClassName =
-    'h-full min-h-[260px] rounded-2xl border-0 p-8 shadow-sm outline-none transition-all duration-300 hover:-translate-y-2 flex flex-col items-center text-center justify-between relative overflow-hidden';
-  const cardRestrictedStyle = { backgroundImage: 'repeating-linear-gradient(-45deg, #ffffff 0, #ffffff 12px, rgba(139, 92, 246, 0.05) 12px, rgba(139, 92, 246, 0.02) 24px)' };
-    const iconBoxBaseClassName =
-    'mb-4 flex h-20 w-20 items-center justify-center rounded-2xl border transition-transform group-hover:scale-110';
-  const cardTitleClassName = "text-[1.25rem] font-black uppercase tracking-[0.05em] text-gray-800 flex items-center justify-center min-h-[56px]";
-  const cardDescClassName = "text-[1rem] font-semibold text-gray-600 leading-[1.3] min-h-[40px] flex items-center justify-center";
-
   return (
     <div className="min-h-screen bg-transparent flex flex-col">
-    <Header title="Sistema de Gestão do Painel de Chamadas" />
+      <Header title="Sistema de Gestão do Painel de Chamadas" />
       <main className="container mx-auto py-12 px-6 flex-grow flex flex-col justify-center">
         <div className="mb-12 text-center">
           <h2 className="text-3xl font-black text-gray-800 uppercase tracking-tight">
@@ -27,100 +70,10 @@ export default function Index() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto w-full items-stretch">
-          <Link to="/reception" className="block group h-full">
-            <Card className={`${cardBaseClassName} border-b-8 border-[#005a2b]`}>
-              <div className="flex flex-col items-center">
-                <div className={`${iconBoxBaseClassName} bg-green-50 border-green-200`}>
-                  <UserPlus className="h-11 w-11 text-[#005a2b]" />
-                </div>
-                <h3 className={cardTitleClassName}>
-                  Recepção
-                </h3>
-              </div>
-
-              <p className={cardDescClassName}>
-                Registro de novos Pacientes
-              </p>
-            </Card>
-          </Link>
-
-          <Link to="/triage" className="block group h-full">
-            <Card className={`${cardBaseClassName} border-b-8 border-blue-600`}>
-              <div className="flex flex-col items-center">
-                <div className={`${iconBoxBaseClassName} bg-blue-50 border-blue-100`}>
-                  <HeartHandshake className="h-11 w-11 text-blue-600" />
-                </div>
-                <h3 className={cardTitleClassName}>
-                  Acolhimento
-                </h3>
-              </div>
-
-              <p className={cardDescClassName}>
-                Classificação de risco e priorização de atendimento.
-              </p>
-            </Card>
-          </Link>
-
-          <Link to="/doctor" className="block group h-full">
-            <Card className={`${cardBaseClassName} border-b-8 border-black`}>
-              <div className="flex flex-col items-center">
-                <div className={`${iconBoxBaseClassName} bg-gray-100 border-gray-300`}>
-                  <DoorOpen className="h-11 w-11 text-gray-900" />
-                </div>
-                <h3 className={cardTitleClassName}>
-                  Consultório
-                </h3>
-              </div>
-
-              <p className={cardDescClassName}>
-                Atendimento médico especializado
-              </p>
-            </Card>
-          </Link>
-
-          <Link to="/panel" className="block group h-full">
-            <Card className={`${cardBaseClassName} border-b-8 border-[#ffcc00]`}>
-              <div className="flex flex-col items-center">
-                <div className={`${iconBoxBaseClassName} bg-yellow-50 border-yellow-100`}>
-                  <Monitor className="h-11 w-11 text-yellow-600" />
-                </div>
-                <h3 className={cardTitleClassName}>
-                  Painel
-                </h3>
-              </div>
-
-              <p className={cardDescClassName}>
-                Visualização de chamadas e controle de fluxo da sala de espera
-              </p>
-            </Card>
-          </Link>
-
+          {MENU_ITEMS.map((item) => (
+            <MenuCard key={item.to} {...item} />
+          ))}
           <NewConsultorio />
-
-            <Link to="/indicators" className="block group h-full">
-            <Card
-              className={`${cardRestrictedClassName} border-b-8 border-purple-600`}
-              style={cardRestrictedStyle}
-            >
-              <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/80 px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-wider text-slate-500 shadow-sm backdrop-blur-sm">
-                <Lock className="h-3 w-3" />
-                Restrito
-              </span>
-
-              <div className="flex flex-col items-center">
-                <div className={`${iconBoxBaseClassName} bg-purple-50 border-purple-100`}>
-                  <ChartColumn className="h-11 w-11 text-purple-600" />
-                </div>
-                <h3 className={cardTitleClassName}>
-                  Indicadores
-                </h3>
-              </div>
-
-              <p className={cardDescClassName}>
-                Visualização de indicadores do atendimento
-              </p>
-            </Card>
-          </Link>
         </div>
       </main>
     </div>
