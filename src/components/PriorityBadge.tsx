@@ -21,7 +21,7 @@ export const PriorityBadge = ({ priority, showLabel = true, className }: Priorit
 
   return (
     <Badge className={cn(colorClasses[priority], 'font-semibold', className)}>
-      {showLabel ? config.label : priority.toUpperCase()}
+      {config.label}
     </Badge>
   );
 };
