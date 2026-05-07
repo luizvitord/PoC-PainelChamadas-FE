@@ -23,12 +23,13 @@ export interface TriageCall {
   room?: string;
   priority?: PriorityLevel;
   timestamp: Date;
+  shouldAnnounce?: boolean;
 }
 
 export const PRIORITY_CONFIG: Record<PriorityLevel, { label: string; waitTime: string; order: number }> = {
-  red: { label: 'Emergência', waitTime: '0 min', order: 1 },
-  orange: { label: 'Muito Urgente', waitTime: '10 min', order: 2 },
-  yellow: { label: 'Urgente', waitTime: '60 min', order: 3 },
-  green: { label: 'Pouco Urgente', waitTime: '120 min', order: 4 },
-  blue: { label: 'Não Urgente', waitTime: '240 min', order: 5 },
+  red: { label: 'Vermelho', waitTime: '0 min', order: 1 },
+  orange: { label: 'Laranja', waitTime: '10 min', order: 2 },
+  yellow: { label: 'Amarelo', waitTime: '60 min', order: 3 },
+  green: { label: 'Verde', waitTime: '120 min', order: 4 },
+  blue: { label: 'Azul', waitTime: '240 min', order: 5 },
 };

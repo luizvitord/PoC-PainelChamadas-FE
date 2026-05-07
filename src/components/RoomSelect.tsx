@@ -20,12 +20,12 @@ export default function RoomSelect({
   label = 'Consultation Room'
 }: RoomSelectProps) {
   return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
+    <div className="flex items-center gap-2">
+      <Label className="text-gray-500 font-bold text-[20px] uppercase whitespace-nowrap">{label}</Label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border px-3 py-2 text-sm bg-background text-foreground"
+        className="w-full rounded-md border border-gray-300 px-4 py-2 text-lg bg-white text-gray-700 shadow-sm cursor-pointer hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
       >
         <option value="">Selecione um consultório</option>
 

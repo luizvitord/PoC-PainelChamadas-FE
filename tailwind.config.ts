@@ -13,7 +13,12 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        kanit: ["Kanit", "sans-serif"],
+        maitree: ["Maitree", "serif"],
+      },
       colors: {
+        "brand-text": "#425563",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

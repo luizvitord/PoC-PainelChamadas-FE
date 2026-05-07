@@ -110,15 +110,26 @@ All colors MUST be HSL.
 }
 
 @layer base {
+  :root {
+    --font-app: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
   * {
     @apply border-border;
   }
 
   body {
     @apply bg-background text-foreground;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: var(--font-app);
     background-color: hsl(var(--background));
     background-image: url("https://www.transparenttextures.com/patterns/cubes.png");
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font-family: inherit;
   }
 }
 
@@ -132,7 +143,7 @@ All colors MUST be HSL.
   }
 
   .reception-container {
-    @apply mx-auto w-full max-w-7xl px-4 py-6 md:px-8 md:py-10;
+    @apply mx-auto w-full max-w-screen-2xl px-4 py-6 md:px-3 md:py-10;
   }
 
   .custom-scrollbar::-webkit-scrollbar {

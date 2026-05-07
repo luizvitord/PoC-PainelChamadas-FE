@@ -1,3 +1,4 @@
+import BackButton from '@/components/BackButton';
 import Header from '@/components/Header';
 import { PriorityBadge } from '@/components/PriorityBadge';
 import RoomSelect from '@/components/RoomSelect';
@@ -11,6 +12,7 @@ import { AttendanceTypeLabel } from '@/lib/attendanceTypes';
 import { PRIORITY_CONFIG } from "@/types/patient";
 import { CheckCircle, Phone } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { CalledPatientTimer } from '@/components/CalledPatientTimer';
 
 export default function Doctor() {
   const { getWaitingForDoctor, callForDoctor, completeConsultation, abandonConsultation, refreshPatients, recallPatient } = usePatients();
@@ -26,6 +28,8 @@ export default function Doctor() {
   const [patientToFinish, setPatientToFinish] = useState<any | null>(null);
   const [confirmAbandonOpen, setConfirmAbandonOpen] = useState(false);
   const [patientToAbandon, setPatientToAbandon] = useState<any | null>(null);
+  const [calledAt, setCalledAt] = useState<number | null>(null);
+  const [timerOpen, setTimerOpen] = useState(false);
   
   // Variável adicionada pela equipe (tempo excedido)
   const [now, setNow] = useState(Date.now());
@@ -43,32 +47,13 @@ export default function Doctor() {
     setConsultationLocked(true);
   };
 
-  const handleCall = (patientId: string) => {
-    setSelectedPatientId(patientId);
-  };
-
-  const handleCallPatient = async (patient: any) => {
-    if (!room) return;
-    setActivePatient(patient);
-
-    try{
-
-      await callForDoctor(patient.id, room);
-  
-      setActivePatientId(patient.id);
-      setConsultationLocked(true);
-  
-      await refreshPatients();
-    } catch(error){
-      toast({ variant: "destructive", title: "Error", description: "Falha ao chamar o paciente." });
-    }
-  };
-
   const handleConfirmCallPatient = async () => {
   if (!activePatient || !room) return;
 
   try {
     await callForDoctor(activePatient.id, room);
+    setCalledAt(Date.now());
+    setTimerOpen(true);
     setActivePatientId(activePatient.id);
     
     // LÓGICA ATUALIZADA: Registra que o paciente já foi chamado e salva no navegador
@@ -78,7 +63,6 @@ export default function Doctor() {
       return updatedSet;
     });
 
-    // setConsultationLocked(false); // fecha modal
     await refreshPatients();
 
     toast({
@@ -98,10 +82,8 @@ const handleRecallPatient = async () => {
   if (!activePatient || !room) return; 
 
   try {
-    console.log("Rechamando paciente:", activePatient);
-    
-    
     await recallPatient(activePatient.id, room);
+    setCalledAt(Date.now())
 
     toast({
       title: 'Paciente chamado novamente',
@@ -125,7 +107,7 @@ const handleRecallPatient = async () => {
 
   useEffect(() => {
     // Ajuste a URL se necessário
-    fetch("http://localhost:1111/consultorios")
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:1111'}/consultorios`)
       .then(res => res.json())
       .then(data => setConsultorios(data))
       .catch(err => console.error("Erro ao carregar consultórios", err));
@@ -144,19 +126,6 @@ const handleRecallPatient = async () => {
 
   return () => clearInterval(interval);
 }, []);
-
-  const handleConfirmCall = async () => {
-    if (selectedPatientId && room) {
-      try {
-        await callForDoctor(selectedPatientId, room);
-        toast({ title: 'Paciente Chamado', description: `Chamando para a sala ${room}` });
-        setSelectedPatientId(null);
-        setRoom('');
-      } catch (error) {
-        toast({ variant: "destructive", title: "Error", description: "Falha ao chamar o paciente." });
-      }
-    }
-  };
 
   const handleFinishConsultation = async (patientId: string) =>{
     try{
@@ -193,40 +162,45 @@ const handleAbandonConsultation = async (patientId: string) => {
 };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8fafc]">
+    <div className="min-h-screen bg-slate-50">
       <Header title="Painel Médico" />
+      <div className="mx-auto w-full max-w-screen-2xl px-3 pt-6">
+        <BackButton />
+      </div>
 
-      <main className="container mx-auto py-10 px-6 flex-grow max-w-6xl">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
-          <div className="p-7 border-b border-gray-100 flex items-center justify-between gap-4">
-            <h2 className="text-gray-800 font-black uppercase tracking-wider text-base flex items-center">
-              <span className="w-3 h-3 bg-indigo-500 rounded-full mr-2"></span>Fila de Espera Médica
-            </h2>
-            <div className="w-[360px] max-w-full">
+      <div className="section-main mx-auto w-full max-w-screen-2xl px-3 py-8">
+        <div className="card overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+          <div className="card-header flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-7 py-6">
+            <div className="flex items-center gap-3">
+              <div className="card-header-bar h-9 w-1.5 rounded bg-indigo-600" />
+              <h2 className="text-2xl font-black uppercase tracking-[0.06em] text-slate-800">Fila de Espera Médica</h2>
+            </div>
+            <div className="room-select-wrap flex w-full max-w-[360px] items-center justify-end gap-2">
               <RoomSelect
                 value={room}
                 onChange={setRoom}
                 options={consultorios}
-                label="Selecione o consultório para chamada"
+                label="Consultório:"
               />
             </div>
           </div>
-          <CardContent className="p-0">
+
+          <CardContent className="table-wrap p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className="bg-gray-50 border-b border-gray-100">
+                <thead className="border-b border-slate-100 bg-slate-50">
                   <tr>
-                    <th className="px-6 py-5 text-sm font-black text-gray-600 uppercase tracking-wider">Chegada</th>
-                    <th className="px-6 py-5 text-sm font-black text-gray-600 uppercase tracking-wider">Tipo</th>
-                    <th className="px-6 py-5 text-sm font-black text-gray-600 uppercase tracking-wider">Paciente</th>
-                    <th className="px-6 py-5 text-sm font-black text-gray-600 uppercase tracking-wider">Classificação</th>
-                    <th className="px-6 py-5 text-sm font-black text-gray-600 uppercase tracking-wider text-center">Ação</th>
+                    <th className="px-6 py-4 text-lg font-black uppercase tracking-[0.1em] text-slate-600">Chegada</th>
+                    <th className="px-6 py-4 text-lg font-black uppercase tracking-[0.1em] text-slate-600">Tipo</th>
+                    <th className="px-6 py-4 text-lg font-black uppercase tracking-[0.1em] text-slate-600">Paciente</th>
+                    <th className="px-6 py-4 text-lg font-black uppercase tracking-[0.1em] text-slate-600">Classificação</th>
+                    <th className="px-6 py-4 text-center text-sm font-black uppercase tracking-[0.1em] text-slate-600">Ação</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody>
                   {waitingPatients.length === 0 ? (
                     <tr>
-                      <td className="px-6 py-10 text-center text-sm font-black uppercase tracking-wider text-gray-300" colSpan={5}>
+                      <td className="px-6 py-10 text-center text-lg font-black uppercase tracking-[0.15em] text-slate-300" colSpan={5}>
                         Nenhum paciente na fila de espera
                       </td>
                     </tr>
@@ -243,77 +217,74 @@ const handleAbandonConsultation = async (patientId: string) => {
                       const chegada = patient.classifiedAt || patient.registeredAt;
 
                       return (
-                        <tr key={patient.id} className={`hover:bg-red-50/30 transition-colors ${overdue ? 'animate-pulse bg-orange-50/60' : ''}`}>
-                          <td className="px-6 py-5 whitespace-nowrap">
-                            <span className="text-sm font-black text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                        <tr key={patient.id} className={`border-b border-slate-100 ${overdue ? 'animate-pulse bg-orange-50/60' : ''}`}>
+                          <td className="px-6 py-4">
+                            <span className="inline-flex rounded-md bg-slate-100 px-2 py-1 text-lg font-black text-slate-600">
                               {new Date(chegada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </td>
-                          <td className="px-6 py-5">
-                            <span className="text-sm font-black text-gray-600 uppercase border border-gray-300 px-2 py-1 rounded bg-white">
+                          <td className="px-6 py-4">
+                            <span className="inline-flex rounded-md border border-slate-300 bg-white px-2 py-1 text-lg font-black uppercase text-slate-600">
                               {AttendanceTypeLabel[patient.attendanceType]}
                             </span>
                           </td>
-                          <td className="px-6 py-5">
-                            <p className="font-bold text-gray-800 uppercase text-base">{patient.fullName}</p>
+                          <td className="px-6 py-4">
+                            <div className="text-xl font-bold uppercase text-slate-800">{patient.fullName}</div>
                             {patient.triageNotes && (
-                              <p className="text-sm text-gray-600 font-semibold mt-1 line-clamp-1">
-                                Observações: {patient.triageNotes}
-                              </p>
+                              <div className="mt-0.5 line-clamp-1 text-xs text-slate-500">
+                                {patient.triageNotes}
+                              </div>
                             )}
                           </td>
-                          <td className="px-6 py-5">
-                            <div className="flex items-center space-x-2">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
                               <PriorityBadge priority={patient.priority} showLabel={false} />
-                              <span className="text-sm font-black uppercase text-gray-700">
+                              <span className="text-lg font-black uppercase text-slate-700">
                                 {patient.priority ? PRIORITY_CONFIG[patient.priority].label : 'Não classificado'}
                               </span>
-                              {overdue && <span className="text-xs font-bold text-orange-700">TEMPO EXCEDIDO</span>}
+                              {overdue && <span className="text-[0.65rem] font-bold text-orange-600">TEMPO EXCEDIDO</span>}
                             </div>
                           </td>
-                          <td className="px-6 py-5 text-center">
-                            <div className="flex justify-center gap-2">
-                              {patient.status === 'waiting-doctor' && (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <span className="inline-block">
-                                        <Button
-                                          disabled={!room}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleOpenCallModal(patient);
-                                          }}
-                                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black px-5 py-2.5 rounded-lg uppercase tracking-wider transition-all"
-                                        >
-                                          <Phone className="mr-2 h-4 w-4" />
-                                          Selecionar para Consulta
-                                        </Button>
-                                      </span>
-                                    </TooltipTrigger>
+                          <td className="px-6 py-4 text-center">
+                            {patient.status === 'waiting-doctor' && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="inline-block">
+                                      <Button
+                                        disabled={!room}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenCallModal(patient);
+                                        }}
+                                        className="h-auto rounded-lg bg-indigo-600 px-6 py-4 text-lg font-black uppercase tracking-[0.06em] text-white hover:bg-indigo-700"
+                                      >
+                                        <Phone className="mr-2 h-4 w-4" />
+                                        Selecionar para Consulta
+                                      </Button>
+                                    </span>
+                                  </TooltipTrigger>
+                                  {!room && (
+                                    <TooltipContent>
+                                      <p>Selecione um consultório</p>
+                                    </TooltipContent>
+                                  )}
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
 
-                                    {!room && (
-                                      <TooltipContent>
-                                        <p>Selecione um consultório</p>
-                                      </TooltipContent>
-                                    )}
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )}
-
-                              {patient.status === 'in-consultation' && (
-                                <Button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                  }}
-                                  variant="outline"
-                                  className="text-sm font-black uppercase tracking-wider rounded-lg px-5 py-2.5"
-                                >
-                                  <CheckCircle className="mr-2 h-4 w-4" />
-                                  Finish Consultation
-                                </Button>
-                              )}
-                            </div>
+                            {patient.status === 'in-consultation' && (
+                              <Button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                }}
+                                variant="outline"
+                                className="h-auto rounded-lg px-6 py-4 text-lg font-black uppercase tracking-[0.06em]"
+                              >
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                Finalizar Consulta
+                              </Button>
+                            )}
                           </td>
                         </tr>
                       );
@@ -324,159 +295,149 @@ const handleAbandonConsultation = async (patientId: string) => {
             </div>
           </CardContent>
         </div>
-      </main>
+      </div>
 
-        {/* MODAL: CHAMAR PACIENTE (Único modal ativo agora) */}
-          <Dialog open={consultationLocked} onOpenChange={() => {}}>
-                    <DialogContent className="sm:max-w-xl w-full overflow-x-hidden [&>button]:hidden">
-                      <DialogHeader>
-                        <DialogTitle>Chamar Paciente</DialogTitle>
-                        <DialogDescription>
-                          Revise as informações de triagem antes de chamar o paciente.
-                        </DialogDescription>
-                      </DialogHeader>
+      <Dialog open={consultationLocked} onOpenChange={() => {}}>
+        <DialogContent className="w-full overflow-x-hidden sm:max-w-3xl [&>button]:hidden">
+          <DialogHeader>
+            <DialogTitle className="text-3xl font-bold">Chamar Paciente</DialogTitle>
+            <DialogDescription className="text-lg">Revise as informações de triagem</DialogDescription>
+          </DialogHeader>
 
-                      {activePatient && (
-                         <div className="bg-secondary/50 border border-border rounded-lg p-4 space-y-3 mb-2 w-full min-w-0">
-                              <div className="flex items-start justify-between">
-                                  <div>
-                                      <h4 className="font-bold text-lg">{activePatient.fullName}</h4>
-                                      <span className="text-xs text-muted-foreground uppercase tracking-wider">Dados do Paciente</span>
-                                  </div>
-                                  <span className="text-2xl font-bold text-primary">{activePatient.ticketNumber}</span>
-                              </div>
+          {activePatient && (
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-5">
+              <div className="flex items-start justify-between">
+                <div className="flex flex-col gap-2">
+                  {/* <span className="text-base font-bold uppercase tracking-[0.1em] text-slate-400">Paciente</span> */}
+                  <div className="text-3xl font-bold">{activePatient.fullName}</div>
+                </div>
+              </div>
 
-                              <div className="grid grid-cols-2 gap-2 text-sm min-w-0">
-                                  <div className="flex flex-col min-w-0">
-                                      <span className="text-muted-foreground text-xs">Prioridade</span>
-                                      <div className="flex items-center gap-2 mt-1">
-                                          <PriorityBadge priority={activePatient.priority} showLabel={false} />
-                                          <span>{PRIORITY_CONFIG[activePatient.priority]?.label}</span>
-                                      </div>
-                                  </div>
-                                  <div className="flex flex-col min-w-0">
-                                      <span className="text-muted-foreground text-xs">Tipo</span>
-                                      <span className="font-medium mt-1">
-                                        {AttendanceTypeLabel[activePatient.attendanceType]}
-                                      </span>
-                                  </div>
-                              </div>
+              <div className="mt-6 grid grid-cols-2 gap-6">
+                <div>
+                  <span className="text-base text-slate-500">Prioridade</span>
+                  <div className="mt-2 flex items-center gap-3">
+                    <PriorityBadge priority={activePatient.priority} showLabel={false} />
+                    <span className="text-xl font-semibold">{PRIORITY_CONFIG[activePatient.priority]?.label}</span>
+                  </div>
+                </div>
+                <div>
+                  <span className="text-base text-slate-500">Tipo</span>
+                  <p className="mt-2 text-xl font-semibold">{AttendanceTypeLabel[activePatient.attendanceType]}</p>
+                </div>
+              </div>
 
-                              {activePatient.triageNotes && (
-                                  <div className="pt-2 border-t border-border/50">
-                                      <span className="text-xs text-muted-foreground block mb-1">Observações:</span>
-                                      <p className="text-sm italic text-foreground bg-background/50 p-2 rounded border border-border/30">
-                                          {activePatient.triageNotes}
-                                      </p>
-                                  </div>
-                              )}
-                          </div>
-                      )}
+              {activePatient.triageNotes && (
+                <div className="mt-6 border-t border-slate-200 pt-4">
+                  <span className="text-base font-bold uppercase tracking-[0.1em] text-slate-400">Observações:</span>
+                  <div className="mt-2 rounded border border-slate-200 bg-white p-4 text-lg italic">
+                    {activePatient.triageNotes}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
-                      <div className="flex flex-wrap gap-2 mt-4">
-                        {/* <Button variant="outline" onClick={() => setSelectedPatientId(null)}>
-                          Cancel
-                        </Button> */}
-                        
-                        {activePatient && calledPatientIds.has(activePatient.id) ? (
-                          <Button onClick={handleRecallPatient} disabled={!activePatient} variant="secondary">
-                            Chamar novamente
-                          </Button>
-                        ) : (
-                          <Button onClick={handleConfirmCallPatient} disabled={!room}>
-                            Chamar Paciente
-                          </Button>
-                        )}
+          <div className="mt-3 flex flex-wrap gap-4">
+            {activePatient && calledPatientIds.has(activePatient.id) ? (
+              <Button size="lg" className="h-14 px-8 text-lg" onClick={handleRecallPatient} disabled={!activePatient} variant="secondary">
+                Chamar novamente
+              </Button>
+            ) : (
+              <Button size="lg" className="h-14 px-8 text-lg bg-indigo-600 hover:bg-indigo-700" onClick={handleConfirmCallPatient} disabled={!room}>
+                Chamar Paciente
+              </Button>
+            )}
 
-                        <Button    
-                          onClick={() => {
-                            setPatientToAbandon(activePatient);
-                            setConfirmAbandonOpen(true);
-                          }}
-                          className="bg-red-600 hover:bg-red-700">
-                            Encerrar consulta (Desistência)
-                        </Button>
-                        <Button onClick={() => {
-                                  setPatientToFinish(activePatient);
-                                  setConfirmFinishOpen(true);
-                                }} className="bg-green-600 hover:bg-green-700">
-                          Finalizar consulta (Atendido)
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+            <Button
+              size="lg"
+              className="h-14 px-8 text-lg bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                setPatientToAbandon(activePatient);
+                setConfirmAbandonOpen(true);
+              }}
+            >
+              Encerrar (Desistência)
+            </Button>
+            <Button
+              size="lg"
+              className="h-14 px-8 text-lg bg-green-600 hover:bg-green-700"
+              onClick={() => {
+                setPatientToFinish(activePatient);
+                setConfirmFinishOpen(true);
+              }}
+            >
+              Finalizar Consulta
+            </Button>
+          </div>
+          {/* Timer — aparece após chamar */}
+          {calledAt && calledPatientIds.has(activePatient?.id) && (
+            <CalledPatientTimer calledAt={calledAt} />
+          )}
+        </DialogContent>
+      </Dialog>
 
-                  <Dialog open={confirmFinishOpen} onOpenChange={setConfirmFinishOpen}>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Confirmar finalização</DialogTitle>
-                        <DialogDescription>
-                          Deseja realmente finalizar esta consulta?
-                        </DialogDescription>
-                      </DialogHeader>
+      <Dialog open={confirmFinishOpen} onOpenChange={setConfirmFinishOpen}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Confirmar finalização</DialogTitle>
+            <DialogDescription className="text-lg">Deseja realmente finalizar esta consulta?</DialogDescription>
+          </DialogHeader>
 
-                      {patientToFinish && (
-                        <div className="bg-secondary/50 border rounded p-3 text-sm">
-                          <p><strong>Paciente:</strong> {patientToFinish.fullName}</p>
-                        </div>
-                      )}
+          {patientToFinish && (
+            <div className="rounded border border-green-200 bg-green-50 p-5 text-lg">
+              <p><strong>Paciente:</strong> {patientToFinish.fullName}</p>
+            </div>
+          )}
 
-                      <div className="flex justify-end gap-2 mt-4">
-                        <Button
-                          variant="outline"
-                          onClick={() => setConfirmFinishOpen(false)}
-                        >
-                          Não
-                        </Button>
+          <div className="mt-4 flex justify-end gap-4">
+            <Button size="lg" className="h-14 px-8 text-lg" variant="outline" onClick={() => setConfirmFinishOpen(false)}>
+              Não
+            </Button>
+            <Button
+              size="lg"
+              className="h-14 px-8 text-lg bg-green-600 hover:bg-green-700"
+              onClick={async () => {
+                await handleFinishConsultation(patientToFinish.id);
+                setConfirmFinishOpen(false);
+              }}
+            >
+              Sim, finalizar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-                        <Button
-                          className="bg-green-600 hover:bg-green-700"
-                          onClick={async () => {
-                            await handleFinishConsultation(patientToFinish.id);
-                            setConfirmFinishOpen(false);
-                          }}
-                        >
-                          Sim, finalizar
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+      <Dialog open={confirmAbandonOpen} onOpenChange={setConfirmAbandonOpen}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Confirmar desistência</DialogTitle>
+            <DialogDescription className="text-lg">Deseja realmente marcar esta consulta como desistência?</DialogDescription>
+          </DialogHeader>
 
-                  <Dialog open={confirmAbandonOpen} onOpenChange={setConfirmAbandonOpen}>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Confirmar desistência</DialogTitle>
-                        <DialogDescription>
-                          Deseja realmente marcar esta consulta como desistência?
-                        </DialogDescription>
-                      </DialogHeader>
+          {patientToAbandon && (
+            <div className="rounded border border-red-200 bg-red-50 p-5 text-lg">
+              <p><strong>Paciente:</strong> {patientToAbandon.fullName}</p>
+            </div>
+          )}
 
-                      {patientToAbandon && (
-                        <div className="bg-secondary/50 border rounded p-3 text-sm">
-                          <p><strong>Paciente:</strong> {patientToAbandon.fullName}</p>
-                        </div>
-                      )}
-
-                      <div className="flex justify-end gap-2 mt-4">
-                        <Button
-                          variant="outline"
-                          onClick={() => setConfirmAbandonOpen(false)}
-                        >
-                          Não
-                        </Button>
-
-                        <Button
-                          className="bg-red-600 hover:bg-red-700"
-                          onClick={async () => {
-                            await handleAbandonConsultation(patientToAbandon.id);
-                            setConfirmAbandonOpen(false);
-                          }}
-                        >
-                          Sim, marcar como desistência
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+          <div className="mt-4 flex justify-end gap-4">
+            <Button size="lg" className="h-14 px-8 text-lg" variant="outline" onClick={() => setConfirmAbandonOpen(false)}>
+              Não
+            </Button>
+            <Button
+              size="lg"
+              className="h-14 px-8 text-lg bg-red-600 hover:bg-red-700"
+              onClick={async () => {
+                await handleAbandonConsultation(patientToAbandon.id);
+                setConfirmAbandonOpen(false);
+              }}
+            >
+              Sim, marcar como desistência
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
