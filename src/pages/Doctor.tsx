@@ -47,27 +47,6 @@ export default function Doctor() {
     setConsultationLocked(true);
   };
 
-  const handleCall = (patientId: string) => {
-    setSelectedPatientId(patientId);
-  };
-
-  const handleCallPatient = async (patient: any) => {
-    if (!room) return;
-    setActivePatient(patient);
-
-    try{
-
-      await callForDoctor(patient.id, room);
-  
-      setActivePatientId(patient.id);
-      setConsultationLocked(true);
-  
-      await refreshPatients();
-    } catch(error){
-      toast({ variant: "destructive", title: "Error", description: "Falha ao chamar o paciente." });
-    }
-  };
-
   const handleConfirmCallPatient = async () => {
   if (!activePatient || !room) return;
 
@@ -84,7 +63,6 @@ export default function Doctor() {
       return updatedSet;
     });
 
-    // setConsultationLocked(false); // fecha modal
     await refreshPatients();
 
     toast({
@@ -104,10 +82,8 @@ const handleRecallPatient = async () => {
   if (!activePatient || !room) return; 
 
   try {
-    console.log("Rechamando paciente:", activePatient);
-    
-    
     await recallPatient(activePatient.id, room);
+    setCalledAt(Date.now())
 
     toast({
       title: 'Paciente chamado novamente',
@@ -150,19 +126,6 @@ const handleRecallPatient = async () => {
 
   return () => clearInterval(interval);
 }, []);
-
-  // const handleConfirmCall = async () => {
-  //   if (selectedPatientId && room) {
-  //     try {
-  //       await callForDoctor(selectedPatientId, room);
-  //       toast({ title: 'Paciente Chamado', description: `Chamando para a sala ${room}` });
-  //       setSelectedPatientId(null);
-  //       setRoom('');
-  //     } catch (error) {
-  //       toast({ variant: "destructive", title: "Error", description: "Falha ao chamar o paciente." });
-  //     }
-  //   }
-  // };
 
   const handleFinishConsultation = async (patientId: string) =>{
     try{

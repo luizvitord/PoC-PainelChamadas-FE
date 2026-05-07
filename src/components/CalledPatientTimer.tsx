@@ -39,7 +39,7 @@ export function CalledPatientTimer({ calledAt }: CalledPatientTimerProps) {
       <div className="flex items-center justify-between px-4 py-3">
         <div>
           <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-            Tempo desde a chamada
+            Tempo desde a última chamada
           </div>
           <div className="text-[10px] text-slate-400">{statusText}</div>
         </div>
