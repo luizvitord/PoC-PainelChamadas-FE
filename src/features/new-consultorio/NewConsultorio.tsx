@@ -45,7 +45,7 @@ export function NewConsultorio() {
           </h3>
         </div>
 
-        <p className="text-xs text-gray-500 font-medium leading-relaxed min-h-[40px] flex items-center justify-center">
+        <p className="text-[1rem] font-semibold text-gray-600 leading-[1.3] min-h-[40px] flex items-center justify-center">
           Adicionar nova sala de atendimento
         </p>
       </Card>

@@ -38,10 +38,10 @@ export function CalledPatientTimer({ calledAt }: CalledPatientTimerProps) {
       </div>
       <div className="flex items-center justify-between px-4 py-3">
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+          <div className="text-[18px] font-bold uppercase text-slate-700">
             Tempo desde a última chamada
           </div>
-          <div className="text-[10px] text-slate-400">{statusText}</div>
+          <div className="text-[18px] text-slate-600">{statusText}</div>
         </div>
         <div className={`text-3xl font-black tabular-nums ${timerColor}`}>
           {formatted}

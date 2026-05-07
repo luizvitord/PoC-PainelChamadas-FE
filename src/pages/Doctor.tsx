@@ -298,40 +298,39 @@ const handleAbandonConsultation = async (patientId: string) => {
       </div>
 
       <Dialog open={consultationLocked} onOpenChange={() => {}}>
-        <DialogContent className="w-full overflow-x-hidden sm:max-w-xl [&>button]:hidden">
+        <DialogContent className="w-full overflow-x-hidden sm:max-w-3xl [&>button]:hidden">
           <DialogHeader>
-            <DialogTitle>Chamar Paciente</DialogTitle>
-            <DialogDescription>Revise as informações de triagem antes de chamar o paciente.</DialogDescription>
+            <DialogTitle className="text-3xl font-bold">Chamar Paciente</DialogTitle>
+            <DialogDescription className="text-lg">Revise as informações de triagem</DialogDescription>
           </DialogHeader>
 
           {activePatient && (
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-5">
               <div className="flex items-start justify-between">
-                <div>
-                  <div className="text-lg font-bold">{activePatient.fullName}</div>
-                  <span className="text-[0.65rem] font-bold uppercase tracking-[0.1em] text-slate-400">Dados do Paciente</span>
+                <div className="flex flex-col gap-2">
+                  {/* <span className="text-base font-bold uppercase tracking-[0.1em] text-slate-400">Paciente</span> */}
+                  <div className="text-3xl font-bold">{activePatient.fullName}</div>
                 </div>
-                <span className="text-2xl font-bold text-indigo-600">{activePatient.ticketNumber}</span>
               </div>
 
-              <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+              <div className="mt-6 grid grid-cols-2 gap-6">
                 <div>
-                  <span className="text-xs text-slate-500">Prioridade</span>
-                  <div className="mt-1 flex items-center gap-2">
+                  <span className="text-base text-slate-500">Prioridade</span>
+                  <div className="mt-2 flex items-center gap-3">
                     <PriorityBadge priority={activePatient.priority} showLabel={false} />
-                    <span>{PRIORITY_CONFIG[activePatient.priority]?.label}</span>
+                    <span className="text-xl font-semibold">{PRIORITY_CONFIG[activePatient.priority]?.label}</span>
                   </div>
                 </div>
                 <div>
-                  <span className="text-xs text-slate-500">Tipo</span>
-                  <p className="mt-1 font-medium">{AttendanceTypeLabel[activePatient.attendanceType]}</p>
+                  <span className="text-base text-slate-500">Tipo</span>
+                  <p className="mt-2 text-xl font-semibold">{AttendanceTypeLabel[activePatient.attendanceType]}</p>
                 </div>
               </div>
 
               {activePatient.triageNotes && (
-                <div className="mt-3 border-t border-slate-200 pt-2">
-                  <span className="text-[0.65rem] font-bold uppercase tracking-[0.1em] text-slate-400">Observações:</span>
-                  <div className="mt-1 rounded border border-slate-200 bg-white p-2 text-sm italic">
+                <div className="mt-6 border-t border-slate-200 pt-4">
+                  <span className="text-base font-bold uppercase tracking-[0.1em] text-slate-400">Observações:</span>
+                  <div className="mt-2 rounded border border-slate-200 bg-white p-4 text-lg italic">
                     {activePatient.triageNotes}
                   </div>
                 </div>
@@ -339,32 +338,34 @@ const handleAbandonConsultation = async (patientId: string) => {
             </div>
           )}
 
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-4">
             {activePatient && calledPatientIds.has(activePatient.id) ? (
-              <Button onClick={handleRecallPatient} disabled={!activePatient} variant="secondary">
+              <Button size="lg" className="h-14 px-8 text-lg" onClick={handleRecallPatient} disabled={!activePatient} variant="secondary">
                 Chamar novamente
               </Button>
             ) : (
-              <Button onClick={handleConfirmCallPatient} disabled={!room} className="bg-indigo-600 hover:bg-indigo-700">
+              <Button size="lg" className="h-14 px-8 text-lg bg-indigo-600 hover:bg-indigo-700" onClick={handleConfirmCallPatient} disabled={!room}>
                 Chamar Paciente
               </Button>
             )}
 
             <Button
+              size="lg"
+              className="h-14 px-8 text-lg bg-red-600 hover:bg-red-700"
               onClick={() => {
                 setPatientToAbandon(activePatient);
                 setConfirmAbandonOpen(true);
               }}
-              className="bg-red-600 hover:bg-red-700"
             >
               Encerrar (Desistência)
             </Button>
             <Button
+              size="lg"
+              className="h-14 px-8 text-lg bg-green-600 hover:bg-green-700"
               onClick={() => {
                 setPatientToFinish(activePatient);
                 setConfirmFinishOpen(true);
               }}
-              className="bg-green-600 hover:bg-green-700"
             >
               Finalizar Consulta
             </Button>
@@ -377,24 +378,25 @@ const handleAbandonConsultation = async (patientId: string) => {
       </Dialog>
 
       <Dialog open={confirmFinishOpen} onOpenChange={setConfirmFinishOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>Confirmar finalização</DialogTitle>
-            <DialogDescription>Deseja realmente finalizar esta consulta?</DialogDescription>
+            <DialogTitle className="text-2xl font-bold">Confirmar finalização</DialogTitle>
+            <DialogDescription className="text-lg">Deseja realmente finalizar esta consulta?</DialogDescription>
           </DialogHeader>
 
           {patientToFinish && (
-            <div className="rounded border border-green-200 bg-green-50 p-3 text-sm">
+            <div className="rounded border border-green-200 bg-green-50 p-5 text-lg">
               <p><strong>Paciente:</strong> {patientToFinish.fullName}</p>
             </div>
           )}
 
-          <div className="mt-4 flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setConfirmFinishOpen(false)}>
+          <div className="mt-4 flex justify-end gap-4">
+            <Button size="lg" className="h-14 px-8 text-lg" variant="outline" onClick={() => setConfirmFinishOpen(false)}>
               Não
             </Button>
             <Button
-              className="bg-green-600 hover:bg-green-700"
+              size="lg"
+              className="h-14 px-8 text-lg bg-green-600 hover:bg-green-700"
               onClick={async () => {
                 await handleFinishConsultation(patientToFinish.id);
                 setConfirmFinishOpen(false);
@@ -407,24 +409,25 @@ const handleAbandonConsultation = async (patientId: string) => {
       </Dialog>
 
       <Dialog open={confirmAbandonOpen} onOpenChange={setConfirmAbandonOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>Confirmar desistência</DialogTitle>
-            <DialogDescription>Deseja realmente marcar esta consulta como desistência?</DialogDescription>
+            <DialogTitle className="text-2xl font-bold">Confirmar desistência</DialogTitle>
+            <DialogDescription className="text-lg">Deseja realmente marcar esta consulta como desistência?</DialogDescription>
           </DialogHeader>
 
           {patientToAbandon && (
-            <div className="rounded border border-red-200 bg-red-50 p-3 text-sm">
+            <div className="rounded border border-red-200 bg-red-50 p-5 text-lg">
               <p><strong>Paciente:</strong> {patientToAbandon.fullName}</p>
             </div>
           )}
 
-          <div className="mt-4 flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setConfirmAbandonOpen(false)}>
+          <div className="mt-4 flex justify-end gap-4">
+            <Button size="lg" className="h-14 px-8 text-lg" variant="outline" onClick={() => setConfirmAbandonOpen(false)}>
               Não
             </Button>
             <Button
-              className="bg-red-600 hover:bg-red-700"
+              size="lg"
+              className="h-14 px-8 text-lg bg-red-600 hover:bg-red-700"
               onClick={async () => {
                 await handleAbandonConsultation(patientToAbandon.id);
                 setConfirmAbandonOpen(false);
