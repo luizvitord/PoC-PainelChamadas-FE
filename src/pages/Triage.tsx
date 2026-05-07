@@ -220,12 +220,12 @@ return (
     </div>
 
       <Dialog open={!!selectedPatientId} onOpenChange={(open) => !open && handleCancel()}>
-        <DialogContent className="max-h-[90vh] w-full max-w-[740px] overflow-y-auto rounded-[14px] border border-[#dbe1ea] bg-[#f8fafc] p-0 shadow-[0_32px_100px_rgba(0,0,0,0.45)] [&>button]:right-5 [&>button]:top-5 [&>button]:flex [&>button]:h-9 [&>button]:w-9 [&>button]:items-center [&>button]:justify-center [&>button]:rounded-[10px] [&>button]:border [&>button]:border-[#e2e8f0] [&>button]:bg-[#e9edf2] [&>button]:p-0 [&>button]:text-gray-500 [&>button]:opacity-100 [&>button:hover]:bg-[#dfe5ec] [&>button>svg]:h-4 [&>button>svg]:w-4">
-          <DialogHeader className="space-y-0 px-6 pb-0 pt-6 text-left">
-            <DialogTitle className="pr-12 text-[1.4rem] font-black uppercase tracking-[0.04em]">
+        <DialogContent className="max-h-[90vh] w-full overflow-x-hidden overflow-y-auto rounded-[14px] border border-[#dbe1ea] bg-[#f8fafc] p-0 shadow-[0_32px_100px_rgba(0,0,0,0.45)] sm:max-w-3xl [&>button]:right-5 [&>button]:top-5 [&>button]:flex [&>button]:h-11 [&>button]:w-11 [&>button]:items-center [&>button]:justify-center [&>button]:rounded-[10px] [&>button]:border [&>button]:border-[#e2e8f0] [&>button]:bg-[#e9edf2] [&>button]:p-0 [&>button]:text-gray-500 [&>button]:opacity-100 [&>button:hover]:bg-[#dfe5ec] [&>button>svg]:h-5 [&>button>svg]:w-5">
+          <DialogHeader className="space-y-0 px-8 pb-0 pt-8 text-left">
+            <DialogTitle className="pr-14 text-3xl font-black uppercase tracking-[0.04em]">
               {isRetriage ? "Reclassificação de Risco" : "Acolhimento e Classificação de Risco"}
             </DialogTitle>
-            <div className="mt-1 text-[0.92rem] font-medium text-gray-500">
+            <div className="mt-2 text-lg font-medium text-gray-500">
               Definir a classificação de risco de{" "}
               <span className="font-bold text-gray-700">
                 {selectedPatient?.fullName}
@@ -233,9 +233,9 @@ return (
             </div>
           </DialogHeader>
 
-          <div className="flex flex-col gap-4 px-6 py-5">
-            <div className="flex flex-col gap-[0.4rem]">
-              <Label className="text-[0.82rem] font-black uppercase tracking-[0.15em] text-gray-500">
+          <div className="flex flex-col gap-6 px-8 py-6">
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm font-black uppercase tracking-[0.15em] text-gray-500">
                 Categoria de Atendimento
               </Label>
 
@@ -248,33 +248,33 @@ return (
                   else if (value === "psychiatric") setPriority("green")
                   else if (value === "samu") setPriority("orange")
                 }}
-                className="flex flex-col gap-[0.6rem]"
+                className="flex flex-col gap-3"
               >
-                <div className={`flex cursor-pointer items-center gap-[0.6rem] rounded-lg border-[1.5px] px-3 py-2 transition-all ${attendanceType === 'psychiatric' ? 'border-[#008140] bg-[#f0fff4]' : 'border-gray-200 hover:border-[#008140] hover:bg-[#f0fff4]'}`}>
-                  <RadioGroupItem className="h-[14px] w-[14px]" value="psychiatric" id="psychiatric" />
-                  <Label htmlFor="psychiatric" className="cursor-pointer text-[0.85rem] font-bold">
+                <div className={`flex cursor-pointer items-center gap-4 rounded-xl border-2 px-5 py-4 transition-all ${attendanceType === 'psychiatric' ? 'border-[#008140] bg-[#f0fff4]' : 'border-gray-200 hover:border-[#008140] hover:bg-[#f0fff4]'}`}>
+                  <RadioGroupItem className="h-5 w-5" value="psychiatric" id="psychiatric" />
+                  <Label htmlFor="psychiatric" className="cursor-pointer text-lg font-bold">
                     Psiquiátrico
                   </Label>
                 </div>
 
-                <div className={`flex cursor-pointer items-center gap-[0.6rem] rounded-lg border-[1.5px] px-3 py-2 transition-all ${attendanceType === 'clinical' ? 'border-[#008140] bg-[#f0fff4]' : 'border-gray-200 hover:border-[#008140] hover:bg-[#f0fff4]'}`}>
-                  <RadioGroupItem className="h-[14px] w-[14px]" value="clinical" id="clinical" />
-                  <Label htmlFor="clinical" className="cursor-pointer text-[0.85rem] font-bold">
+                <div className={`flex cursor-pointer items-center gap-4 rounded-xl border-2 px-5 py-4 transition-all ${attendanceType === 'clinical' ? 'border-[#008140] bg-[#f0fff4]' : 'border-gray-200 hover:border-[#008140] hover:bg-[#f0fff4]'}`}>
+                  <RadioGroupItem className="h-5 w-5" value="clinical" id="clinical" />
+                  <Label htmlFor="clinical" className="cursor-pointer text-lg font-bold">
                     Clínico
                   </Label>
                 </div>
 
-                <div className={`flex cursor-pointer items-center gap-[0.6rem] rounded-lg border-[1.5px] px-3 py-2 transition-all ${attendanceType === 'samu' ? 'border-[#008140] bg-[#f0fff4]' : 'border-gray-200 hover:border-[#008140] hover:bg-[#f0fff4]'}`}>
-                  <RadioGroupItem className="h-[14px] w-[14px]" value="samu" id="samu" />
-                  <Label htmlFor="samu" className="cursor-pointer text-[0.85rem] font-bold">
+                <div className={`flex cursor-pointer items-center gap-4 rounded-xl border-2 px-5 py-4 transition-all ${attendanceType === 'samu' ? 'border-[#008140] bg-[#f0fff4]' : 'border-gray-200 hover:border-[#008140] hover:bg-[#f0fff4]'}`}>
+                  <RadioGroupItem className="h-5 w-5" value="samu" id="samu" />
+                  <Label htmlFor="samu" className="cursor-pointer text-lg font-bold">
                     SAMU (Serviço de Atendimento Móvel de Urgência)
                   </Label>
                 </div>
               </RadioGroup>
             </div>
 
-            <div className="flex flex-col gap-[0.4rem]">
-              <Label className="text-[0.82rem] font-black uppercase tracking-[0.15em] text-gray-500">
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm font-black uppercase tracking-[0.15em] text-gray-500">
                 Grau de Prioridade (Protocolo de Manchester)
               </Label>
 
@@ -282,20 +282,20 @@ return (
                 <button
                   type="button"
                   onClick={() => setIsManchesterOpen((prev) => !prev)}
-                  className={`flex w-full items-center justify-between px-4 py-3 text-left ${isManchesterOpen ? 'border-b border-[#22a35d]' : ''}`}
+                  className={`flex w-full items-center justify-between px-5 py-4 text-left ${isManchesterOpen ? 'border-b border-[#22a35d]' : ''}`}
                 >
-                  <div className="flex items-center gap-3">
-                    <span className={`inline-flex min-w-[74px] items-center justify-center rounded-full px-3 py-1 text-[1.05rem] font-black uppercase leading-none tracking-wide ${priorityPillClass[priority]}`}>
+                  <div className="flex items-center gap-4">
+                    <span className={`inline-flex min-w-[90px] items-center justify-center rounded-full px-4 py-1.5 text-lg font-black uppercase leading-none tracking-wide ${priorityPillClass[priority]}`}>
                       {priorityPillLabel[priority]}
                     </span>
-                    <span className="text-[1.08rem] font-bold leading-tight text-[#1f2a44]">
+                    <span className="text-xl font-bold leading-tight text-[#1f2a44]">
                       {PRIORITY_CONFIG[priority].label} ({PRIORITY_CONFIG[priority].waitTime})
                     </span>
                   </div>
                   {isManchesterOpen ? (
-                    <ChevronUp className="h-5 w-5 text-gray-500" />
+                    <ChevronUp className="h-6 w-6 text-gray-500" />
                   ) : (
-                    <ChevronDown className="h-5 w-5 text-gray-500" />
+                    <ChevronDown className="h-6 w-6 text-gray-500" />
                   )}
                 </button>
 
@@ -309,17 +309,17 @@ return (
                           setPriority(level);
                           setIsManchesterOpen(false);
                         }}
-                        className={`flex w-full items-center gap-4 border-b border-[#e2e8f0] px-4 py-4 text-left last:border-b-0 ${
+                        className={`flex w-full items-center gap-4 border-b border-[#e2e8f0] px-5 py-5 text-left last:border-b-0 ${
                           priority === level ? 'bg-[#e8eef8]' : 'bg-white hover:bg-[#f8fafc]'
                         }`}
                       >
-                        <div className="flex w-6 justify-center text-[#4f73df]">
-                          {priority === level ? <Check className="h-5 w-5" /> : null}
+                        <div className="flex w-7 justify-center text-[#4f73df]">
+                          {priority === level ? <Check className="h-6 w-6" /> : null}
                         </div>
-                        <span className={`inline-flex min-w-[110px] items-center justify-center rounded-full px-3 py-1 text-[0.95rem] font-black uppercase leading-none tracking-wide ${priorityPillClass[level]}`}>
+                        <span className={`inline-flex min-w-[120px] items-center justify-center rounded-full px-4 py-1.5 text-base font-black uppercase leading-none tracking-wide ${priorityPillClass[level]}`}>
                           {priorityPillLabel[level]}
                         </span>
-                        <span className="text-[1.08rem] font-bold leading-tight text-[#1f2a44]">
+                        <span className="text-xl font-bold leading-tight text-[#1f2a44]">
                           {PRIORITY_CONFIG[level].label} ({PRIORITY_CONFIG[level].waitTime})
                         </span>
                       </button>
@@ -329,8 +329,8 @@ return (
               </div>
             </div>
 
-            <div className="flex flex-col gap-[0.4rem]">
-              <Label className="text-[0.82rem] font-black uppercase tracking-[0.15em] text-gray-500">
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm font-black uppercase tracking-[0.15em] text-gray-500">
                 Anotações Clínicas
               </Label>
 
@@ -339,23 +339,25 @@ return (
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Digite as observações do paciente para auxiliar o médico no atendimento..."
                 rows={4}
-                className="min-h-[90px] rounded-[10px] border-[1.5px] border-gray-200 bg-gray-50 px-4 py-3 text-base font-medium text-gray-800 focus:border-[#008140] focus:bg-white focus:ring-4 focus:ring-[rgba(0,129,64,0.12)]"
+                className="min-h-[110px] rounded-[10px] border-[1.5px] border-gray-200 bg-gray-50 px-5 py-4 text-lg font-medium text-gray-800 focus:border-[#008140] focus:bg-white focus:ring-4 focus:ring-[rgba(0,129,64,0.12)]"
               />
             </div>
           </div>
 
-          <div className="flex justify-end gap-[0.6rem] px-6 pb-6">
+          <div className="flex justify-end gap-3 px-8 pb-8">
             <Button
+              size="lg"
               variant="outline"
               onClick={handleCancel}
-              className="rounded-lg border-[1.5px] border-gray-200 bg-white px-5 py-2.5 text-[0.85rem] font-black uppercase tracking-[0.08em] text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+              className="h-14 rounded-xl border-2 border-gray-200 bg-white px-8 text-lg font-black uppercase tracking-[0.08em] text-gray-700 hover:border-gray-300 hover:bg-gray-50"
             >
               Cancelar
             </Button>
 
             <Button
+              size="lg"
               onClick={handleConfirmTriage}
-              className="rounded-lg bg-[#008140] px-5 py-2.5 text-[0.85rem] font-black uppercase tracking-[0.08em] text-white hover:bg-[#006f36]"
+              className="h-14 rounded-xl bg-[#008140] px-8 text-lg font-black uppercase tracking-[0.08em] text-white hover:bg-[#006f36]"
             >
                {isRetriage ? "Confirmar reclassificação" : "Confirmar Classificação"}
             </Button>
