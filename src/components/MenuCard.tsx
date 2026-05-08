@@ -45,7 +45,7 @@ export function MenuCard({
       >
         {restricted && (
           <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/80 px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-wider text-slate-500 shadow-sm backdrop-blur-sm">
-            <Lock className="h-3 w-3" />
+            <Lock className="h-6 w-6" />
             Restrito
           </span>
         )}
