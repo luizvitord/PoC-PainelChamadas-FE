@@ -214,7 +214,7 @@ const handleAbandonConsultation = async (patientId: string) => {
 
                       const isOrange = patient.priority === 'orange';
                       const overdue = isOrange && classifiedAtTime && (now - classifiedAtTime > 10 * 60 * 1000);
-                      const chegada = patient.classifiedAt || patient.registeredAt;
+                      const chegada = patient.chegadaAt || patient.classifiedAt;
 
                       return (
                         <tr key={patient.id} className={`border-b border-slate-100 ${overdue ? 'animate-pulse bg-orange-50/60' : ''}`}>

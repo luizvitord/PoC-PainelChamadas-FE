@@ -2,6 +2,7 @@ export type PriorityLevel = 'red' | 'orange' | 'yellow' | 'green' | 'blue';
 
 export interface Patient {
   id: string;
+  chegadaAt: Date;
   ticketNumber: string;
   fullName: string;
   dateOfBirth: string;

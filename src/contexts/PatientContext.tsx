@@ -128,7 +128,6 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const callForTriage = useCallback(async (patientId: string) => {
     await api.put(`/pacientes/${patientId}/chamar-triagem`);
-    setPatients(prev => prev.map(p => p.id === patientId ? { ...p, status: 'in-triage' } : p));
   }, []);
 
 
