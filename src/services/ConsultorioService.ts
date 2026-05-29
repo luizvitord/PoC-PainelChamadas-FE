@@ -1,4 +1,6 @@
-const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:1111'}/consultorios`;
+import { API_BASE_URL } from '@/lib/appConfig';
+
+const API_URL = `${API_BASE_URL}/consultorios`;
 
 export interface Consultorio {
   id: string | number;
