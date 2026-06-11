@@ -3,8 +3,10 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import { Patient, PriorityLevel } from '@/types/patient';
 import { AttendanceTypeBackend, PriorityBackend } from '@/lib/utils/backendMaps';
 
+import { API_BASE_URL } from '@/lib/appConfig';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:1111',
+  baseURL: API_BASE_URL,
   headers: { 'Content-Type': 'application/json' }
 });
 
@@ -128,7 +130,6 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const callForTriage = useCallback(async (patientId: string) => {
     await api.put(`/pacientes/${patientId}/chamar-triagem`);
-    setPatients(prev => prev.map(p => p.id === patientId ? { ...p, status: 'in-triage' } : p));
   }, []);
 
 
