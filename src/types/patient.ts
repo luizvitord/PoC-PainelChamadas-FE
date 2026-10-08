@@ -9,6 +9,7 @@ export interface Patient {
   cpf: string;
   registeredAt: Date;
   classifiedAt?: Date | null;
+  prazoAtendimentoAt?: Date | null;
   status: 'waiting-triage' | 'in-triage' | 'waiting-doctor' | 'in-consultation' | 'completed';
   priority?: PriorityLevel;
   attendanceType?: 'clinical' | 'psychiatric' | 'samu';

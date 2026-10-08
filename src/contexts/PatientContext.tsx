@@ -61,7 +61,8 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
         attendanceType: p.tipo === 'PSIQUIATRICO' ? 'psychiatric' : p.tipo === 'SAMU' ? 'samu' : 'clinical',
         triageNotes: p.triageNotes,
         registeredAt: new Date(),
-        classifiedAt: p.classifiedAt ? new Date(p.classifiedAt) : null
+        classifiedAt: p.classifiedAt ? new Date(p.classifiedAt) : null,
+        prazoAtendimentoAt: p.prazoAtendimentoAt ? new Date(p.prazoAtendimentoAt) : null
       }));
       console.log('Fetched patients:', [...triagePatients, ...doctorPatients]);
 
