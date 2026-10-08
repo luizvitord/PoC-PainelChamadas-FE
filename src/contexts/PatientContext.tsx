@@ -14,6 +14,7 @@ interface PatientContextType {
   patients: Patient[];
   registerPatient: (data: { fullName: string; dateOfBirth: string; cpf: string }) => Promise<Patient>;
   callForTriage: (patientId: string) => Promise<void>;
+  rechamarTriagem: (patientId: string) => Promise<void>;
   assignPriority: (patientId: string, priority: PriorityLevel, attendanceType: 'clinical' | 'psychiatric' | 'samu', notes: string) => Promise<void>;
   callForDoctor: (patientId: string, room: string) => Promise<void>;
   recallPatient: (patientId: string, room: string) => Promise<void>;
@@ -132,6 +133,10 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await api.put(`/pacientes/${patientId}/chamar-triagem`);
   }, []);
 
+  const rechamarTriagem = useCallback(async (patientId: string) => {
+    await api.put(`/pacientes/${patientId}/rechamar-triagem`);
+  }, []);
+
 
 
   const getWaitingForTriage = useCallback(() => patients.filter(p => p.status === 'waiting-triage'), [patients]);
@@ -139,7 +144,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   return (
     <PatientContext.Provider value={{
-      patients, registerPatient, callForTriage,
+      patients, registerPatient, callForTriage, rechamarTriagem,
       assignPriority, callForDoctor, completeConsultation, abandonConsultation,
       getWaitingForTriage, getWaitingForDoctor, refreshPatients,
       recallPatient
