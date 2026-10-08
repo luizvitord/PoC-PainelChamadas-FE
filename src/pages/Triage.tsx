@@ -16,7 +16,7 @@ import { Check, ChevronDown, ChevronUp, Phone } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 export default function Triage() {
-  const { getWaitingForDoctor, getWaitingForTriage, callForTriage, assignPriority, abandonConsultation, refreshPatients } = usePatients();
+  const { getWaitingForDoctor, getWaitingForTriage, callForTriage, rechamarTriagem, assignPriority, abandonConsultation, refreshPatients } = usePatients();
   const { toast } = useToast();
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [attendanceType, setAttendanceType] = useState<'clinical' | 'psychiatric' | 'samu'>('psychiatric');
@@ -25,6 +25,7 @@ export default function Triage() {
   const [notes, setNotes] = useState('');
   const [confirmAbandonOpen, setConfirmAbandonOpen] = useState(false);
   const [patientToAbandon, setPatientToAbandon] = useState<{ id: string; fullName: string } | null>(null);
+  const [isRecalling, setIsRecalling] = useState(false);
   const availableColors = getAvailablePriorities(attendanceType);
   const waitingPatientsForDoctor = getWaitingForDoctor();
   const waitingPatients = getWaitingForTriage();
@@ -36,6 +37,8 @@ export default function Triage() {
     waitingPatientsForDoctor.find(p => p.id === selectedPatientId);
 
   const isRetriage = !!selectedPatient?.priority;
+  // O modal só abre para um paciente da lista de triagem depois que o chamar-triagem deu certo
+  const canRecall = !!selectedPatient && !isRetriage;
   
   useEffect(() => {
     const interval = setInterval(() => {
@@ -55,6 +58,23 @@ export default function Triage() {
     }); 
     } catch(error) {
         toast({ variant: "destructive", title: "Error", description: "Falha ao chamar paciente." });
+    }
+  };
+
+  const handleRecallTriage = async () => {
+    if (!selectedPatient || isRecalling) return;
+
+    setIsRecalling(true);
+    try {
+      await rechamarTriagem(selectedPatient.id);
+      toast({
+        title: 'Paciente chamado novamente',
+        description: `${selectedPatient.fullName} foi chamado novamente para o acolhimento.`,
+      });
+    } catch {
+      toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível rechamar o paciente.' });
+    } finally {
+      setIsRecalling(false);
     }
   };
 
@@ -361,13 +381,28 @@ return (
           </div>
 
           <div className="flex justify-between gap-3 px-8 pb-8">
-            <Button
-              size="lg"
-              onClick={() => { setPatientToAbandon({ id: selectedPatient!.id, fullName: selectedPatient!.fullName }); setConfirmAbandonOpen(true); }}
-              className="h-14 rounded-xl bg-red-600 px-8 text-lg font-black uppercase tracking-[0.08em] text-white hover:bg-red-700"
-            >
-              Desistência
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                size="lg"
+                onClick={() => { setPatientToAbandon({ id: selectedPatient!.id, fullName: selectedPatient!.fullName }); setConfirmAbandonOpen(true); }}
+                className="h-14 rounded-xl bg-red-600 px-8 text-lg font-black uppercase tracking-[0.08em] text-white hover:bg-red-700"
+              >
+                Desistência
+              </Button>
+
+              {canRecall && (
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  onClick={handleRecallTriage}
+                  disabled={isRecalling}
+                  className="h-14 rounded-xl px-8 text-lg font-black uppercase tracking-[0.08em]"
+                >
+                  <Phone className="h-4 w-4" />
+                  Rechamar
+                </Button>
+              )}
+            </div>
 
             <div className="flex gap-3">
               <Button
