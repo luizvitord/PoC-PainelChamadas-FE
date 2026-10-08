@@ -9,6 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { usePatients } from '@/contexts/PatientContext';
 import { useToast } from '@/hooks/use-toast';
 import { AttendanceTypeLabel } from '@/lib/attendanceTypes';
+import { isOverdue } from '@/lib/isOverdue';
 import { PRIORITY_CONFIG } from "@/types/patient";
 import { CheckCircle, Phone } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -207,14 +208,7 @@ const handleAbandonConsultation = async (patientId: string) => {
                     </tr>
                   ) : (
                     waitingPatients.map((patient) => {
-                      const classifiedAtTime = patient.classifiedAt
-                        ? (patient.classifiedAt instanceof Date
-                            ? patient.classifiedAt.getTime()
-                            : new Date(patient.classifiedAt).getTime())
-                        : null;
-
-                      const isOrange = patient.priority === 'orange';
-                      const overdue = isOrange && classifiedAtTime && (now - classifiedAtTime > 10 * 60 * 1000);
+                      const overdue = isOverdue(patient, now);
                       const chegada = patient.chegadaAt || patient.classifiedAt;
 
                       return (
