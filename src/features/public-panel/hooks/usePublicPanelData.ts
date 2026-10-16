@@ -7,7 +7,7 @@ import { BackendPanelCall, mapBackendPanelCall } from '../utils/mapBackendPanelC
 import { mapCallToViewModel } from '../utils/mapCallToViewModel';
 import { mergePanelCalls } from '../utils/mergePanelCalls';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:1111';
+import { API_BASE_URL } from '@/lib/appConfig';
 const PANEL_CALLS_RETAIN_LIMIT = 250;
 const KNOWN_CALL_IDS_LIMIT = 500;
 

@@ -9,10 +9,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { usePatients } from '@/contexts/PatientContext';
 import { useToast } from '@/hooks/use-toast';
 import { AttendanceTypeLabel } from '@/lib/attendanceTypes';
+import { isOverdue } from '@/lib/isOverdue';
 import { PRIORITY_CONFIG } from "@/types/patient";
 import { CheckCircle, Phone } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CalledPatientTimer } from '@/components/CalledPatientTimer';
+import { API_BASE_URL } from '@/lib/appConfig';
 
 export default function Doctor() {
   const { getWaitingForDoctor, callForDoctor, completeConsultation, abandonConsultation, refreshPatients, recallPatient } = usePatients();
@@ -107,7 +109,7 @@ const handleRecallPatient = async () => {
 
   useEffect(() => {
     // Ajuste a URL se necessário
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:1111'}/consultorios`)
+    fetch(`${API_BASE_URL}/consultorios`)
       .then(res => res.json())
       .then(data => setConsultorios(data))
       .catch(err => console.error("Erro ao carregar consultórios", err));
@@ -206,15 +208,8 @@ const handleAbandonConsultation = async (patientId: string) => {
                     </tr>
                   ) : (
                     waitingPatients.map((patient) => {
-                      const classifiedAtTime = patient.classifiedAt
-                        ? (patient.classifiedAt instanceof Date
-                            ? patient.classifiedAt.getTime()
-                            : new Date(patient.classifiedAt).getTime())
-                        : null;
-
-                      const isOrange = patient.priority === 'orange';
-                      const overdue = isOrange && classifiedAtTime && (now - classifiedAtTime > 10 * 60 * 1000);
-                      const chegada = patient.classifiedAt || patient.registeredAt;
+                      const overdue = isOverdue(patient, now);
+                      const chegada = patient.chegadaAt || patient.classifiedAt;
 
                       return (
                         <tr key={patient.id} className={`border-b border-slate-100 ${overdue ? 'animate-pulse bg-orange-50/60' : ''}`}>

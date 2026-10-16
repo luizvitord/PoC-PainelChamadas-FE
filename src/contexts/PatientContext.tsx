@@ -3,8 +3,10 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import { Patient, PriorityLevel } from '@/types/patient';
 import { AttendanceTypeBackend, PriorityBackend } from '@/lib/utils/backendMaps';
 
+import { API_BASE_URL } from '@/lib/appConfig';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:1111',
+  baseURL: API_BASE_URL,
   headers: { 'Content-Type': 'application/json' }
 });
 
@@ -12,6 +14,7 @@ interface PatientContextType {
   patients: Patient[];
   registerPatient: (data: { fullName: string; dateOfBirth: string; cpf: string }) => Promise<Patient>;
   callForTriage: (patientId: string) => Promise<void>;
+  rechamarTriagem: (patientId: string) => Promise<void>;
   assignPriority: (patientId: string, priority: PriorityLevel, attendanceType: 'clinical' | 'psychiatric' | 'samu', notes: string) => Promise<void>;
   callForDoctor: (patientId: string, room: string) => Promise<void>;
   recallPatient: (patientId: string, room: string) => Promise<void>;
@@ -59,7 +62,8 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
         attendanceType: p.tipo === 'PSIQUIATRICO' ? 'psychiatric' : p.tipo === 'SAMU' ? 'samu' : 'clinical',
         triageNotes: p.triageNotes,
         registeredAt: new Date(),
-        classifiedAt: p.classifiedAt ? new Date(p.classifiedAt) : null
+        classifiedAt: p.classifiedAt ? new Date(p.classifiedAt) : null,
+        prazoAtendimentoAt: p.prazoAtendimentoAt ? new Date(p.prazoAtendimentoAt) : null
       }));
       console.log('Fetched patients:', [...triagePatients, ...doctorPatients]);
 
@@ -128,7 +132,10 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const callForTriage = useCallback(async (patientId: string) => {
     await api.put(`/pacientes/${patientId}/chamar-triagem`);
-    setPatients(prev => prev.map(p => p.id === patientId ? { ...p, status: 'in-triage' } : p));
+  }, []);
+
+  const rechamarTriagem = useCallback(async (patientId: string) => {
+    await api.put(`/pacientes/${patientId}/rechamar-triagem`);
   }, []);
 
 
@@ -138,7 +145,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   return (
     <PatientContext.Provider value={{
-      patients, registerPatient, callForTriage,
+      patients, registerPatient, callForTriage, rechamarTriagem,
       assignPriority, callForDoctor, completeConsultation, abandonConsultation,
       getWaitingForTriage, getWaitingForDoctor, refreshPatients,
       recallPatient

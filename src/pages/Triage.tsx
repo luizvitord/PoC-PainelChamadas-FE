@@ -3,7 +3,7 @@ import Header from '@/components/Header';
 import { PriorityBadge } from '@/components/PriorityBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,22 +16,29 @@ import { Check, ChevronDown, ChevronUp, Phone } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 export default function Triage() {
-  const { getWaitingForDoctor, getWaitingForTriage, callForTriage, assignPriority, refreshPatients } = usePatients();
+  const { getWaitingForDoctor, getWaitingForTriage, callForTriage, rechamarTriagem, assignPriority, abandonConsultation, refreshPatients } = usePatients();
   const { toast } = useToast();
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [attendanceType, setAttendanceType] = useState<'clinical' | 'psychiatric' | 'samu'>('psychiatric');
   const [priority, setPriority] = useState<PriorityLevel>('green');
   const [isManchesterOpen, setIsManchesterOpen] = useState(false);
   const [notes, setNotes] = useState('');
+  const [confirmAbandonOpen, setConfirmAbandonOpen] = useState(false);
+  const [patientToAbandon, setPatientToAbandon] = useState<{ id: string; fullName: string } | null>(null);
+  const [isRecalling, setIsRecalling] = useState(false);
   const availableColors = getAvailablePriorities(attendanceType);
   const waitingPatientsForDoctor = getWaitingForDoctor();
   const waitingPatients = getWaitingForTriage();
+  console.log("Waiting patients for triage:", waitingPatients);
+
 
   const selectedPatient =
     waitingPatients.find(p => p.id === selectedPatientId) ||
     waitingPatientsForDoctor.find(p => p.id === selectedPatientId);
 
   const isRetriage = !!selectedPatient?.priority;
+  // O modal só abre para um paciente da lista de triagem depois que o chamar-triagem deu certo
+  const canRecall = !!selectedPatient && !isRetriage;
   
   useEffect(() => {
     const interval = setInterval(() => {
@@ -51,6 +58,23 @@ export default function Triage() {
     }); 
     } catch(error) {
         toast({ variant: "destructive", title: "Error", description: "Falha ao chamar paciente." });
+    }
+  };
+
+  const handleRecallTriage = async () => {
+    if (!selectedPatient || isRecalling) return;
+
+    setIsRecalling(true);
+    try {
+      await rechamarTriagem(selectedPatient.id);
+      toast({
+        title: 'Paciente chamado novamente',
+        description: `${selectedPatient.fullName} foi chamado novamente para o acolhimento.`,
+      });
+    } catch {
+      toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível rechamar o paciente.' });
+    } finally {
+      setIsRecalling(false);
     }
   };
 
@@ -92,6 +116,18 @@ export default function Triage() {
 
     if (patient.triageNotes) {
       setNotes(patient.triageNotes);
+    }
+  };
+
+  const handleAbandonTriage = async (patientId: string) => {
+    try {
+      await abandonConsultation(patientId);
+      setConfirmAbandonOpen(false);
+      setPatientToAbandon(null);
+      await handleCancel();
+      toast({ title: 'Desistência registrada', description: 'Paciente marcado como desistência.' });
+    } catch {
+      toast({ variant: 'destructive', title: 'Erro', description: 'Falha ao registrar desistência.' });
     }
   };
 
@@ -159,7 +195,7 @@ return (
                         <tr key={patient.id}>
                           <td className="whitespace-nowrap px-8 py-6">
                             <span className="rounded-full bg-blue-50 px-3 py-1.5 text-base font-black italic uppercase text-blue-700">
-                              {new Date(patient.registeredAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                              {new Date(patient.chegadaAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </td>
                           <td className="px-8 py-6 text-xl font-bold uppercase text-gray-800">{patient.fullName}</td>
@@ -220,7 +256,7 @@ return (
     </div>
 
       <Dialog open={!!selectedPatientId} onOpenChange={(open) => !open && handleCancel()}>
-        <DialogContent className="max-h-[90vh] w-full overflow-x-hidden overflow-y-auto rounded-[14px] border border-[#dbe1ea] bg-[#f8fafc] p-0 shadow-[0_32px_100px_rgba(0,0,0,0.45)] sm:max-w-3xl [&>button]:right-5 [&>button]:top-5 [&>button]:flex [&>button]:h-11 [&>button]:w-11 [&>button]:items-center [&>button]:justify-center [&>button]:rounded-[10px] [&>button]:border [&>button]:border-[#e2e8f0] [&>button]:bg-[#e9edf2] [&>button]:p-0 [&>button]:text-gray-500 [&>button]:opacity-100 [&>button:hover]:bg-[#dfe5ec] [&>button>svg]:h-5 [&>button>svg]:w-5">
+        <DialogContent className="max-h-[90vh] w-full overflow-x-hidden overflow-y-auto rounded-[14px] border border-[#dbe1ea] bg-[#f8fafc] p-0 shadow-[0_32px_100px_rgba(0,0,0,0.45)] sm:max-w-4xl [&>button]:right-5 [&>button]:top-5 [&>button]:flex [&>button]:h-11 [&>button]:w-11 [&>button]:items-center [&>button]:justify-center [&>button]:rounded-[10px] [&>button]:border [&>button]:border-[#e2e8f0] [&>button]:bg-[#e9edf2] [&>button]:p-0 [&>button]:text-gray-500 [&>button]:opacity-100 [&>button:hover]:bg-[#dfe5ec] [&>button>svg]:h-5 [&>button>svg]:w-5">
           <DialogHeader className="space-y-0 px-8 pb-0 pt-8 text-left">
             <DialogTitle className="pr-14 text-3xl font-black uppercase tracking-[0.04em]">
               {isRetriage ? "Reclassificação de Risco" : "Acolhimento e Classificação de Risco"}
@@ -344,15 +380,39 @@ return (
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 px-8 pb-8">
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={handleCancel}
-              className="h-14 rounded-xl border-2 border-gray-200 bg-white px-8 text-lg font-black uppercase tracking-[0.08em] text-gray-700 hover:border-gray-300 hover:bg-gray-50"
-            >
-              Cancelar
-            </Button>
+          <div className="flex justify-between gap-3 px-8 pb-8">
+            <div className="flex gap-3">
+              <Button
+                size="lg"
+                onClick={() => { setPatientToAbandon({ id: selectedPatient!.id, fullName: selectedPatient!.fullName }); setConfirmAbandonOpen(true); }}
+                className="h-14 rounded-xl bg-red-600 px-8 text-lg font-black uppercase tracking-[0.08em] text-white hover:bg-red-700"
+              >
+                Desistência
+              </Button>
+
+              {canRecall && (
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  onClick={handleRecallTriage}
+                  disabled={isRecalling}
+                  className="h-14 rounded-xl px-8 text-lg font-black uppercase tracking-[0.08em]"
+                >
+                  <Phone className="h-4 w-4" />
+                  Rechamar
+                </Button>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={handleCancel}
+                className="h-14 rounded-xl border-2 border-gray-200 bg-white px-8 text-lg font-black uppercase tracking-[0.08em] text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+              >
+                Cancelar
+              </Button>
 
             <Button
               size="lg"
@@ -360,6 +420,32 @@ return (
               className="h-14 rounded-xl bg-[#008140] px-8 text-lg font-black uppercase tracking-[0.08em] text-white hover:bg-[#006f36]"
             >
                {isRetriage ? "Confirmar reclassificação" : "Confirmar Classificação"}
+            </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={confirmAbandonOpen} onOpenChange={setConfirmAbandonOpen}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Confirmar desistência</DialogTitle>
+            <DialogDescription className="text-lg">Deseja realmente marcar este paciente como desistência?</DialogDescription>
+          </DialogHeader>
+          {patientToAbandon && (
+            <div className="rounded border border-red-200 bg-red-50 p-5 text-lg">
+              <p><strong>Paciente:</strong> {patientToAbandon.fullName}</p>
+            </div>
+          )}
+          <div className="mt-4 flex justify-end gap-4">
+            <Button size="lg" className="h-14 px-8 text-lg" variant="outline" onClick={() => setConfirmAbandonOpen(false)}>
+              Não
+            </Button>
+            <Button
+              size="lg"
+              className="h-14 px-8 text-lg bg-red-600 hover:bg-red-700"
+              onClick={() => patientToAbandon && handleAbandonTriage(patientToAbandon.id)}
+            >
+              Sim, marcar como desistência
             </Button>
           </div>
         </DialogContent>

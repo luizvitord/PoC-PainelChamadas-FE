@@ -2,12 +2,14 @@ export type PriorityLevel = 'red' | 'orange' | 'yellow' | 'green' | 'blue';
 
 export interface Patient {
   id: string;
+  chegadaAt: Date;
   ticketNumber: string;
   fullName: string;
   dateOfBirth: string;
   cpf: string;
   registeredAt: Date;
   classifiedAt?: Date | null;
+  prazoAtendimentoAt?: Date | null;
   status: 'waiting-triage' | 'in-triage' | 'waiting-doctor' | 'in-consultation' | 'completed';
   priority?: PriorityLevel;
   attendanceType?: 'clinical' | 'psychiatric' | 'samu';
