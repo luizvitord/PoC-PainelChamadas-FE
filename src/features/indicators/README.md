@@ -96,3 +96,34 @@ Validação de conclusão em 16/10/2026: 24 testes aprovados com o backend ativo
 (17 locais + 7 HTTP reais), mais 1 teste aprovado com o backend desligado.
 Build e lint da feature aprovados. A checagem TypeScript geral continua limitada
 pelos erros preexistentes citados acima; não apontou erros novos nesta feature.
+
+## Resumo da entrega por task - 16/10/2026
+
+1. **Estrutura e integração:** feature organizada como public-panel; tipos
+   IndicadoresResponse e Detalhamento compatíveis com Java; Record<Risco, number>;
+   hook React Query com GERAL padrão, filtro SAMU, polling e cache por filtros;
+   helper LocalDateTime sem UTC com testes; mocks reais geral.json e samu.json
+   capturados com o seed original e commitados. Consultas nos dois escopos
+   validadas contra backend local com PostgreSQL temporário.
+2. **Cards:** cadastrados, classificados e atendidos em componentes próprios,
+   percentuais formatados e cinco cards por cor. Os testes usam a resposta real
+   GERAL com 19 cadastrados, 17 classificados (89,47%), 14 atendidos (73,68%) e
+   Laranja=5. Desistências ficaram de fora; ocultação de cards SAMU é IND-10.
+3. **Estados:** skeleton, erro de rede/HTTP 400, nova tentativa, período vazio,
+   última atualização e ocultação dos números anteriores durante consultas.
+   Troca de escopo validada com o hook e backend reais; apresentação dos estados
+   coberta por testes de componentes.
+4. **Extra autorizado no backend:** filtro GERAL/SAMU aplicado ao endpoint,
+   service e seis queries, com tipo nulo incluído em GERAL, sem alterar DTO ou
+   seed. Commit cc3198a em feat/postgresql-migration do APIRestPoc, validado por
+   21 testes. Documentação: docs/indicadores/endpoint.md naquele repositório.
+
+**Visual:** provisório para visualização e teste dos dados, com os componentes
+existentes do site. Não corresponde ao design definitivo. Esta branch ainda
+precisa ser integrada à estrutura visual nova da equipe na develop. Nenhuma
+alteração dessa estrutura remota foi sobrescrita.
+
+**Validação desta entrega:** 25 testes da feature aprovados nas execuções já
+registradas, build e lint aprovados. A suíte e o TypeScript gerais têm as
+limitações preexistentes descritas acima. Esta atualização de documentação não
+altera código e não representa uma nova execução dos testes.
