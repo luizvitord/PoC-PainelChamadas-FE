@@ -93,6 +93,12 @@ export default function Index() {
             </Card>
           </Link>
 
+          <Link to="/indicators" className="block group h-full">
+            <Card className={`${cardBaseClassName} border-b-8 border-emerald-700`}>
+              <h3 className={cardTitleClassName}>Indicadores</h3>
+              <p className={cardDescClassName}>Contagens e percentuais de atendimento por período</p>
+            </Card>
+          </Link>
           <NewConsultorio />
         </div>
       </main>

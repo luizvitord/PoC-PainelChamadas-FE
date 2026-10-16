@@ -9,6 +9,7 @@ import Reception from "./pages/Reception";
 import Triage from "./pages/Triage";
 import Doctor from "./pages/Doctor";
 import PublicPanel from "./pages/PublicPanel";
+import Indicators from "./pages/Indicators";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/triage" element={<Triage />} />
             <Route path="/doctor" element={<Doctor />} />
             <Route path="/panel" element={<PublicPanel />} />
+            <Route path="/indicators" element={<Indicators />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
