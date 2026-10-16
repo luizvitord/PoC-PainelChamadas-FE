@@ -3,6 +3,25 @@
 Rota `/indicators`, acessível no menu inicial. Estrutura equivalente a `public-panel`:
 `types.ts`, `hooks/`, `utils/`, `components/` e `IndicatorsFeature.tsx`.
 
+## Visual provisório e situação da integração
+
+A tela criada nesta entrega é provisória, destinada à visualização e aos testes
+de integração. Não implementa nem substitui o design oficial da equipe.
+Utiliza Header, Card, Input, Button e Skeleton existentes, além dos estilos e
+cores do projeto. O layout definitivo deve seguir o design aprovado.
+
+Em 16/10/2026 o backend foi corrigido para aceitar GERAL/SAMU, com 21 testes
+aprovados. Este frontend ainda mantém a proteção SAMU e o mock do backend
+anterior. É necessário ativar a configuração e recapturar os mocks reais antes
+de considerar concluídos os critérios de aceite dos dois escopos.
+
+O fetch antes da publicação encontrou `0752d6d` na develop remota, com outra
+estrutura de indicadores da equipe. Ela altera os mesmos arquivos de rota,
+menu, página e IndicatorsFeature. Esta entrega foi publicada separadamente em
+`feat/indicadores-dados-cards-provisorios`, sem integrar ou sobrescrever esse
+trabalho. A próxima integração deve aproveitar a estrutura visual da equipe
+e incorporar o hook, tipos, cards e estados conforme o design aprovado.
+
 ## Contrato e comportamento
 
 - `IndicadoresResponse` e `Detalhamento` espelham os records Java do backend em `8d6e8b4`.
@@ -15,7 +34,7 @@ Rota `/indicators`, acessível no menu inicial. Estrutura equivalente a `public-
 - Erro de rede, HTTP 400/outros erros, botão para repetir, período vazio e horário da última resposta bem-sucedida.
 - Sem desistências (dependência de indicadores BE-02). Não implementa a ocultação de cards SAMU de IND-10.
 
-## Bloqueio real do backend (conferido em 16/10/2026)
+## Diagnóstico anterior à correção do backend (16/10/2026)
 
 Foi feito fetch e inspecionadas todas as branches remotas. `IndicadorController`,
 `IndicadorService`, `IndicadorRepository` e DTO são idênticos nas branches
@@ -55,8 +74,10 @@ O banco de desenvolvimento não foi usado nem limpo.
 A resposta solicitada com SAMU foi comparada byte a byte e é idêntica; não foi
 salva como mock SAMU, pois isso documentaria um filtro inexistente.
 
-Pendentes: mocks reais GERAL sem SAMU e SAMU exclusivo, e aceite integrado dos
-dois escopos. Depois do BE-04 correto, recapturar os JSONs e ajustar o teste live.
+Pendentes neste frontend: ativar os escopos contra o backend corrigido, capturar
+os mocks reais GERAL sem SAMU e SAMU exclusivo e validar os dois escopos.
+Recapturar os JSONs e ajustar o teste live; o mock legado não deve ser tratado
+como a resposta do novo padrão GERAL.
 
 ## Validação
 
