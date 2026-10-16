@@ -7,15 +7,9 @@ import { fireEvent } from '@testing-library/react';
 import { useIndicadores } from '../hooks/useIndicadores';
 import { renderHook } from '@testing-library/react';
 import type { IndicadoresResponse } from '../types';
-import real from '../mocks/backend-atual-geral-inclui-samu.json';
+import real from '../mocks/geral.json';
 
-vi.mock('../constants', async importOriginal => ({
-  ...await importOriginal<typeof import('../constants')>(), ESCOPOS_SUPORTADOS: true,
-}));
-// Fixture sintética de aceite UI, NÃO uma resposta real nem o mock por escopo.
-const geral: IndicadoresResponse = { ...real, porRiscoETipo: [], cadastrados: 19, classificados: 17,
-  atendidos: 14, percentualClassificados: 89.47, percentualAtendidos: 73.68,
-  contagensPorRisco: { ...real.contagensPorRisco, LARANJA: 5 } };
+const geral: IndicadoresResponse = real as IndicadoresResponse;
 const vazio: IndicadoresResponse = { ...geral, cadastrados: 0, classificados: 0, atendidos: 0,
   percentualClassificados: 0, percentualAtendidos: 0 };
 const filtros = { inicio: '2026-09-01T00:00:00', fim: '2026-09-03T23:59:59', escopo: 'GERAL' as const };

@@ -3,98 +3,96 @@
 Rota `/indicators`, acessível no menu inicial. Estrutura equivalente a `public-panel`:
 `types.ts`, `hooks/`, `utils/`, `components/` e `IndicatorsFeature.tsx`.
 
-## Visual provisório e situação da integração
+## Task 1: integração GERAL/SAMU
 
-A tela criada nesta entrega é provisória, destinada à visualização e aos testes
-de integração. Não implementa nem substitui o design oficial da equipe.
-Utiliza Header, Card, Input, Button e Skeleton existentes, além dos estilos e
-cores do projeto. O layout definitivo deve seguir o design aprovado.
+O frontend requer backend com a correção `cc3198a` ou posterior. O hook
+`useIndicadores({ inicio, fim, escopo })` consulta ambos os escopos sem flag
+adicional. Escopo omitido usa GERAL. A chave de cache inclui período e escopo,
+a atualização ocorre a cada 30 segundos e as requisições usam AbortSignal.
+Não há fallback para mock em produção.
 
-Em 16/10/2026 o backend foi corrigido para aceitar GERAL/SAMU, com 21 testes
-aprovados. Este frontend ainda mantém a proteção SAMU e o mock do backend
-anterior. É necessário ativar a configuração e recapturar os mocks reais antes
-de considerar concluídos os critérios de aceite dos dois escopos.
+`IndicadoresResponse` e `Detalhamento` espelham os records Java.
+`contagensPorRisco` é `Record<Risco, number>`, incluindo NAO_CLASSIFICADO no
+contrato; a interface apresenta as cinco cores. Médias sem amostras são null.
 
-O fetch antes da publicação encontrou `0752d6d` na develop remota, com outra
-estrutura de indicadores da equipe. Ela altera os mesmos arquivos de rota,
-menu, página e IndicatorsFeature. Esta entrega foi publicada separadamente em
-`feat/indicadores-dados-cards-provisorios`, sem integrar ou sobrescrever esse
-trabalho. A próxima integração deve aproveitar a estrutura visual da equipe
-e incorporar o hook, tipos, cards e estados conforme o design aprovado.
+Datas são locais, sem offset: o helper `toLocalDateTime` usa componentes locais,
+sem `toISOString()`. Datas do seletor cobrem de 00:00:00 a 23:59:59.999999999,
+incluindo frações do último segundo do dia. O helper possui testes.
 
-## Contrato e comportamento
+A URL usa a configuração existente: `window.APP_CONFIG.apiUrl`, depois
+`VITE_API_URL`, com padrão http://localhost:1111.
 
-- `IndicadoresResponse` e `Detalhamento` espelham os records Java do backend em `8d6e8b4`.
-- `contagensPorRisco` é `Record<Risco, number>`, incluindo NAO_CLASSIFICADO no contrato; a tela exibe as cinco cores.
-- Hook `useIndicadores({ inicio, fim, escopo })`, padrão GERAL; chave inclui os três filtros, intervalo de 30 segundos e cancelamento por AbortSignal.
-- Usa a URL de API já configurada no projeto (`window.APP_CONFIG.apiUrl`, depois `VITE_API_URL`).
-- Datas locais sem offset: `toLocalDateTime` usa componentes locais. O seletor de datas envia início às 00:00:00 e fim às 23:59:59.999999999, incluindo todo o último dia. Não usa `toISOString()`.
-- Cards próprios para cadastrados, classificados, atendidos e componente reutilizado para cada cor. Os percentuais vêm do backend e são formatados em pt-BR, sem recalcular ou excluir SAMU no frontend.
-- Skeleton em toda consulta, inclusive ao voltar a um filtro em cache. Dados antigos são ocultados durante a atualização e em erros. Nenhum `keepPreviousData`.
-- Erro de rede, HTTP 400/outros erros, botão para repetir, período vazio e horário da última resposta bem-sucedida.
-- Sem desistências (dependência de indicadores BE-02). Não implementa a ocultação de cards SAMU de IND-10.
+## Mocks reais
 
-## Diagnóstico anterior à correção do backend (16/10/2026)
+- `mocks/geral.json`: Geral exclui SAMU e mantém pacientes sem tipo.
+- `mocks/samu.json`: somente SAMU.
 
-Foi feito fetch e inspecionadas todas as branches remotas. `IndicadorController`,
-`IndicadorService`, `IndicadorRepository` e DTO são idênticos nas branches
-`feat/be-2-historico-chamadas`, `feat/be-3-prazo-manchester`,
-`feat/be-4-anonimizar-chamadas`, `fix/isolate-integration-tests` e
-`feat/postgresql-migration`. Nenhuma implementa o parâmetro escopo.
-A branch BE-04 disponível trata de anonimização, não do filtro dos indicadores.
-
-GET com GERAL e SAMU retorna o mesmo conteúdo. O backend ignora o parâmetro extra.
-Por isso o frontend exibe um aviso explícito e impede a consulta exclusiva SAMU;
-não mostra dados combinados com rótulo SAMU. Quando a implementação correta entrar,
-configurar `VITE_INDICADORES_ESCOPOS_SUPORTADOS=true` no build e validar novamente.
-Essa opção NÃO implementa o filtro e não deve ser ligada contra o backend atual.
-
-| Campo | Resposta real atual | Aceite solicitado para GERAL |
-|---|---:|---:|
-| cadastrados | 21 | 19 |
-| classificados | 19 | 17 |
-| percentualClassificados | 90,48 | 89,47 |
-| atendidos | 16 | 14 |
-| percentualAtendidos | 76,19 | 73,68 |
-| LARANJA | 7 | 5 |
-
-Os valores da task correspondem à exclusão dos dois pacientes SAMU do seed.
-O frontend não subtrai esses valores nem altera o seed para aparentar conclusão.
-As verificações UI com 19/17/14 são fixtures sintéticas explícitas dentro dos testes;
-não são respostas reais nem mocks de API por escopo.
-
-## Mock real e reprodução
-
-`mocks/backend-atual-geral-inclui-samu.json` é a resposta HTTP real capturada em
-16/10/2026 do backend `8d6e8b4`, com schema e seed originais, sem edição do conteúdo.
-Período: inicio=2026-09-01T00:00:00, fim=2026-09-03T23:59:59, escopo=GERAL.
-Executado em PostgreSQL 16 temporário no container `pet-indicators-fixtures`,
-banco `indicators_test`, porta local 55439, backend na porta 1112.
+Capturados via HTTP em 16/10/2026, backend `cc3198a`, com os arquivos originais
+`docs/indicadores/schema.sql` e `docs/indicadores/seed_teste_indicadores.sql`.
+JSONs apenas formatados, sem alteração dos dados. O mock antigo que misturava
+os escopos foi removido. Período de captura: 2026-09-01T00:00:00 até
+2026-09-03T23:59:59. Backend local na porta 1112, PostgreSQL 16 temporário no
+container pet-task1-indicators, banco indicators_test, porta 55439.
 O banco de desenvolvimento não foi usado nem limpo.
-A resposta solicitada com SAMU foi comparada byte a byte e é idêntica; não foi
-salva como mock SAMU, pois isso documentaria um filtro inexistente.
 
-Pendentes neste frontend: ativar os escopos contra o backend corrigido, capturar
-os mocks reais GERAL sem SAMU e SAMU exclusivo e validar os dois escopos.
-Recapturar os JSONs e ajustar o teste live; o mock legado não deve ser tratado
-como a resposta do novo padrão GERAL.
+| Campo | GERAL | SAMU |
+|---|---:|---:|
+| cadastrados | 19 | 2 |
+| classificados | 17 | 2 |
+| atendidos | 14 | 2 |
+| percentualClassificados | 89.47 | 100.00 |
+| percentualAtendidos | 73.68 | 100.00 |
+| LARANJA | 5 | 2 |
 
-## Validação
+Exemplo de captura contra backend isolado já populado:
+
+```sh
+curl --fail 'http://localhost:1112/indicadores?inicio=2026-09-01T00:00:00&fim=2026-09-03T23:59:59&escopo=GERAL'
+curl --fail 'http://localhost:1112/indicadores?inicio=2026-09-01T00:00:00&fim=2026-09-03T23:59:59&escopo=SAMU'
+```
+
+## Visual provisório
+
+A tela é provisória para visualizar e testar dados, não substitui o design
+oficial. Utiliza Header, Card, Input, Button e Skeleton existentes e as cores
+do projeto. Esta etapa apenas ativa os dados dos dois escopos e remove o aviso
+de backend indisponível; não redesenha a interface.
+
+Há cards de cadastrados, classificados e atendidos com percentuais recebidos
+do backend, e cinco cards por cor. Desistências e ocultação de cards específicos
+para SAMU (IND-10) não fazem parte desta entrega.
+
+Skeleton em novas consultas, inclusive filtros em cache, erros HTTP/rede,
+período vazio e última atualização. Números antigos são ocultados durante
+carregamento e erros.
+
+O commit `0752d6d` da develop remota introduziu outra estrutura visual da equipe.
+Esta branch `feat/indicadores-dados-cards-provisorios` ainda precisa ser integrada
+com ela, preservando o design e a estrutura aprovados. Não houve merge automático.
+
+## Testes
 
 ```sh
 TZ=America/Fortaleza npm test -- src/features/indicators
 npm run build
 npx eslint src/features/indicators src/pages/Indicators.tsx
-# Backend temporário com o seed deve estar rodando nesta URL:
-INDICADORES_LIVE=true VITE_API_URL=http://localhost:1112 TZ=America/Fortaleza npm test -- src/features/indicators/hooks/useIndicadores.live.test.tsx
-# Depois de desligar o backend temporário:
+# Integração real: iniciar backend isolado com seed, depois:
+INDICADORES_LIVE=true VITE_API_URL=http://localhost:1112 TZ=America/Fortaleza npm test -- src/features/indicators
+# Servidor temporário desligado:
 INDICADORES_OFFLINE=true VITE_API_URL=http://localhost:1112 TZ=America/Fortaleza npm test -- src/features/indicators/hooks/useIndicadores.live.test.tsx
 ```
 
-17 testes locais dos indicadores e 3 live aprovados; offline verificado separadamente.
-Os testes live são opt-in e não fazem seed, escrita ou limpeza de banco.
-Build e lint dos arquivos novos aprovados. A suíte geral apresentou falha em
-`public-panel/components/PublicPanelScreen.test.tsx` (texto `3` não encontrado).
-`tsc --noEmit -p tsconfig.app.json` aponta erros preexistentes em
-`new-consultorio/hooks/useNewConsultorio.ts` e `public-panel/hooks/usePanelSpeech.test.tsx`.
-Esses arquivos não foram alterados nesta entrega.
+Testes live são opt-in, usam HTTP real e não fazem seed ou limpeza de banco.
+Validam igualdade integral com os mocks reais de cada escopo, padrão GERAL,
+troca GERAL/SAMU, período vazio e HTTP 400. Os testes de componentes usam o
+mock real GERAL para os números de aceite.
+
+Limitações preexistentes da suíte geral: falha em
+`public-panel/components/PublicPanelScreen.test.tsx` (texto 3 não encontrado).
+O TypeScript geral aponta erros em `new-consultorio/hooks/useNewConsultorio.ts`
+e `public-panel/hooks/usePanelSpeech.test.tsx`, não alterados nesta entrega.
+
+Validação de conclusão em 16/10/2026: 24 testes aprovados com o backend ativo
+(17 locais + 7 HTTP reais), mais 1 teste aprovado com o backend desligado.
+Build e lint da feature aprovados. A checagem TypeScript geral continua limitada
+pelos erros preexistentes citados acima; não apontou erros novos nesta feature.

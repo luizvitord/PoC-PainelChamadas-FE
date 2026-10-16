@@ -1,0 +1,137 @@
+{
+  "cadastrados": 2,
+  "classificados": 2,
+  "atendidos": 2,
+  "percentualClassificados": 100.0,
+  "percentualAtendidos": 100.0,
+  "contagensPorRisco": {
+    "VERMELHO": 0,
+    "LARANJA": 2,
+    "AMARELO": 0,
+    "VERDE": 0,
+    "AZUL": 0,
+    "NAO_CLASSIFICADO": 0
+  },
+  "porRiscoETipo": [
+    {
+      "risco": "VERMELHO",
+      "tipo": "CLINICO",
+      "tempoMedioEsperaMinutos": null,
+      "totalComProtocolo": 0,
+      "foraDoPrazo": 0,
+      "percentualForaDoPrazo": 0.0
+    },
+    {
+      "risco": "VERMELHO",
+      "tipo": "PSIQUIATRICO",
+      "tempoMedioEsperaMinutos": null,
+      "totalComProtocolo": 0,
+      "foraDoPrazo": 0,
+      "percentualForaDoPrazo": 0.0
+    },
+    {
+      "risco": "VERMELHO",
+      "tipo": "SAMU",
+      "tempoMedioEsperaMinutos": null,
+      "totalComProtocolo": 0,
+      "foraDoPrazo": 0,
+      "percentualForaDoPrazo": 0.0
+    },
+    {
+      "risco": "LARANJA",
+      "tipo": "CLINICO",
+      "tempoMedioEsperaMinutos": null,
+      "totalComProtocolo": 0,
+      "foraDoPrazo": 0,
+      "percentualForaDoPrazo": 0.0
+    },
+    {
+      "risco": "LARANJA",
+      "tipo": "PSIQUIATRICO",
+      "tempoMedioEsperaMinutos": null,
+      "totalComProtocolo": 0,
+      "foraDoPrazo": 0,
+      "percentualForaDoPrazo": 0.0
+    },
+    {
+      "risco": "LARANJA",
+      "tipo": "SAMU",
+      "tempoMedioEsperaMinutos": 12.5,
+      "totalComProtocolo": 2,
+      "foraDoPrazo": 1,
+      "percentualForaDoPrazo": 50.0
+    },
+    {
+      "risco": "AMARELO",
+      "tipo": "CLINICO",
+      "tempoMedioEsperaMinutos": null,
+      "totalComProtocolo": 0,
+      "foraDoPrazo": 0,
+      "percentualForaDoPrazo": 0.0
+    },
+    {
+      "risco": "AMARELO",
+      "tipo": "PSIQUIATRICO",
+      "tempoMedioEsperaMinutos": null,
+      "totalComProtocolo": 0,
+      "foraDoPrazo": 0,
+      "percentualForaDoPrazo": 0.0
+    },
+    {
+      "risco": "AMARELO",
+      "tipo": "SAMU",
+      "tempoMedioEsperaMinutos": null,
+      "totalComProtocolo": 0,
+      "foraDoPrazo": 0,
+      "percentualForaDoPrazo": 0.0
+    },
+    {
+      "risco": "VERDE",
+      "tipo": "CLINICO",
+      "tempoMedioEsperaMinutos": null,
+      "totalComProtocolo": 0,
+      "foraDoPrazo": 0,
+      "percentualForaDoPrazo": 0.0
+    },
+    {
+      "risco": "VERDE",
+      "tipo": "PSIQUIATRICO",
+      "tempoMedioEsperaMinutos": null,
+      "totalComProtocolo": 0,
+      "foraDoPrazo": 0,
+      "percentualForaDoPrazo": 0.0
+    },
+    {
+      "risco": "VERDE",
+      "tipo": "SAMU",
+      "tempoMedioEsperaMinutos": null,
+      "totalComProtocolo": 0,
+      "foraDoPrazo": 0,
+      "percentualForaDoPrazo": 0.0
+    },
+    {
+      "risco": "AZUL",
+      "tipo": "CLINICO",
+      "tempoMedioEsperaMinutos": null,
+      "totalComProtocolo": 0,
+      "foraDoPrazo": 0,
+      "percentualForaDoPrazo": 0.0
+    },
+    {
+      "risco": "AZUL",
+      "tipo": "PSIQUIATRICO",
+      "tempoMedioEsperaMinutos": null,
+      "totalComProtocolo": 0,
+      "foraDoPrazo": 0,
+      "percentualForaDoPrazo": 0.0
+    },
+    {
+      "risco": "AZUL",
+      "tipo": "SAMU",
+      "tempoMedioEsperaMinutos": null,
+      "totalComProtocolo": 0,
+      "foraDoPrazo": 0,
+      "percentualForaDoPrazo": 0.0
+    }
+  ]
+}

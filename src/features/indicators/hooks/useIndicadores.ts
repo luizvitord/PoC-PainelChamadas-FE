@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { API_BASE_URL } from '@/lib/appConfig';
-import { ESCOPOS_SUPORTADOS, INDICADORES_REFETCH_INTERVAL } from '../constants';
+import { INDICADORES_REFETCH_INTERVAL } from '../constants';
 import type { FiltrosIndicadores, IndicadoresResponse } from '../types';
 
 export class IndicadoresError extends Error {
@@ -11,9 +11,6 @@ export function useIndicadores({ inicio, fim, escopo = 'GERAL' }: FiltrosIndicad
   return useQuery<IndicadoresResponse, Error>({
     queryKey: ['indicadores', inicio, fim, escopo],
     queryFn: async ({ signal }) => {
-      if (escopo === 'SAMU' && !ESCOPOS_SUPORTADOS) {
-        throw new IndicadoresError('A visão SAMU aguarda suporte do backend.');
-      }
       if (!inicio || !fim || inicio > fim) throw new IndicadoresError('Informe um período válido.', 400);
       const params = new URLSearchParams({ inicio, fim, escopo });
       let response: Response;

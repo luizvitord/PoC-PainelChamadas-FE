@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
-import { ESCOPOS_SUPORTADOS } from './constants';
 import type { Escopo } from './types';
 import { dataParaLocalDateTime, toLocalDateTime } from './utils/localDateTime';
 import { IndicadoresResultados } from './components/IndicadoresResultados';
@@ -27,9 +26,6 @@ export function IndicatorsFeature() {
         <option value="GERAL">Geral</option><option value="SAMU">SAMU</option>
       </select></label>
     </div>
-    {!ESCOPOS_SUPORTADOS && <p role="note" className="rounded-lg border border-amber-300 bg-amber-50 p-4">
-      A separação Geral/SAMU ainda não está disponível no servidor atual. Os dados gerais incluem SAMU; a consulta exclusiva de SAMU está indisponível.
-    </p>}
     {erro ? <p role="alert">{erro}</p> : <IndicadoresResultados inicio={inicioLocal} fim={fimLocal} escopo={escopo} />}
   </main>;
 }
