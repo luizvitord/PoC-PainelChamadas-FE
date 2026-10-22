@@ -35,7 +35,8 @@ export function IndicatorsFeature() {
             onLimpar={limpar}
           />
           <SummaryCards />
-          <IndicatorsTabs />
+          {/* TODO IND-01: porRiscoETipo={data?.porRiscoETipo}; o escopo entra com o filtro do IND-10 */}
+          <IndicatorsTabs porRiscoETipo={undefined} />
         </div>
       ) : (
         <IndicatorsAccessGate onUnlock={unlock} />
