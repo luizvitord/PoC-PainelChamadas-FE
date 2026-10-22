@@ -83,6 +83,16 @@ describe('IndicatorsFeature', () => {
     expect(screen.queryByRole('heading', { name: 'Volumes e Fluxo de Atendimento' })).not.toBeInTheDocument();
   });
 
+  it('shows the empty state in the emergency level tab while there is no data (IND-01)', () => {
+    renderIndicators();
+    submitPassword('1234');
+
+    fireEvent.mouseDown(screen.getByRole('tab', { name: 'Por Nível de Emergência' }));
+
+    expect(screen.getByRole('heading', { name: 'Por Nível de Emergência' })).toBeInTheDocument();
+    expect(screen.getByText('Sem dados para o período')).toBeInTheDocument();
+  });
+
   describe('filtro de período', () => {
     beforeEach(() => {
       periodosRepassados.length = 0;
