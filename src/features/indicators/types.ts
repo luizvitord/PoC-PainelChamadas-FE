@@ -18,7 +18,12 @@ export interface IndicadoresResponse {
   atendidos: number;
   percentualClassificados: number;
   percentualAtendidos: number;
+  tempoMedioAcolhimentoMinutos: number | null;
+  tempoMedioClassificacaoAteMedicoMinutos: number | null;
+  tempoMedioEntradaAteMedicoMinutos: number | null;
   contagensPorRisco: Record<Risco, number>;
+  totalRechamadas: number;
+  pacientesRechamadosPorRisco: Record<Risco, number>;
   porRiscoETipo: Detalhamento[];
 }
 

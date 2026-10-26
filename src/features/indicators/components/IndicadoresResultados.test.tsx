@@ -42,11 +42,18 @@ describe('Indicadores', () => {
     expect(screen.getByRole('status', { name: 'Carregando indicadores' })).toBeInTheDocument();
     await screen.findByText('19');
     expect(screen.getByText('17')).toBeInTheDocument();
-    expect(screen.getByText('14')).toBeInTheDocument();
+    expect(screen.getAllByText('14')).toHaveLength(2);
     expect(screen.getByText('89,47% dos cadastrados')).toBeInTheDocument();
     expect(screen.getByText('73,68% dos cadastrados')).toBeInTheDocument();
-    expect(within(screen.getByText('Laranja').parentElement!).getByText('5')).toBeInTheDocument();
-    for (const cor of ['Vermelho', 'Laranja', 'Amarelo', 'Verde', 'Azul']) expect(screen.getByText(cor)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Por nível de emergência' }));
+    expect(screen.getByText('Classificação de risco psiquiátrico')).toBeInTheDocument();
+    expect(screen.getByText('Classificação de risco clínico')).toBeInTheDocument();
+    for (const cor of ['Vermelho', 'Laranja', 'Amarelo', 'Verde', 'Azul']) expect(screen.getAllByText(cor).length).toBeGreaterThan(0);
+    expect(within(screen.getByText('Total de rechamadas').parentElement!).getByText('7')).toBeInTheDocument();
+    expect(within(screen.getByText('Pacientes rechamados').parentElement!).getByText('4')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Tempos de espera' }));
+    expect(screen.getByText('Espera p/ acolhimento / classificação')).toBeInTheDocument();
+    expect(screen.getByText('01:02:30')).toBeInTheDocument();
     expect(screen.queryByText(/desistências/i)).not.toBeInTheDocument();
     expect(screen.getByText(/Última atualização:/).textContent).toMatch(/\d{2}:\d{2}:\d{2}/);
   });
@@ -55,6 +62,23 @@ describe('Indicadores', () => {
     render(<IndicadoresResultados {...filtros} />, { wrapper });
     await screen.findByText('Sem dados no período');
     expect(screen.queryByText('Cadastrados')).not.toBeInTheDocument();
+  });
+  it('filtra os pacientes atendidos por horário usando dados do backend', async () => {
+    render(<IndicadoresResultados {...filtros} />, { wrapper });
+    await screen.findByText('19');
+    fetchMock.mockResolvedValue(new Response(JSON.stringify([
+      { id: 1, nome: 'Maria', risco: 'LARANJA', tipo: 'CLINICO', chegadaAt: '2026-09-02T08:00:00', chamadaConsultorioAt: '2026-09-02T09:30:00', rechamadasConsultorioCount: 2 },
+      { id: 2, nome: 'João', risco: 'VERDE', tipo: 'CLINICO', chegadaAt: '2026-09-02T13:00:00', chamadaConsultorioAt: '2026-09-02T14:15:00', rechamadasConsultorioCount: 0 },
+    ])));
+    fireEvent.click(screen.getByRole('button', { name: 'Atendidos por horário' }));
+    await screen.findByText('Atendidos na faixa');
+    expect(screen.queryByText('Maria')).not.toBeInTheDocument();
+    expect(screen.queryByText('João')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Manhã' }));
+    expect(within(screen.getByText('Atendidos na faixa').parentElement!).getByText('1')).toBeInTheDocument();
+    expect(screen.queryByText('João')).not.toBeInTheDocument();
+    expect(screen.queryByText(/2× rechamado/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Primeira chamada/i)).not.toBeInTheDocument();
   });
   it.each([400, 500])('mostra erro HTTP %s', async status => {
     fetchMock.mockResolvedValue(new Response('{}', { status }));
@@ -82,7 +106,7 @@ describe('Indicadores', () => {
     expect(screen.queryByText('19')).not.toBeInTheDocument();
     expect(new URL(fetchMock.mock.calls.at(-1)![0]).searchParams.get('escopo')).toBe('SAMU');
     await act(async () => resolve(resposta({ ...geral, cadastrados: 2 })));
-    await waitFor(() => expect(within(screen.getByText('Cadastrados').parentElement!).getByText('2')).toBeInTheDocument());
+    await waitFor(() => expect(within(screen.getByText('Nº pacientes cadastrados').parentElement!).getByText('2')).toBeInTheDocument());
     view.rerender(<IndicadoresResultados {...filtros} />);
     expect(screen.queryByText('19')).not.toBeInTheDocument();
     expect(screen.queryAllByText('2')).toHaveLength(0);
@@ -98,9 +122,8 @@ describe('Indicadores', () => {
     await act(async () => { await vi.advanceTimersByTimeAsync(30_000); });
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
-  it('filtros iniciam em Geral e rejeitam período invertido sem dados antigos', async () => {
+  it('rejeita período invertido sem dados antigos', async () => {
     render(<IndicatorsFeature />, { wrapper });
-    expect(screen.getByLabelText('Visão')).toHaveValue('GERAL');
     await screen.findByText('19');
     fireEvent.change(screen.getByLabelText('Data inicial'), { target: { value: '2099-09-01' } });
     expect(screen.getByRole('alert')).toHaveTextContent('A data inicial');

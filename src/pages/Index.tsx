@@ -1,7 +1,7 @@
 import Header from '@/components/Header';
 import { Card } from '@/components/ui/card';
 import { NewConsultorio } from '@/features/new-consultorio/NewConsultorio';
-import { DoorOpen, HeartHandshake, Monitor, UserPlus } from 'lucide-react';
+import { BarChart3, DoorOpen, HeartHandshake, Monitor, UserPlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Index() {
@@ -94,9 +94,14 @@ export default function Index() {
           </Link>
 
           <Link to="/indicators" className="block group h-full">
-            <Card className={`${cardBaseClassName} border-b-8 border-emerald-700`}>
-              <h3 className={cardTitleClassName}>Indicadores</h3>
-              <p className={cardDescClassName}>Contagens e percentuais de atendimento por período</p>
+            <Card className={`${cardBaseClassName} border-b-8 border-indigo-600`}>
+              <div className="flex flex-col items-center">
+                <div className={`${iconBoxBaseClassName} border-indigo-200 bg-indigo-50`}>
+                  <BarChart3 className="h-11 w-11 text-indigo-600" />
+                </div>
+                <h3 className={cardTitleClassName}>Indicadores</h3>
+              </div>
+              <p className={cardDescClassName}>Estatísticas e métricas de atendimento do dia</p>
             </Card>
           </Link>
           <NewConsultorio />

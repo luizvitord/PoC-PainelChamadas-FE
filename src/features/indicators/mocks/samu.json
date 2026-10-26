@@ -4,6 +4,18 @@
   "atendidos": 2,
   "percentualClassificados": 100.0,
   "percentualAtendidos": 100.0,
+  "tempoMedioAcolhimentoMinutos": 4.0,
+  "tempoMedioClassificacaoAteMedicoMinutos": 12.5,
+  "tempoMedioEntradaAteMedicoMinutos": 17.5,
+  "totalRechamadas": 2,
+  "pacientesRechamadosPorRisco": {
+    "VERMELHO": 0,
+    "LARANJA": 1,
+    "AMARELO": 0,
+    "VERDE": 0,
+    "AZUL": 0,
+    "NAO_CLASSIFICADO": 0
+  },
   "contagensPorRisco": {
     "VERMELHO": 0,
     "LARANJA": 2,

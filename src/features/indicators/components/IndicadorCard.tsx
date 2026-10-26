@@ -5,13 +5,15 @@ export interface IndicadorCardProps {
   quantidade: number;
   percentual?: number;
   className?: string;
+  descricao?: string;
 }
-export function IndicadorCard({ titulo, quantidade, percentual, className = '' }: IndicadorCardProps) {
-  return <Card className={`p-6 border-t-4 ${className}`}>
-    <h3 className="font-semibold text-slate-600">{titulo}</h3>
-    <p className="mt-3 text-4xl font-bold tabular-nums text-slate-900">{quantidade.toLocaleString('pt-BR')}</p>
-    {percentual !== undefined && <p className="mt-2 text-sm text-slate-600">
+export function IndicadorCard({ titulo, quantidade, percentual, className = '', descricao }: IndicadorCardProps) {
+  return <Card className={`ind-stat-card ind-stat-card-sm border-t-4 ${className}`}>
+    <h3 className="ind-stat-label">{titulo}</h3>
+    <p className="ind-stat-value">{quantidade.toLocaleString('pt-BR')}</p>
+    {percentual !== undefined && <p className="ind-stat-sub">
       {percentual.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% dos cadastrados
     </p>}
+    {descricao && <p className="ind-stat-sub">{descricao}</p>}
   </Card>;
 }
