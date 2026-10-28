@@ -1,7 +1,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ReactNode } from 'react';
 
-import { DetalhamentoNivel, EmergencyLevelTab, EscopoNivel } from './tabs/EmergencyLevelTab';
+import { Escopo } from '../utils/escopo';
+import { DetalhamentoNivel, EmergencyLevelTab } from './tabs/EmergencyLevelTab';
 import { HourlyTab } from './tabs/HourlyTab';
 import { VolumesTab } from './tabs/VolumesTab';
 import { TemposEspera, WaitTimesTab } from './tabs/WaitTimesTab';
@@ -9,10 +10,11 @@ import { TemposEspera, WaitTimesTab } from './tabs/WaitTimesTab';
 interface IndicatorsTabsProps {
   tempos?: TemposEspera;
   porRiscoETipo?: DetalhamentoNivel[];
-  escopo?: EscopoNivel;
+  escopo?: Escopo;
 }
 
 const INDICATOR_TABS: { value: string; label: string; render: (props: IndicatorsTabsProps) => ReactNode }[] = [
+  // TODO IND-04: repassar o escopo e esconder no SAMU o que visivelNoEscopo (utils/escopo) indicar.
   { value: 'volumes', label: 'Volumes e Fluxo', render: () => <VolumesTab /> },
   { value: 'wait-times', label: 'Tempos de Espera', render: ({ tempos }) => <WaitTimesTab tempos={tempos} /> },
   {

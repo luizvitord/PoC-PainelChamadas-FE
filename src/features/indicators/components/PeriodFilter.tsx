@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RotateCcw } from 'lucide-react';
+import { ReactNode } from 'react';
 
 interface PeriodFilterProps {
   dataInicio: string;
@@ -10,11 +11,21 @@ interface PeriodFilterProps {
   onInicioChange: (dataInicio: string) => void;
   onFimChange: (dataFim: string) => void;
   onLimpar: () => void;
+  /** Outros filtros na mesma linha, depois de um divisor (ex.: Geral / SAMU do IND-10). */
+  children?: ReactNode;
 }
 
 const labelClassName = 'text-xs font-black uppercase tracking-[0.18em] text-gray-500';
 
-export function PeriodFilter({ dataInicio, dataFim, erro, onInicioChange, onFimChange, onLimpar }: PeriodFilterProps) {
+export function PeriodFilter({
+  dataInicio,
+  dataFim,
+  erro,
+  onInicioChange,
+  onFimChange,
+  onLimpar,
+  children,
+}: PeriodFilterProps) {
   return (
     <div className="mb-8 rounded-2xl border border-gray-100 bg-white px-7 py-6 shadow-sm">
       <div className="flex flex-wrap items-end gap-6">
@@ -53,6 +64,13 @@ export function PeriodFilter({ dataInicio, dataFim, erro, onInicioChange, onFimC
           <RotateCcw className="h-4 w-4" />
           Limpar
         </Button>
+
+        {children && (
+          <>
+            <div className="h-12 w-px bg-gray-200" />
+            {children}
+          </>
+        )}
       </div>
 
       {erro && (
