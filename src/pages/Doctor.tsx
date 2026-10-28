@@ -209,13 +209,13 @@ const handleAbandonConsultation = async (patientId: string) => {
                   ) : (
                     waitingPatients.map((patient) => {
                       const overdue = isOverdue(patient, now);
-                      const chegada = patient.chegadaAt || patient.classifiedAt;
+                      const chegada = patient.chegadaAt ?? patient.classifiedAt;
 
                       return (
                         <tr key={patient.id} className={`border-b border-slate-100 ${overdue ? 'animate-pulse bg-orange-50/60' : ''}`}>
                           <td className="px-6 py-4">
                             <span className="inline-flex rounded-md bg-slate-100 px-2 py-1 text-lg font-black text-slate-600">
-                              {new Date(chegada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                              {chegada?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) ?? '--:--'}
                             </span>
                           </td>
                           <td className="px-6 py-4">

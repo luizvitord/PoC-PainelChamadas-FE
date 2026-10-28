@@ -1,14 +1,14 @@
 import { PriorityBadge } from '@/components/PriorityBadge';
 import { AttendanceType, AttendanceTypeLabel } from '@/lib/attendanceTypes';
 import { getAvailablePriorities } from '@/lib/priorityRules';
+import { riscoParaPrioridade } from '@/lib/utils/riscoParaPrioridade';
+import { tipoParaAtendimento } from '@/lib/utils/tipoParaAtendimento';
 import { PRIORITY_CONFIG, PriorityLevel } from '@/types/patient';
 import { useState } from 'react';
 
 import { Escopo } from '../../utils/escopo';
 import { formatarMinutos } from '../../utils/formatarMinutos';
 import { formatarPercentual } from '../../utils/formatarPercentual';
-import { riscoParaPrioridade } from '../../utils/riscoParaPrioridade';
-import { tipoParaAtendimento } from '../../utils/tipoParaAtendimento';
 
 // Só os campos usados do IndicadoresResponse.Detalhamento; será trocado pelo Detalhamento do IND-01.
 export interface DetalhamentoNivel {
