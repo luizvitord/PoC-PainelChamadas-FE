@@ -93,6 +93,19 @@ describe('IndicatorsFeature', () => {
     expect(screen.getByText('Sem dados para o período')).toBeInTheDocument();
   });
 
+  it('shows the three wait time cards without values while there is no data (IND-01)', () => {
+    renderIndicators();
+    submitPassword('1234');
+
+    fireEvent.mouseDown(screen.getByRole('tab', { name: 'Tempos de Espera' }));
+
+    expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual([
+      'Acolhimento',
+      'Classificação → Médico',
+      'Entrada → Médico',
+    ]);
+  });
+
   describe('filtro de período', () => {
     beforeEach(() => {
       periodosRepassados.length = 0;
