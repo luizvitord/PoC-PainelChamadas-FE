@@ -4,6 +4,7 @@ import { getAvailablePriorities } from '@/lib/priorityRules';
 import { riscoParaPrioridade } from '@/lib/utils/riscoParaPrioridade';
 import { tipoParaAtendimento } from '@/lib/utils/tipoParaAtendimento';
 import { PRIORITY_CONFIG, PriorityLevel } from '@/types/patient';
+import { ProtocoloTempo } from '@/types/protocolo';
 import { useState } from 'react';
 
 import { Escopo } from '../../utils/escopo';
@@ -22,6 +23,7 @@ export interface DetalhamentoNivel {
 interface EmergencyLevelTabProps {
   porRiscoETipo?: DetalhamentoNivel[];
   escopo?: Escopo;
+  protocolos?: ProtocoloTempo[];
 }
 
 interface LinhaNivel {
@@ -38,18 +40,18 @@ const COLUNAS: { id: Coluna; label: string }[] = [
   { id: 'total', label: 'Total (n)' },
 ];
 
-// Ordem de exibição dos cards; as combinações válidas vêm de getAvailablePriorities.
+// Ordem de exibição dos cards; as combinações válidas vêm do protocolo (GET /protocolos).
 const ORDEM_ATENDIMENTO: AttendanceType[] = ['psychiatric', 'clinical', 'samu'];
 
 // O back manda as 15 combinações cor × tipo: fica só o que pertence ao escopo e existe no protocolo.
-function montarLinhas(porRiscoETipo: DetalhamentoNivel[], escopo: Escopo): LinhaNivel[] {
+function montarLinhas(porRiscoETipo: DetalhamentoNivel[], escopo: Escopo, protocolos: ProtocoloTempo[]): LinhaNivel[] {
   return porRiscoETipo
     .flatMap((detalhamento) => {
       const prioridade = riscoParaPrioridade(detalhamento.risco);
       const atendimento = tipoParaAtendimento(detalhamento.tipo);
       if (!prioridade || !atendimento) return [];
       if ((atendimento === 'samu') !== (escopo === 'SAMU')) return [];
-      if (!getAvailablePriorities(atendimento).includes(prioridade)) return [];
+      if (!getAvailablePriorities(protocolos, atendimento).includes(prioridade)) return [];
       return [{ prioridade, atendimento, detalhamento }];
     })
     .sort((a, b) => PRIORITY_CONFIG[a.prioridade].order - PRIORITY_CONFIG[b.prioridade].order);
@@ -69,11 +71,11 @@ const colunaChipClassName =
   'rounded-lg border px-4 py-2 text-sm font-black uppercase tracking-[0.08em] transition-colors aria-pressed:border-[#008140] aria-pressed:bg-[#008140] aria-pressed:text-white aria-[pressed=false]:border-gray-200 aria-[pressed=false]:bg-gray-100 aria-[pressed=false]:text-gray-400 aria-[pressed=false]:line-through';
 const thClassName = 'px-6 py-4 text-sm font-black uppercase tracking-wider text-gray-600';
 
-export function EmergencyLevelTab({ porRiscoETipo, escopo = 'GERAL' }: EmergencyLevelTabProps) {
+export function EmergencyLevelTab({ porRiscoETipo, escopo = 'GERAL', protocolos }: EmergencyLevelTabProps) {
   const [niveisOcultos, setNiveisOcultos] = useState<Set<PriorityLevel>>(() => new Set());
   const [colunasOcultas, setColunasOcultas] = useState<Set<Coluna>>(() => new Set());
 
-  const linhas = montarLinhas(porRiscoETipo ?? [], escopo);
+  const linhas = montarLinhas(porRiscoETipo ?? [], escopo, protocolos ?? []);
 
   if (linhas.length === 0) {
     return (

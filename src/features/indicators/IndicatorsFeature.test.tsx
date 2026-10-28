@@ -19,6 +19,10 @@ vi.mock('./hooks/usePeriodoFiltro', async (importOriginal) => {
   };
 });
 
+vi.mock('@/hooks/useProtocolos', () => ({
+  useProtocolos: () => ({ data: [] }),
+}));
+
 const periodoAtual = () => periodosRepassados[periodosRepassados.length - 1];
 
 function renderIndicators() {

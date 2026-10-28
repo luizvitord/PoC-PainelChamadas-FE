@@ -9,8 +9,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { usePatients } from '@/contexts/PatientContext';
 import { useToast } from '@/hooks/use-toast';
+import { useProtocolos } from '@/hooks/useProtocolos';
 import { AttendanceTypeLabel } from '@/lib/attendanceTypes';
-import { getAvailablePriorities } from '@/lib/priorityRules';
+import { getAvailablePriorities, getWaitTimeMinutes } from '@/lib/priorityRules';
 import { PRIORITY_CONFIG, PriorityLevel } from '@/types/patient';
 import { Check, ChevronDown, ChevronUp, Phone } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -26,7 +27,14 @@ export default function Triage() {
   const [confirmAbandonOpen, setConfirmAbandonOpen] = useState(false);
   const [patientToAbandon, setPatientToAbandon] = useState<{ id: string; fullName: string } | null>(null);
   const [isRecalling, setIsRecalling] = useState(false);
-  const availableColors = getAvailablePriorities(attendanceType);
+  const { data: protocolos = [], isLoading: isLoadingProtocolo } = useProtocolos();
+  const availableColors = getAvailablePriorities(protocolos, attendanceType);
+  // Só confirma uma cor que o protocolo aceita para o tipo escolhido.
+  const isPriorityValid = availableColors.includes(priority);
+  const waitTimeLabel = (level: PriorityLevel) => {
+    const minutes = getWaitTimeMinutes(protocolos, level, attendanceType);
+    return minutes === null ? '' : ` (${minutes} min)`;
+  };
   const waitingPatientsForDoctor = getWaitingForDoctor();
   const waitingPatients = getWaitingForTriage();
   console.log("Waiting patients for triage:", waitingPatients);
@@ -325,7 +333,7 @@ return (
                       {priorityPillLabel[priority]}
                     </span>
                     <span className="text-xl font-bold leading-tight text-[#1f2a44]">
-                      {PRIORITY_CONFIG[priority].label} ({PRIORITY_CONFIG[priority].waitTime})
+                      {PRIORITY_CONFIG[priority].label}{waitTimeLabel(priority)}
                     </span>
                   </div>
                   {isManchesterOpen ? (
@@ -356,13 +364,21 @@ return (
                           {priorityPillLabel[level]}
                         </span>
                         <span className="text-xl font-bold leading-tight text-[#1f2a44]">
-                          {PRIORITY_CONFIG[level].label} ({PRIORITY_CONFIG[level].waitTime})
+                          {PRIORITY_CONFIG[level].label}{waitTimeLabel(level)}
                         </span>
                       </button>
                     ))}
                   </div>
                 )}
               </div>
+
+              {availableColors.length === 0 && (
+                <p className="text-base font-semibold text-red-600">
+                  {isLoadingProtocolo
+                    ? 'Carregando o protocolo de Manchester...'
+                    : 'Protocolo de Manchester indisponível. Não é possível classificar agora.'}
+                </p>
+              )}
             </div>
 
             <div className="flex flex-col gap-2">
@@ -417,6 +433,7 @@ return (
             <Button
               size="lg"
               onClick={handleConfirmTriage}
+              disabled={!isPriorityValid}
               className="h-14 rounded-xl bg-[#008140] px-8 text-lg font-black uppercase tracking-[0.08em] text-white hover:bg-[#006f36]"
             >
                {isRetriage ? "Confirmar reclassificação" : "Confirmar Classificação"}
