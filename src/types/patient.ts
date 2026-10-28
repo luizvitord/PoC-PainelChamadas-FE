@@ -4,7 +4,6 @@ export type PriorityLevel = 'red' | 'orange' | 'yellow' | 'green' | 'blue';
 export interface Patient {
   id: string;
   chegadaAt: Date | null;
-  ticketNumber: string;
   fullName: string;
   dateOfBirth?: string;
   cpf: string;
@@ -22,7 +21,6 @@ export interface Patient {
 
 export interface TriageCall {
   callId: string;
-  ticketNumber: string;
   patientName?: string;
   type: 'triage' | 'doctor';
   room?: string;

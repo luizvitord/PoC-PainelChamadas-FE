@@ -59,10 +59,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     await refreshPatients();
 
-    return {
-      ...mapBackendPatient(response.data, 'waiting-triage'),
-      ticketNumber: `T-0${response.data.id}`,
-    };
+    return mapBackendPatient(response.data, 'waiting-triage');
   }, [refreshPatients]);
 
   const assignPriority = useCallback(async (patientId: string, priority: PriorityLevel, attendanceType: 'clinical' | 'psychiatric' | 'samu', triageNotes: string) => {

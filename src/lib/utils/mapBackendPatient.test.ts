@@ -23,7 +23,6 @@ describe('mapBackendPatient', () => {
       id: '7',
       fullName: 'Maria da Silva',
       cpf: '123.456.789-00',
-      ticketNumber: '',
       status: 'waiting-doctor',
       priority: 'orange',
       attendanceType: 'psychiatric',
