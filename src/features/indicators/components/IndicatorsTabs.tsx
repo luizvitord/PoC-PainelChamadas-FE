@@ -1,4 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ProtocoloTempo } from '@/types/protocolo';
 import { ReactNode } from 'react';
 
 import { Escopo } from '../utils/escopo';
@@ -11,6 +12,7 @@ interface IndicatorsTabsProps {
   tempos?: TemposEspera;
   porRiscoETipo?: DetalhamentoNivel[];
   escopo?: Escopo;
+  protocolos?: ProtocoloTempo[];
 }
 
 const INDICATOR_TABS: { value: string; label: string; render: (props: IndicatorsTabsProps) => ReactNode }[] = [
@@ -20,7 +22,9 @@ const INDICATOR_TABS: { value: string; label: string; render: (props: Indicators
   {
     value: 'emergency-levels',
     label: 'Por Nível de Emergência',
-    render: ({ porRiscoETipo, escopo }) => <EmergencyLevelTab porRiscoETipo={porRiscoETipo} escopo={escopo} />,
+    render: ({ porRiscoETipo, escopo, protocolos }) => (
+      <EmergencyLevelTab porRiscoETipo={porRiscoETipo} escopo={escopo} protocolos={protocolos} />
+    ),
   },
   { value: 'hourly', label: 'Atendidos por Horário', render: () => <HourlyTab /> },
 ];

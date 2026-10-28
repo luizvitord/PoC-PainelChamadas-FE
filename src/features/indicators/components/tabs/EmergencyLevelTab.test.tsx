@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
+import { PROTOCOLO_PADRAO } from '@/test/protocoloFixture';
+
 import { DetalhamentoNivel, EmergencyLevelTab } from './EmergencyLevelTab';
 
 const RISCOS = ['VERMELHO', 'LARANJA', 'AMARELO', 'VERDE', 'AZUL'];
@@ -38,7 +40,7 @@ describe('EmergencyLevelTab', () => {
 
   describe('visão Geral', () => {
     it('mostra Psiquiátrico com os 5 níveis e Clínico com vermelho e laranja, na ordem do protocolo', () => {
-      render(<EmergencyLevelTab porRiscoETipo={PORRISCOETIPO} />);
+      render(<EmergencyLevelTab protocolos={PROTOCOLO_PADRAO} porRiscoETipo={PORRISCOETIPO} />);
 
       expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Psiquiátrico', 'Clínico']);
       expect(niveisDoCard('Psiquiátrico')).toEqual(['Vermelho', 'Laranja', 'Amarelo', 'Verde', 'Azul']);
@@ -46,7 +48,7 @@ describe('EmergencyLevelTab', () => {
     });
 
     it('formata tempo médio, % fora do protocolo e (n)', () => {
-      render(<EmergencyLevelTab porRiscoETipo={PORRISCOETIPO} />);
+      render(<EmergencyLevelTab protocolos={PROTOCOLO_PADRAO} porRiscoETipo={PORRISCOETIPO} />);
 
       const laranjaClinico = linha('Clínico', 'Laranja');
       expect(laranjaClinico).toHaveTextContent('00:12:30');
@@ -59,7 +61,7 @@ describe('EmergencyLevelTab', () => {
     });
 
     it('não mostra SAMU nem Amarelo/Verde/Azul no Clínico', () => {
-      render(<EmergencyLevelTab porRiscoETipo={PORRISCOETIPO} escopo="GERAL" />);
+      render(<EmergencyLevelTab protocolos={PROTOCOLO_PADRAO} porRiscoETipo={PORRISCOETIPO} escopo="GERAL" />);
 
       expect(screen.queryByRole('heading', { name: 'SAMU' })).not.toBeInTheDocument();
       ['Amarelo', 'Verde', 'Azul'].forEach((nivel) => {
@@ -70,7 +72,7 @@ describe('EmergencyLevelTab', () => {
 
   describe('visão SAMU', () => {
     it('mostra só Laranja/SAMU com 50% fora do protocolo e só o chip Laranja', () => {
-      render(<EmergencyLevelTab porRiscoETipo={PORRISCOETIPO} escopo="SAMU" />);
+      render(<EmergencyLevelTab protocolos={PROTOCOLO_PADRAO} porRiscoETipo={PORRISCOETIPO} escopo="SAMU" />);
 
       expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['SAMU']);
       expect(niveisDoCard('SAMU')).toEqual(['Laranja']);
@@ -82,7 +84,7 @@ describe('EmergencyLevelTab', () => {
 
   describe('chips', () => {
     it('começam todos ativos', () => {
-      render(<EmergencyLevelTab porRiscoETipo={PORRISCOETIPO} />);
+      render(<EmergencyLevelTab protocolos={PROTOCOLO_PADRAO} porRiscoETipo={PORRISCOETIPO} />);
 
       const chips = screen.getAllByRole('button');
       expect(chips).toHaveLength(8);
@@ -90,7 +92,7 @@ describe('EmergencyLevelTab', () => {
     });
 
     it('desligar um nível esconde a linha em todos os tipos e ligar mostra de novo', () => {
-      render(<EmergencyLevelTab porRiscoETipo={PORRISCOETIPO} />);
+      render(<EmergencyLevelTab protocolos={PROTOCOLO_PADRAO} porRiscoETipo={PORRISCOETIPO} />);
       const chipLaranja = screen.getByRole('button', { name: 'Nível Laranja' });
 
       fireEvent.click(chipLaranja);
@@ -105,7 +107,7 @@ describe('EmergencyLevelTab', () => {
     });
 
     it('desligar uma coluna esconde o cabeçalho e os valores dela', () => {
-      render(<EmergencyLevelTab porRiscoETipo={PORRISCOETIPO} />);
+      render(<EmergencyLevelTab protocolos={PROTOCOLO_PADRAO} porRiscoETipo={PORRISCOETIPO} />);
 
       fireEvent.click(screen.getByRole('button', { name: '% fora do protocolo' }));
 
@@ -123,7 +125,7 @@ describe('EmergencyLevelTab', () => {
     });
 
     it('avisa quando nenhum nível do tipo está selecionado', () => {
-      render(<EmergencyLevelTab porRiscoETipo={PORRISCOETIPO} />);
+      render(<EmergencyLevelTab protocolos={PROTOCOLO_PADRAO} porRiscoETipo={PORRISCOETIPO} />);
 
       fireEvent.click(screen.getByRole('button', { name: 'Nível Vermelho' }));
       fireEvent.click(screen.getByRole('button', { name: 'Nível Laranja' }));
@@ -135,7 +137,7 @@ describe('EmergencyLevelTab', () => {
 
   describe('sem dados', () => {
     it('mostra o estado vazio quando porRiscoETipo é undefined', () => {
-      render(<EmergencyLevelTab porRiscoETipo={undefined} />);
+      render(<EmergencyLevelTab protocolos={PROTOCOLO_PADRAO} porRiscoETipo={undefined} />);
 
       expect(screen.getByText('Sem dados para o período')).toBeInTheDocument();
       expect(screen.queryByRole('table')).not.toBeInTheDocument();
@@ -143,14 +145,20 @@ describe('EmergencyLevelTab', () => {
     });
 
     it('mostra o estado vazio quando a lista vem vazia', () => {
-      render(<EmergencyLevelTab porRiscoETipo={[]} />);
+      render(<EmergencyLevelTab protocolos={PROTOCOLO_PADRAO} porRiscoETipo={[]} />);
+
+      expect(screen.getByText('Sem dados para o período')).toBeInTheDocument();
+    });
+
+    it('não mostra combinações enquanto o protocolo não carregou', () => {
+      render(<EmergencyLevelTab protocolos={undefined} porRiscoETipo={PORRISCOETIPO} />);
 
       expect(screen.getByText('Sem dados para o período')).toBeInTheDocument();
     });
 
     it('mostra --:--:-- quando a média é null', () => {
       const semMedia = PORRISCOETIPO.map((d) => (d.risco === 'VERMELHO' && d.tipo === 'CLINICO' ? { ...d, tempoMedioEsperaMinutos: null } : d));
-      render(<EmergencyLevelTab porRiscoETipo={semMedia} />);
+      render(<EmergencyLevelTab protocolos={PROTOCOLO_PADRAO} porRiscoETipo={semMedia} />);
 
       expect(linha('Clínico', 'Vermelho')).toHaveTextContent('--:--:--');
     });

@@ -1,5 +1,6 @@
 import BackButton from '@/components/BackButton';
 import Header from '@/components/Header';
+import { useProtocolos } from '@/hooks/useProtocolos';
 import { useState } from 'react';
 
 import { EscopoFilter } from './components/EscopoFilter';
@@ -17,6 +18,7 @@ export function IndicatorsFeature() {
   const { isUnlocked, unlock } = useIndicatorsAccess();
   const { dataInicio, dataFim, erro, periodo, alterarInicio, alterarFim, limpar } = usePeriodoFiltro();
   const [escopo, setEscopo] = useState<Escopo>('GERAL');
+  const { data: protocolos } = useProtocolos();
 
   // TODO IND-01: const { data } = useIndicadores({ ...periodo, escopo });
   // `periodo` só muda com um período válido; o `escopo` vale para todas as abas.
@@ -43,7 +45,7 @@ export function IndicatorsFeature() {
           {/* TODO IND-01: atendidos={data?.atendidos} tempoMedioEntradaAteMedicoMinutos={data?.tempoMedioEntradaAteMedicoMinutos} */}
           <SummaryCards />
           {/* TODO IND-01: tempos={data} porRiscoETipo={data?.porRiscoETipo} */}
-          <IndicatorsTabs tempos={undefined} porRiscoETipo={undefined} escopo={escopo} />
+          <IndicatorsTabs tempos={undefined} porRiscoETipo={undefined} escopo={escopo} protocolos={protocolos} />
         </div>
       ) : (
         <IndicatorsAccessGate onUnlock={unlock} />
