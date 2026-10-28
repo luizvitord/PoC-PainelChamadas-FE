@@ -4,6 +4,7 @@ import { getAvailablePriorities } from '@/lib/priorityRules';
 import { PRIORITY_CONFIG, PriorityLevel } from '@/types/patient';
 import { useState } from 'react';
 
+import { Escopo } from '../../utils/escopo';
 import { formatarMinutos } from '../../utils/formatarMinutos';
 import { formatarPercentual } from '../../utils/formatarPercentual';
 import { riscoParaPrioridade } from '../../utils/riscoParaPrioridade';
@@ -18,11 +19,9 @@ export interface DetalhamentoNivel {
   percentualForaDoPrazo: number;
 }
 
-export type EscopoNivel = 'GERAL' | 'SAMU';
-
 interface EmergencyLevelTabProps {
   porRiscoETipo?: DetalhamentoNivel[];
-  escopo?: EscopoNivel;
+  escopo?: Escopo;
 }
 
 interface LinhaNivel {
@@ -43,7 +42,7 @@ const COLUNAS: { id: Coluna; label: string }[] = [
 const ORDEM_ATENDIMENTO: AttendanceType[] = ['psychiatric', 'clinical', 'samu'];
 
 // O back manda as 15 combinações cor × tipo: fica só o que pertence ao escopo e existe no protocolo.
-function montarLinhas(porRiscoETipo: DetalhamentoNivel[], escopo: EscopoNivel): LinhaNivel[] {
+function montarLinhas(porRiscoETipo: DetalhamentoNivel[], escopo: Escopo): LinhaNivel[] {
   return porRiscoETipo
     .flatMap((detalhamento) => {
       const prioridade = riscoParaPrioridade(detalhamento.risco);
