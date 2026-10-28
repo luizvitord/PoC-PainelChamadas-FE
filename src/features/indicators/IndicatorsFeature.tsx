@@ -34,9 +34,10 @@ export function IndicatorsFeature() {
             onFimChange={alterarFim}
             onLimpar={limpar}
           />
+          {/* TODO IND-01: atendidos={data?.atendidos} tempoMedioEntradaAteMedicoMinutos={data?.tempoMedioEntradaAteMedicoMinutos} */}
           <SummaryCards />
-          {/* TODO IND-01: porRiscoETipo={data?.porRiscoETipo}; o escopo entra com o filtro do IND-10 */}
-          <IndicatorsTabs porRiscoETipo={undefined} />
+          {/* TODO IND-01: tempos={data} porRiscoETipo={data?.porRiscoETipo}; o escopo entra com o filtro do IND-10 */}
+          <IndicatorsTabs tempos={undefined} porRiscoETipo={undefined} />
         </div>
       ) : (
         <IndicatorsAccessGate onUnlock={unlock} />

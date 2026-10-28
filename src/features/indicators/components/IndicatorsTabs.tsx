@@ -4,16 +4,17 @@ import { ReactNode } from 'react';
 import { DetalhamentoNivel, EmergencyLevelTab, EscopoNivel } from './tabs/EmergencyLevelTab';
 import { HourlyTab } from './tabs/HourlyTab';
 import { VolumesTab } from './tabs/VolumesTab';
-import { WaitTimesTab } from './tabs/WaitTimesTab';
+import { TemposEspera, WaitTimesTab } from './tabs/WaitTimesTab';
 
 interface IndicatorsTabsProps {
+  tempos?: TemposEspera;
   porRiscoETipo?: DetalhamentoNivel[];
   escopo?: EscopoNivel;
 }
 
 const INDICATOR_TABS: { value: string; label: string; render: (props: IndicatorsTabsProps) => ReactNode }[] = [
   { value: 'volumes', label: 'Volumes e Fluxo', render: () => <VolumesTab /> },
-  { value: 'wait-times', label: 'Tempos de Espera', render: () => <WaitTimesTab /> },
+  { value: 'wait-times', label: 'Tempos de Espera', render: ({ tempos }) => <WaitTimesTab tempos={tempos} /> },
   {
     value: 'emergency-levels',
     label: 'Por Nível de Emergência',
