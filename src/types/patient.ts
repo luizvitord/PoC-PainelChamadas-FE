@@ -1,14 +1,17 @@
 export type PriorityLevel = 'red' | 'orange' | 'yellow' | 'green' | 'blue';
 
+// Datas já convertidas para Date em mapBackendPatient; null quando o back não registrou o momento.
 export interface Patient {
   id: string;
-  chegadaAt: Date;
+  chegadaAt: Date | null;
   ticketNumber: string;
   fullName: string;
-  dateOfBirth: string;
+  dateOfBirth?: string;
   cpf: string;
-  registeredAt: Date;
   classifiedAt?: Date | null;
+  chamadaTriagemAt?: Date | null;
+  chamadaConsultorioAt?: Date | null;
+  atendimentoFinalizadoAt?: Date | null;
   prazoAtendimentoAt?: Date | null;
   status: 'waiting-triage' | 'in-triage' | 'waiting-doctor' | 'in-consultation' | 'completed';
   priority?: PriorityLevel;

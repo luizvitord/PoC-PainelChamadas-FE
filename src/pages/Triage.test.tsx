@@ -38,7 +38,6 @@ const buildPatient = (overrides: Partial<Patient> = {}): Patient => ({
   fullName: 'Maria da Silva',
   dateOfBirth: '1990-01-01',
   cpf: '123.456.789-00',
-  registeredAt: new Date('2026-10-08T10:00:00'),
   status: 'waiting-triage',
   ...overrides,
 });

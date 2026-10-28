@@ -2,6 +2,7 @@ import axios from 'axios';
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Patient, PriorityLevel } from '@/types/patient';
 import { AttendanceTypeBackend, PriorityBackend } from '@/lib/utils/backendMaps';
+import { BackendPatient, mapBackendPatient } from '@/lib/utils/mapBackendPatient';
 
 import { API_BASE_URL } from '@/lib/appConfig';
 
@@ -27,44 +28,18 @@ interface PatientContextType {
 
 const PatientContext = createContext<PatientContextType | undefined>(undefined);
 
-const mapBackendPriority = (risco?: string | null): PriorityLevel => {
-  const map: Record<string, PriorityLevel> = {
-    'VERMELHO': 'red', 'LARANJA': 'orange', 'AMARELO': 'yellow', 'VERDE': 'green', 'AZUL': 'blue'
-  };
-  return risco ? map[risco] || 'green' : 'green';
-};
-
 export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [patients, setPatients] = useState<Patient[]>([]);
 
   const refreshPatients = useCallback(async () => {
     try {
       const [triageRes, doctorRes] = await Promise.all([
-        api.get('/pacientes/aguardando-triagem'),
-        api.get('/pacientes/aguardando-medico')
+        api.get<BackendPatient[]>('/pacientes/aguardando-triagem'),
+        api.get<BackendPatient[]>('/pacientes/aguardando-medico')
       ]);
 
-      const triagePatients = triageRes.data.map((p: any) => ({
-        ...p,
-        id: p.id.toString(),
-        fullName: p.nome,
-        status: 'waiting-triage',
-        dateOfBirth: p.dateOfBirth,
-        registeredAt: new Date()
-      }));
-
-      const doctorPatients = doctorRes.data.map((p: any) => ({
-        ...p,
-        id: p.id.toString(),
-        fullName: p.nome,
-        status: 'waiting-doctor',
-        priority: mapBackendPriority(p.risco),
-        attendanceType: p.tipo === 'PSIQUIATRICO' ? 'psychiatric' : p.tipo === 'SAMU' ? 'samu' : 'clinical',
-        triageNotes: p.triageNotes,
-        registeredAt: new Date(),
-        classifiedAt: p.classifiedAt ? new Date(p.classifiedAt) : null,
-        prazoAtendimentoAt: p.prazoAtendimentoAt ? new Date(p.prazoAtendimentoAt) : null
-      }));
+      const triagePatients = triageRes.data.map((p) => mapBackendPatient(p, 'waiting-triage'));
+      const doctorPatients = doctorRes.data.map((p) => mapBackendPatient(p, 'waiting-doctor'));
       console.log('Fetched patients:', [...triagePatients, ...doctorPatients]);
 
       setPatients([...triagePatients, ...doctorPatients]);
@@ -76,7 +51,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => { refreshPatients(); }, [refreshPatients]);
 
   const registerPatient = useCallback(async (data: { fullName: string; dateOfBirth: string; cpf: string }) => {
-    const response = await api.post('/pacientes', {
+    const response = await api.post<BackendPatient>('/pacientes', {
       nome: data.fullName,
       cpf: data.cpf,
       dataNascimento: data.dateOfBirth
@@ -84,18 +59,10 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     await refreshPatients();
 
-    // Mapeamento: Pegamos o que vem do Java e transformamos para o padrão do Front
     return {
-      ...response.data,
-      id: response.data.id.toString(),
-      // Verifique se no Java o campo é 'nome' ou 'fullName'. 
-      // Se o Java retorna 'nome', mapeamos para 'fullName' aqui:
-      fullName: response.data.nome || data.fullName,
-      // Verifique se no Java o campo é 'ticketNumber', 'senha' ou 'numeroTicket'
+      ...mapBackendPatient(response.data, 'waiting-triage'),
       ticketNumber: `T-0${response.data.id}`,
-      registeredAt: new Date(),
-      status: 'waiting-triage'
-    } as Patient;
+    };
   }, [refreshPatients]);
 
   const assignPriority = useCallback(async (patientId: string, priority: PriorityLevel, attendanceType: 'clinical' | 'psychiatric' | 'samu', triageNotes: string) => {

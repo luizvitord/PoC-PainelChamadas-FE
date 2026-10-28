@@ -195,7 +195,7 @@ return (
                         <tr key={patient.id}>
                           <td className="whitespace-nowrap px-8 py-6">
                             <span className="rounded-full bg-blue-50 px-3 py-1.5 text-base font-black italic uppercase text-blue-700">
-                              {new Date(patient.chegadaAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                              {patient.chegadaAt?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) ?? '--:--'}
                             </span>
                           </td>
                           <td className="px-8 py-6 text-xl font-bold uppercase text-gray-800">{patient.fullName}</td>
