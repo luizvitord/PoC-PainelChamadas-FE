@@ -54,7 +54,7 @@ export default function Reception() {
 
       toast({
         title: 'Paciente Registrado',
-        description: `Ticket ${patient.ticketNumber} emitido para ${patient.fullName}`,
+        description: `${patient.fullName} aguarda a chamada para o acolhimento.`,
       });
 
       setFormData({ fullName: '', dateOfBirth: '', cpf: '' }); // Removemos o await aqui também
@@ -209,9 +209,6 @@ export default function Reception() {
                               {patient.cpf || 'CPF não informado'}
                             </p>
                           </div>
-                          <span className="text-sm font-bold text-gray-300">
-                            {patient.ticketNumber}
-                          </span>
                         </div>
                       ))
                     )}

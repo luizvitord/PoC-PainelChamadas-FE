@@ -6,7 +6,6 @@ import { mergePanelCalls } from './mergePanelCalls';
 function call(callId: string, timestamp: string, shouldAnnounce = false): TriageCall {
   return {
     callId,
-    ticketNumber: callId,
     patientName: `Paciente ${callId}`,
     type: 'doctor',
     room: '1',

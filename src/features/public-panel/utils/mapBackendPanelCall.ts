@@ -4,7 +4,6 @@ export interface BackendPanelCall {
   id: number | string;
   pacienteId?: number | string;
   patientName?: string;
-  ticketNumber?: string;
   type?: 'triage' | 'doctor' | string;
   destination?: string;
   consultorioId?: number | string | null;
@@ -18,7 +17,6 @@ export function mapBackendPanelCall(call: BackendPanelCall, shouldAnnounce = fal
 
   return {
     callId: String(call.id),
-    ticketNumber: call.ticketNumber || '',
     patientName: call.patientName || '',
     type,
     room: mapRoom(call, type),

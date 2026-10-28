@@ -25,8 +25,6 @@ export function mapBackendPatient(patient: BackendPatient, status: Patient['stat
     id: String(patient.id),
     fullName: patient.nome ?? '',
     cpf: patient.cpf ?? '',
-    // O back ainda não persiste a senha do paciente.
-    ticketNumber: '',
     status,
     priority: riscoParaPrioridade(patient.risco ?? '') ?? undefined,
     attendanceType: tipoParaAtendimento(patient.tipo ?? '') ?? undefined,

@@ -34,7 +34,6 @@ vi.mock('@/contexts/PatientContext', () => ({
 const buildPatient = (overrides: Partial<Patient> = {}): Patient => ({
   id: '1',
   chegadaAt: new Date('2026-10-08T10:00:00'),
-  ticketNumber: 'T-01',
   fullName: 'Maria da Silva',
   dateOfBirth: '1990-01-01',
   cpf: '123.456.789-00',
