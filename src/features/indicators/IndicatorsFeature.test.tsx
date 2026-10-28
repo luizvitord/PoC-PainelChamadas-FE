@@ -93,6 +93,55 @@ describe('IndicatorsFeature', () => {
     expect(screen.getByText('Sem dados para o período')).toBeInTheDocument();
   });
 
+  describe('filtro Geral / SAMU', () => {
+    const chip = (nome: string) => screen.getByRole('button', { name: nome });
+
+    it('começa na visão Geral', () => {
+      renderIndicators();
+      submitPassword('1234');
+
+      expect(chip('Geral')).toHaveAttribute('aria-pressed', 'true');
+      expect(chip('SAMU')).toHaveAttribute('aria-pressed', 'false');
+      expect(screen.getByText('Indicadores de Atendimento')).toBeInTheDocument();
+    });
+
+    it('escolher SAMU deixa a visão visível no título', () => {
+      renderIndicators();
+      submitPassword('1234');
+
+      fireEvent.click(chip('SAMU'));
+
+      expect(chip('SAMU')).toHaveAttribute('aria-pressed', 'true');
+      expect(chip('Geral')).toHaveAttribute('aria-pressed', 'false');
+      expect(screen.getByText('Indicadores de Atendimento — SAMU')).toBeInTheDocument();
+
+      fireEvent.click(chip('Geral'));
+
+      expect(screen.getByText('Indicadores de Atendimento')).toBeInTheDocument();
+    });
+
+    it('o escopo vale para todas as abas', () => {
+      renderIndicators();
+      submitPassword('1234');
+      fireEvent.click(chip('SAMU'));
+
+      fireEvent.mouseDown(screen.getByRole('tab', { name: 'Por Nível de Emergência' }));
+
+      expect(chip('SAMU')).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByText('Indicadores de Atendimento — SAMU')).toBeInTheDocument();
+    });
+
+    it('limpar o período não muda o escopo', () => {
+      renderIndicators();
+      submitPassword('1234');
+      fireEvent.click(chip('SAMU'));
+
+      fireEvent.click(chip('Limpar'));
+
+      expect(chip('SAMU')).toHaveAttribute('aria-pressed', 'true');
+    });
+  });
+
   describe('filtro de período', () => {
     beforeEach(() => {
       periodosRepassados.length = 0;
