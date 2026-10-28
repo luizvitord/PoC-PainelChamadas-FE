@@ -40,9 +40,10 @@ export function IndicatorsFeature() {
           >
             <EscopoFilter escopo={escopo} onEscopoChange={setEscopo} />
           </PeriodFilter>
+          {/* TODO IND-01: atendidos={data?.atendidos} tempoMedioEntradaAteMedicoMinutos={data?.tempoMedioEntradaAteMedicoMinutos} */}
           <SummaryCards />
-          {/* TODO IND-01: porRiscoETipo={data?.porRiscoETipo} */}
-          <IndicatorsTabs porRiscoETipo={undefined} escopo={escopo} />
+          {/* TODO IND-01: tempos={data} porRiscoETipo={data?.porRiscoETipo} */}
+          <IndicatorsTabs tempos={undefined} porRiscoETipo={undefined} escopo={escopo} />
         </div>
       ) : (
         <IndicatorsAccessGate onUnlock={unlock} />
