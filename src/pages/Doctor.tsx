@@ -3,6 +3,7 @@ import Header from '@/components/Header';
 import { PriorityBadge } from '@/components/PriorityBadge';
 import RoomSelect from '@/components/RoomSelect';
 import { SuicidalBehaviorField } from '@/components/SuicidalBehaviorField';
+import { TriageNotesPreview } from '@/components/TriageNotesPreview';
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -229,11 +230,7 @@ const handleAbandonConsultation = async (patientId: string) => {
                           </td>
                           <td className="px-6 py-4">
                             <div className="text-xl font-bold uppercase text-slate-800">{patient.fullName}</div>
-                            {patient.triageNotes && (
-                              <div className="mt-0.5 line-clamp-1 text-xs text-slate-500">
-                                {patient.triageNotes}
-                              </div>
-                            )}
+                            {patient.triageNotes && <TriageNotesPreview notes={patient.triageNotes} />}
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
@@ -329,7 +326,7 @@ const handleAbandonConsultation = async (patientId: string) => {
               {activePatient.triageNotes && (
                 <div className="mt-6 border-t border-slate-200 pt-4">
                   <span className="text-base font-bold uppercase tracking-[0.1em] text-slate-400">Observações:</span>
-                  <div className="mt-2 rounded border border-slate-200 bg-white p-4 text-lg italic">
+                  <div className="mt-2 max-h-48 overflow-y-auto whitespace-pre-wrap rounded border border-slate-200 bg-white p-4 text-lg italic [overflow-wrap:anywhere]">
                     {activePatient.triageNotes}
                   </div>
                 </div>
