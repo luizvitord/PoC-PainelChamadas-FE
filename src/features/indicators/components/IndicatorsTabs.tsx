@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProtocoloTempo } from '@/types/protocolo';
 import { ReactNode } from 'react';
 
+import type { AtendidoPorHorario } from '../hooks/useAtendidosPorHorario';
 import { Escopo } from '../utils/escopo';
 import { DetalhamentoNivel, EmergencyLevelTab } from './tabs/EmergencyLevelTab';
 import { HourlyTab } from './tabs/HourlyTab';
@@ -13,6 +14,7 @@ interface IndicatorsTabsProps {
   porRiscoETipo?: DetalhamentoNivel[];
   escopo?: Escopo;
   protocolos?: ProtocoloTempo[];
+  atendidos?: { data?: AtendidoPorHorario[]; carregando?: boolean; erro?: string };
 }
 
 const INDICATOR_TABS: { value: string; label: string; render: (props: IndicatorsTabsProps) => ReactNode }[] = [
@@ -26,7 +28,13 @@ const INDICATOR_TABS: { value: string; label: string; render: (props: Indicators
       <EmergencyLevelTab porRiscoETipo={porRiscoETipo} escopo={escopo} protocolos={protocolos} />
     ),
   },
-  { value: 'hourly', label: 'Atendidos por Horário', render: () => <HourlyTab /> },
+  {
+    value: 'hourly',
+    label: 'Atendidos por Horário',
+    render: ({ atendidos }) => (
+      <HourlyTab atendidos={atendidos?.data} carregando={atendidos?.carregando} erro={atendidos?.erro} />
+    ),
+  },
 ];
 
 const tabTriggerClassName =
