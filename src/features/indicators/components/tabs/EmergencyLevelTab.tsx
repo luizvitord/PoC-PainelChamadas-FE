@@ -108,7 +108,7 @@ export function EmergencyLevelTab({ porRiscoETipo, escopo = 'GERAL', protocolos 
               onClick={() => setNiveisOcultos((atual) => alternar(atual, nivel))}
               className="rounded-full transition-opacity aria-[pressed=false]:opacity-30 aria-[pressed=false]:grayscale"
             >
-              <PriorityBadge priority={nivel} className="px-4 py-1.5 text-sm font-black uppercase tracking-wide" />
+              <PriorityBadge priority={nivel} label="color" size="md" />
             </button>
           ))}
         </div>
@@ -165,7 +165,7 @@ export function EmergencyLevelTab({ porRiscoETipo, escopo = 'GERAL', protocolos 
                     linhasVisiveis.map(({ prioridade, detalhamento }) => (
                       <tr key={prioridade}>
                         <td className="px-6 py-4">
-                          <PriorityBadge priority={prioridade} className="px-3 py-1 text-sm font-black uppercase tracking-wide" />
+                          <PriorityBadge priority={prioridade} label="color" />
                         </td>
                         {colunasVisiveis.map((coluna) => (
                           <td key={coluna.id} className="px-6 py-4 text-right text-lg font-bold tabular-nums text-gray-800">
