@@ -30,10 +30,11 @@ export interface TriageCall {
 }
 
 // Só apresentação; o tempo máximo de cada cor por tipo vem do protocolo (GET /protocolos).
-export const PRIORITY_CONFIG: Record<PriorityLevel, { label: string; order: number }> = {
-  red: { label: 'Vermelho', order: 1 },
-  orange: { label: 'Laranja', order: 2 },
-  yellow: { label: 'Amarelo', order: 3 },
-  green: { label: 'Verde', order: 4 },
-  blue: { label: 'Azul', order: 5 },
+// urgency: significado da cor no protocolo de Manchester.
+export const PRIORITY_CONFIG: Record<PriorityLevel, { label: string; urgency: string; order: number }> = {
+  red: { label: 'Vermelho', urgency: 'Emergência', order: 1 },
+  orange: { label: 'Laranja', urgency: 'Muito urgente', order: 2 },
+  yellow: { label: 'Amarelo', urgency: 'Urgente', order: 3 },
+  green: { label: 'Verde', urgency: 'Pouco urgente', order: 4 },
+  blue: { label: 'Azul', urgency: 'Não urgente', order: 5 },
 };

@@ -126,7 +126,7 @@ export function HourlyTab({ atendidos, carregando, erro }: HourlyTabProps) {
                   </td>
                   <td className="px-6 py-4">
                     {prioridade ? (
-                      <PriorityBadge priority={prioridade} className="px-3 py-1 text-sm font-black uppercase tracking-wide" />
+                      <PriorityBadge priority={prioridade} label="color" />
                     ) : (
                       <span className="text-gray-400">—</span>
                     )}

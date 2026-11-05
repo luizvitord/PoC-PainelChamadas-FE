@@ -1,8 +1,10 @@
 import axios from 'axios';
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Patient, PriorityLevel } from '@/types/patient';
-import { AttendanceTypeBackend, PriorityBackend } from '@/lib/utils/backendMaps';
+import { AttendanceTypeBackend, PriorityBackend, SuicidalBehaviorBackend } from '@/lib/utils/backendMaps';
 import { BackendPatient, mapBackendPatient } from '@/lib/utils/mapBackendPatient';
+import { SuicidalBehavior } from '@/lib/suicidalBehavior';
+import { PatientAlreadyCalledError } from '@/lib/patientErrors';
 
 import { API_BASE_URL } from '@/lib/appConfig';
 
@@ -19,7 +21,7 @@ interface PatientContextType {
   assignPriority: (patientId: string, priority: PriorityLevel, attendanceType: 'clinical' | 'psychiatric' | 'samu', notes: string) => Promise<void>;
   callForDoctor: (patientId: string, room: string) => Promise<void>;
   recallPatient: (patientId: string, room: string) => Promise<void>;
-  completeConsultation: (patientId: string) => Promise<void>;
+  completeConsultation: (patientId: string, suicidalBehavior: SuicidalBehavior) => Promise<void>;
   abandonConsultation: (patientId: string) => Promise<void>;
   getWaitingForTriage: () => Patient[];
   getWaitingForDoctor: () => Patient[];
@@ -75,7 +77,16 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [refreshPatients]);
 
   const callForDoctor = useCallback(async (patientId: string, room: string) => {
-    await api.put(`/pacientes/${patientId}/chamar?consultorioId=${room}`);
+    try {
+      await api.put(`/pacientes/${patientId}/chamar?consultorioId=${room}`);
+    } catch (error) {
+      // 409: outro consultório chamou o paciente primeiro (o back reserva o paciente de forma atômica).
+      if ((error as { response?: { status?: number } })?.response?.status === 409) {
+        await refreshPatients();
+        throw new PatientAlreadyCalledError();
+      }
+      throw error;
+    }
     await refreshPatients();
   }, [refreshPatients]);
 
@@ -83,9 +94,11 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await api.put(`/pacientes/${patientId}/rechamar`);
   }, []);
 
-  const completeConsultation = useCallback(async (patientId: string) => {
+  const completeConsultation = useCallback(async (patientId: string, suicidalBehavior: SuicidalBehavior) => {
     console.log(`Finalizando consulta para paciente ID: ${patientId}`);
-    await api.put(`/pacientes/${patientId}/finalizar`);
+    await api.put(`/pacientes/${patientId}/finalizar`, {
+      comportamentoSuicida: SuicidalBehaviorBackend[suicidalBehavior],
+    });
     await refreshPatients();
   }, [refreshPatients]);
 

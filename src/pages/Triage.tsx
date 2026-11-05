@@ -10,11 +10,21 @@ import { Textarea } from '@/components/ui/textarea';
 import { usePatients } from '@/contexts/PatientContext';
 import { useToast } from '@/hooks/use-toast';
 import { useProtocolos } from '@/hooks/useProtocolos';
-import { AttendanceTypeLabel } from '@/lib/attendanceTypes';
+import { AttendanceType, AttendanceTypeLabel } from '@/lib/attendanceTypes';
 import { getAvailablePriorities, getWaitTimeMinutes } from '@/lib/priorityRules';
 import { PRIORITY_CONFIG, PriorityLevel } from '@/types/patient';
 import { Check, ChevronDown, ChevronUp, Phone } from 'lucide-react';
 import { useEffect, useState } from 'react';
+
+// Ordem dos tipos de atendimento no modal; o nome completo do SAMU aparece ao passar o mouse.
+const ATTENDANCE_OPTIONS: { value: AttendanceType; title?: string }[] = [
+  { value: 'psychiatric' },
+  { value: 'clinical' },
+  { value: 'samu', title: 'Serviço de Atendimento Móvel de Urgência' },
+];
+
+// A coluna triage_notes é VARCHAR(255): acima disso a classificação falhava com erro 500 sem aviso.
+const TRIAGE_NOTES_MAX_LENGTH = 250;
 
 export default function Triage() {
   const { getWaitingForDoctor, getWaitingForTriage, callForTriage, rechamarTriagem, assignPriority, abandonConsultation, refreshPatients } = usePatients();
@@ -27,6 +37,7 @@ export default function Triage() {
   const [confirmAbandonOpen, setConfirmAbandonOpen] = useState(false);
   const [patientToAbandon, setPatientToAbandon] = useState<{ id: string; fullName: string } | null>(null);
   const [isRecalling, setIsRecalling] = useState(false);
+  const notesRemaining = Math.max(0, TRIAGE_NOTES_MAX_LENGTH - notes.length);
   const { data: protocolos = [], isLoading: isLoadingProtocolo } = useProtocolos();
   const availableColors = getAvailablePriorities(protocolos, attendanceType);
   // Só confirma uma cor que o protocolo aceita para o tipo escolhido.
@@ -148,22 +159,6 @@ export default function Triage() {
     await refreshPatients(); 
   };
 
-  const priorityPillLabel: Record<PriorityLevel, string> = {
-    red: 'VERMELHO',
-    orange: 'LARANJA',
-    yellow: 'AMARELO',
-    green: 'VERDE',
-    blue: 'AZUL',
-  };
-
-  const priorityPillClass: Record<PriorityLevel, string> = {
-    red: 'bg-[#ff0000] text-white',
-    orange: 'bg-[#f57c00] text-white',
-    yellow: 'bg-[#e6b800] text-white',
-    green: 'bg-[#00b35a] text-white',
-    blue: 'bg-[#4f73df] text-white',
-  };
-
 
 return (
   <div className="min-h-screen bg-[#f8fafc]">
@@ -247,7 +242,7 @@ return (
                       <p className="mt-1 text-lg font-medium italic text-gray-500">{patient.cpf || 'CPF não informado'}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <PriorityBadge priority={patient.priority} showLabel={false} />
+                      <PriorityBadge priority={patient.priority} size="sm" />
                       <span className="text-xs italic text-gray-400">Reclassificar</span>
                     </div>
                   </button>
@@ -265,7 +260,7 @@ return (
 
       <Dialog open={!!selectedPatientId} onOpenChange={(open) => !open && handleCancel()}>
         <DialogContent className="max-h-[90vh] w-full overflow-x-hidden overflow-y-auto rounded-[14px] border border-[#dbe1ea] bg-[#f8fafc] p-0 shadow-[0_32px_100px_rgba(0,0,0,0.45)] sm:max-w-4xl [&>button]:right-5 [&>button]:top-5 [&>button]:flex [&>button]:h-11 [&>button]:w-11 [&>button]:items-center [&>button]:justify-center [&>button]:rounded-[10px] [&>button]:border [&>button]:border-[#e2e8f0] [&>button]:bg-[#e9edf2] [&>button]:p-0 [&>button]:text-gray-500 [&>button]:opacity-100 [&>button:hover]:bg-[#dfe5ec] [&>button>svg]:h-5 [&>button>svg]:w-5">
-          <DialogHeader className="space-y-0 px-8 pb-0 pt-8 text-left">
+          <DialogHeader className="space-y-0 px-8 pb-0 pt-6 text-left">
             <DialogTitle className="pr-14 text-3xl font-black uppercase tracking-[0.04em]">
               {isRetriage ? "Reclassificação de Risco" : "Acolhimento e Classificação de Risco"}
             </DialogTitle>
@@ -277,12 +272,13 @@ return (
             </div>
           </DialogHeader>
 
-          <div className="flex flex-col gap-6 px-8 py-6">
+          <div className="flex flex-col gap-4 px-8 py-4">
             <div className="flex flex-col gap-2">
               <Label className="text-sm font-black uppercase tracking-[0.15em] text-gray-500">
                 Categoria de Atendimento
               </Label>
 
+              {/* Lado a lado para o modal caber na tela sem rolagem; o cartão inteiro é clicável. */}
               <RadioGroup
                 value={attendanceType}
                 onValueChange={(value) => {
@@ -292,28 +288,19 @@ return (
                   else if (value === "psychiatric") setPriority("green")
                   else if (value === "samu") setPriority("orange")
                 }}
-                className="flex flex-col gap-3"
+                className="grid grid-cols-1 gap-3 sm:grid-cols-3"
               >
-                <div className={`flex cursor-pointer items-center gap-4 rounded-xl border-2 px-5 py-4 transition-all ${attendanceType === 'psychiatric' ? 'border-[#008140] bg-[#f0fff4]' : 'border-gray-200 hover:border-[#008140] hover:bg-[#f0fff4]'}`}>
-                  <RadioGroupItem className="h-5 w-5" value="psychiatric" id="psychiatric" />
-                  <Label htmlFor="psychiatric" className="cursor-pointer text-lg font-bold">
-                    Psiquiátrico
+                {ATTENDANCE_OPTIONS.map(({ value, title }) => (
+                  <Label
+                    key={value}
+                    htmlFor={value}
+                    title={title}
+                    className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 px-4 py-3 text-lg font-bold transition-all ${attendanceType === value ? 'border-[#008140] bg-[#f0fff4]' : 'border-gray-200 hover:border-[#008140] hover:bg-[#f0fff4]'}`}
+                  >
+                    <RadioGroupItem className="h-5 w-5" value={value} id={value} />
+                    {AttendanceTypeLabel[value]}
                   </Label>
-                </div>
-
-                <div className={`flex cursor-pointer items-center gap-4 rounded-xl border-2 px-5 py-4 transition-all ${attendanceType === 'clinical' ? 'border-[#008140] bg-[#f0fff4]' : 'border-gray-200 hover:border-[#008140] hover:bg-[#f0fff4]'}`}>
-                  <RadioGroupItem className="h-5 w-5" value="clinical" id="clinical" />
-                  <Label htmlFor="clinical" className="cursor-pointer text-lg font-bold">
-                    Clínico
-                  </Label>
-                </div>
-
-                <div className={`flex cursor-pointer items-center gap-4 rounded-xl border-2 px-5 py-4 transition-all ${attendanceType === 'samu' ? 'border-[#008140] bg-[#f0fff4]' : 'border-gray-200 hover:border-[#008140] hover:bg-[#f0fff4]'}`}>
-                  <RadioGroupItem className="h-5 w-5" value="samu" id="samu" />
-                  <Label htmlFor="samu" className="cursor-pointer text-lg font-bold">
-                    SAMU (Serviço de Atendimento Móvel de Urgência)
-                  </Label>
-                </div>
+                ))}
               </RadioGroup>
             </div>
 
@@ -326,11 +313,12 @@ return (
                 <button
                   type="button"
                   onClick={() => setIsManchesterOpen((prev) => !prev)}
-                  className={`flex w-full items-center justify-between px-5 py-4 text-left ${isManchesterOpen ? 'border-b border-[#22a35d]' : ''}`}
+                  className={`flex w-full items-center justify-between px-5 py-3 text-left ${isManchesterOpen ? 'border-b border-[#22a35d]' : ''}`}
                 >
                   <div className="flex items-center gap-4">
-                    <span className={`inline-flex min-w-[90px] items-center justify-center rounded-full px-4 py-1.5 text-lg font-black uppercase leading-none tracking-wide ${priorityPillClass[priority]}`}>
-                      {priorityPillLabel[priority]}
+                    {/* Largura fixa para o texto da cor e do tempo ficar alinhado em todas as opções. */}
+                    <span className="w-[200px] shrink-0">
+                      <PriorityBadge priority={priority} size="lg" />
                     </span>
                     <span className="text-xl font-bold leading-tight text-[#1f2a44]">
                       {PRIORITY_CONFIG[priority].label}{waitTimeLabel(priority)}
@@ -353,15 +341,15 @@ return (
                           setPriority(level);
                           setIsManchesterOpen(false);
                         }}
-                        className={`flex w-full items-center gap-4 border-b border-[#e2e8f0] px-5 py-5 text-left last:border-b-0 ${
+                        className={`flex w-full items-center gap-4 border-b border-[#e2e8f0] px-5 py-4 text-left last:border-b-0 ${
                           priority === level ? 'bg-[#e8eef8]' : 'bg-white hover:bg-[#f8fafc]'
                         }`}
                       >
                         <div className="flex w-7 justify-center text-[#4f73df]">
                           {priority === level ? <Check className="h-6 w-6" /> : null}
                         </div>
-                        <span className={`inline-flex min-w-[120px] items-center justify-center rounded-full px-4 py-1.5 text-base font-black uppercase leading-none tracking-wide ${priorityPillClass[level]}`}>
-                          {priorityPillLabel[level]}
+                        <span className="w-[200px] shrink-0">
+                          <PriorityBadge priority={level} size="lg" />
                         </span>
                         <span className="text-xl font-bold leading-tight text-[#1f2a44]">
                           {PRIORITY_CONFIG[level].label}{waitTimeLabel(level)}
@@ -382,26 +370,41 @@ return (
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label className="text-sm font-black uppercase tracking-[0.15em] text-gray-500">
-                Anotações Clínicas
-              </Label>
+              <div className="flex items-baseline justify-between gap-3">
+                <Label htmlFor="triage-notes" className="text-sm font-black uppercase tracking-[0.15em] text-gray-500">
+                  Anotações Clínicas
+                </Label>
+                <span
+                  id="triage-notes-counter"
+                  className={`text-sm font-bold tabular-nums ${
+                    notesRemaining === 0 ? 'text-red-600' : notesRemaining <= 25 ? 'text-amber-600' : 'text-gray-400'
+                  }`}
+                >
+                  {notesRemaining} {notesRemaining === 1 ? 'caractere restante' : 'caracteres restantes'}
+                </span>
+              </div>
 
               <Textarea
+                id="triage-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
+                maxLength={TRIAGE_NOTES_MAX_LENGTH}
+                aria-describedby="triage-notes-counter"
                 placeholder="Digite as observações do paciente para auxiliar o médico no atendimento..."
-                rows={4}
-                className="min-h-[110px] rounded-[10px] border-[1.5px] border-gray-200 bg-gray-50 px-5 py-4 text-lg font-medium text-gray-800 focus:border-[#008140] focus:bg-white focus:ring-4 focus:ring-[rgba(0,129,64,0.12)]"
+                rows={3}
+                className="min-h-[84px] rounded-[10px] border-[1.5px] border-gray-200 bg-gray-50 px-5 py-3 text-lg font-medium text-gray-800 focus:border-[#008140] focus:bg-white focus:ring-4 focus:ring-[rgba(0,129,64,0.12)]"
               />
             </div>
           </div>
 
-          <div className="flex justify-between gap-3 px-8 pb-8">
-            <div className="flex gap-3">
+          {/* Rodapé fixo: em telas baixas só o conteúdo rola e os botões continuam à vista.
+              Quebram linha se não couberem (numa linha forçada, alargavam o modal e o fim era cortado). */}
+          <div className="sticky bottom-0 z-10 flex flex-wrap items-center gap-3 border-t border-gray-200 bg-[#f8fafc] px-8 py-5">
+            <div className="flex flex-wrap gap-3">
               <Button
                 size="lg"
                 onClick={() => { setPatientToAbandon({ id: selectedPatient!.id, fullName: selectedPatient!.fullName }); setConfirmAbandonOpen(true); }}
-                className="h-14 rounded-xl bg-red-600 px-8 text-lg font-black uppercase tracking-[0.08em] text-white hover:bg-red-700"
+                className="h-14 rounded-xl bg-red-600 px-6 text-base font-black uppercase tracking-[0.06em] text-white hover:bg-red-700"
               >
                 Desistência
               </Button>
@@ -412,7 +415,7 @@ return (
                   variant="secondary"
                   onClick={handleRecallTriage}
                   disabled={isRecalling}
-                  className="h-14 rounded-xl px-8 text-lg font-black uppercase tracking-[0.08em]"
+                  className="h-14 rounded-xl px-6 text-base font-black uppercase tracking-[0.06em]"
                 >
                   <Phone className="h-4 w-4" />
                   Rechamar
@@ -420,12 +423,12 @@ return (
               )}
             </div>
 
-            <div className="flex gap-3">
+            <div className="ml-auto flex flex-wrap justify-end gap-3">
               <Button
                 size="lg"
                 variant="outline"
                 onClick={handleCancel}
-                className="h-14 rounded-xl border-2 border-gray-200 bg-white px-8 text-lg font-black uppercase tracking-[0.08em] text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                className="h-14 rounded-xl border-2 border-gray-200 bg-white px-6 text-base font-black uppercase tracking-[0.06em] text-gray-700 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800"
               >
                 Cancelar
               </Button>
@@ -434,7 +437,7 @@ return (
               size="lg"
               onClick={handleConfirmTriage}
               disabled={!isPriorityValid}
-              className="h-14 rounded-xl bg-[#008140] px-8 text-lg font-black uppercase tracking-[0.08em] text-white hover:bg-[#006f36]"
+              className="h-14 rounded-xl bg-[#008140] px-6 text-base font-black uppercase tracking-[0.06em] text-white hover:bg-[#006f36]"
             >
                {isRetriage ? "Confirmar reclassificação" : "Confirmar Classificação"}
             </Button>

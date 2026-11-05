@@ -103,6 +103,35 @@ describe('Triage Manchester protocol', () => {
   });
 });
 
+describe('Triage clinical notes limit', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    waitingForTriage = [buildPatient()];
+    waitingForDoctor = [];
+    protocolosMock = { data: PROTOCOLO_PADRAO, isLoading: false };
+    callForTriageMock.mockResolvedValue(undefined);
+    refreshPatientsMock.mockResolvedValue(undefined);
+  });
+
+  it('limits the notes to 250 characters and counts down while typing', async () => {
+    renderTriage();
+    await openTriageModal();
+
+    const notes = screen.getByLabelText('Anotações Clínicas');
+    expect(notes).toHaveAttribute('maxLength', '250');
+    expect(screen.getByText('250 caracteres restantes')).toBeInTheDocument();
+
+    fireEvent.change(notes, { target: { value: 'Ansiedade' } });
+    expect(screen.getByText('241 caracteres restantes')).toBeInTheDocument();
+
+    fireEvent.change(notes, { target: { value: 'x'.repeat(249) } });
+    expect(screen.getByText('1 caractere restante')).toBeInTheDocument();
+
+    fireEvent.change(notes, { target: { value: 'x'.repeat(250) } });
+    expect(screen.getByText('0 caracteres restantes')).toHaveClass('text-red-600');
+  });
+});
+
 describe('Triage recall', () => {
   beforeEach(() => {
     vi.clearAllMocks();

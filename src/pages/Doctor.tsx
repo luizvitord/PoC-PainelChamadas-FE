@@ -2,6 +2,8 @@ import BackButton from '@/components/BackButton';
 import Header from '@/components/Header';
 import { PriorityBadge } from '@/components/PriorityBadge';
 import RoomSelect from '@/components/RoomSelect';
+import { SuicidalBehaviorField } from '@/components/SuicidalBehaviorField';
+import { TriageNotesPreview } from '@/components/TriageNotesPreview';
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,7 +12,8 @@ import { usePatients } from '@/contexts/PatientContext';
 import { useToast } from '@/hooks/use-toast';
 import { AttendanceTypeLabel } from '@/lib/attendanceTypes';
 import { isOverdue } from '@/lib/isOverdue';
-import { PRIORITY_CONFIG } from "@/types/patient";
+import { PatientAlreadyCalledError } from '@/lib/patientErrors';
+import { SuicidalBehavior, SuicidalBehaviorLabel } from '@/lib/suicidalBehavior';
 import { CheckCircle, Phone } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CalledPatientTimer } from '@/components/CalledPatientTimer';
@@ -32,7 +35,9 @@ export default function Doctor() {
   const [patientToAbandon, setPatientToAbandon] = useState<any | null>(null);
   const [calledAt, setCalledAt] = useState<number | null>(null);
   const [timerOpen, setTimerOpen] = useState(false);
-  
+  const [suicidalBehavior, setSuicidalBehavior] = useState<SuicidalBehavior | null>(null);
+  const [isCalling, setIsCalling] = useState(false);
+
   // Variável adicionada pela equipe (tempo excedido)
   const [now, setNow] = useState(Date.now());
 
@@ -43,15 +48,24 @@ export default function Doctor() {
   });
 
   const waitingPatients = getWaitingForDoctor();
+  // O modal só trava depois de chamar: antes disso o médico está só revisando e pode fechar.
+  const isActivePatientCalled = !!activePatient && calledPatientIds.has(activePatient.id);
 
   const handleOpenCallModal = (patient: any) => {
     setActivePatient(patient);
+    setSuicidalBehavior(null); // cada paciente começa sem avaliação marcada
     setConsultationLocked(true);
   };
 
-  const handleConfirmCallPatient = async () => {
-  if (!activePatient || !room) return;
+  const closeCallModal = () => {
+    setConsultationLocked(false);
+    setActivePatient(null);
+  };
 
+  const handleConfirmCallPatient = async () => {
+  if (!activePatient || !room || isCalling) return;
+
+  setIsCalling(true);
   try {
     await callForDoctor(activePatient.id, room);
     setCalledAt(Date.now());
@@ -72,11 +86,23 @@ export default function Doctor() {
       description: `${activePatient.fullName} foi chamado para a sala ${room}`,
     });
   } catch (error) {
+    if (error instanceof PatientAlreadyCalledError) {
+      // Outro médico chamou antes: o paciente já saiu da fila, então fecha o modal.
+      closeCallModal();
+      toast({
+        variant: 'destructive',
+        title: 'Paciente já chamado',
+        description: `${error.message} A fila foi atualizada.`,
+      });
+      return;
+    }
     toast({
       variant: 'destructive',
       title: 'Erro',
       description: 'Falha ao chamar o paciente',
     });
+  } finally {
+    setIsCalling(false);
   }
 };
 
@@ -129,9 +155,9 @@ const handleRecallPatient = async () => {
   return () => clearInterval(interval);
 }, []);
 
-  const handleFinishConsultation = async (patientId: string) =>{
+  const handleFinishConsultation = async (patientId: string, behavior: SuicidalBehavior) =>{
     try{
-        await completeConsultation(patientId);
+        await completeConsultation(patientId, behavior);
         setConsultationLocked(false);
         toast({
           title: 'Finalizada',
@@ -225,18 +251,15 @@ const handleAbandonConsultation = async (patientId: string) => {
                           </td>
                           <td className="px-6 py-4">
                             <div className="text-xl font-bold uppercase text-slate-800">{patient.fullName}</div>
-                            {patient.triageNotes && (
-                              <div className="mt-0.5 line-clamp-1 text-xs text-slate-500">
-                                {patient.triageNotes}
-                              </div>
-                            )}
+                            {patient.triageNotes && <TriageNotesPreview notes={patient.triageNotes} />}
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
-                              <PriorityBadge priority={patient.priority} showLabel={false} />
-                              <span className="text-lg font-black uppercase text-slate-700">
-                                {patient.priority ? PRIORITY_CONFIG[patient.priority].label : 'Não classificado'}
-                              </span>
+                              {patient.priority ? (
+                                <PriorityBadge priority={patient.priority} />
+                              ) : (
+                                <span className="text-lg font-black uppercase text-slate-500">Não classificado</span>
+                              )}
                               {overdue && <span className="text-[0.65rem] font-bold text-orange-600">TEMPO EXCEDIDO</span>}
                             </div>
                           </td>
@@ -292,40 +315,52 @@ const handleAbandonConsultation = async (patientId: string) => {
         </div>
       </div>
 
-      <Dialog open={consultationLocked} onOpenChange={() => {}}>
-        <DialogContent className="w-full overflow-x-hidden sm:max-w-3xl [&>button]:hidden">
-          <DialogHeader>
-            <DialogTitle className="text-3xl font-bold">Chamar Paciente</DialogTitle>
-            <DialogDescription className="text-lg">Revise as informações de triagem</DialogDescription>
-          </DialogHeader>
+      {/* Antes de chamar, fecha pelo X ou Esc. Depois de chamar, trava (sem X) até Finalizar ou Desistência:
+          o paciente já saiu da fila e só existe neste modal. */}
+      <Dialog open={consultationLocked} onOpenChange={(open) => { if (!open && !isActivePatientCalled) closeCallModal(); }}>
+        {/* Largo e com o conteúdo lado a lado para caber na tela sem rolagem (como o modal da triagem). */}
+        <DialogContent
+          hideCloseButton={isActivePatientCalled}
+          className="max-h-[90vh] w-full overflow-x-hidden overflow-y-auto pb-0 sm:max-w-5xl [&>button>svg]:h-6 [&>button>svg]:w-6"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <DialogHeader className="min-w-0 flex-1">
+              <DialogTitle className="text-3xl font-bold">Chamar Paciente</DialogTitle>
+              <DialogDescription className="text-lg">Revise as informações antes de chamar o paciente</DialogDescription>
+            </DialogHeader>
+
+            {/* Timer — aparece após chamar */}
+            {calledAt && calledPatientIds.has(activePatient?.id) && (
+              <div className="w-full sm:w-[470px] sm:shrink-0">
+                <CalledPatientTimer calledAt={calledAt} />
+              </div>
+            )}
+          </div>
 
           {activePatient && (
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-5">
-              <div className="flex items-start justify-between">
-                <div className="flex flex-col gap-2">
-                  {/* <span className="text-base font-bold uppercase tracking-[0.1em] text-slate-400">Paciente</span> */}
-                  <div className="text-3xl font-bold">{activePatient.fullName}</div>
-                </div>
-              </div>
+            <div className={`grid gap-4 ${activePatient.triageNotes ? 'sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]' : ''}`}>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-5">
+                <div className="text-2xl font-bold [overflow-wrap:anywhere]">{activePatient.fullName}</div>
 
-              <div className="mt-6 grid grid-cols-2 gap-6">
-                <div>
-                  <span className="text-base text-slate-500">Prioridade</span>
-                  <div className="mt-2 flex items-center gap-3">
-                    <PriorityBadge priority={activePatient.priority} showLabel={false} />
-                    <span className="text-xl font-semibold">{PRIORITY_CONFIG[activePatient.priority]?.label}</span>
+                <div className="mt-4 flex flex-wrap gap-x-10 gap-y-3">
+                  <div>
+                    <span className="text-base text-slate-500">Prioridade</span>
+                    <div className="mt-2">
+                      <PriorityBadge priority={activePatient.priority} size="lg" />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-base text-slate-500">Tipo</span>
+                    <p className="mt-2 text-xl font-semibold">{AttendanceTypeLabel[activePatient.attendanceType]}</p>
                   </div>
                 </div>
-                <div>
-                  <span className="text-base text-slate-500">Tipo</span>
-                  <p className="mt-2 text-xl font-semibold">{AttendanceTypeLabel[activePatient.attendanceType]}</p>
-                </div>
               </div>
 
+              {/* Mostra 3 linhas inteiras; o restante rola dentro da caixa. */}
               {activePatient.triageNotes && (
-                <div className="mt-6 border-t border-slate-200 pt-4">
+                <div className="flex min-w-0 flex-col rounded-lg border border-slate-200 bg-slate-50 p-5">
                   <span className="text-base font-bold uppercase tracking-[0.1em] text-slate-400">Observações:</span>
-                  <div className="mt-2 rounded border border-slate-200 bg-white p-4 text-lg italic">
+                  <div className="mt-2 max-h-[84px] overflow-y-auto whitespace-pre-wrap rounded border border-slate-200 bg-white p-3 text-base leading-6 italic [overflow-wrap:anywhere]">
                     {activePatient.triageNotes}
                   </div>
                 </div>
@@ -333,13 +368,18 @@ const handleAbandonConsultation = async (patientId: string) => {
             </div>
           )}
 
-          <div className="mt-3 flex flex-wrap gap-4">
+          {activePatient && (
+            <SuicidalBehaviorField value={suicidalBehavior} onChange={setSuicidalBehavior} />
+          )}
+
+          {/* Rodapé fixo: se alguma tela ainda precisar rolar, os botões continuam à vista. */}
+          <div className="sticky bottom-0 -mx-6 flex flex-wrap gap-4 border-t border-slate-200 bg-background px-6 py-4">
             {activePatient && calledPatientIds.has(activePatient.id) ? (
               <Button size="lg" className="h-14 px-8 text-lg" onClick={handleRecallPatient} disabled={!activePatient} variant="secondary">
                 Chamar novamente
               </Button>
             ) : (
-              <Button size="lg" className="h-14 px-8 text-lg bg-indigo-600 hover:bg-indigo-700" onClick={handleConfirmCallPatient} disabled={!room}>
+              <Button size="lg" className="h-14 px-8 text-lg bg-indigo-600 hover:bg-indigo-700" onClick={handleConfirmCallPatient} disabled={!room || isCalling}>
                 Chamar Paciente
               </Button>
             )}
@@ -357,6 +397,7 @@ const handleAbandonConsultation = async (patientId: string) => {
             <Button
               size="lg"
               className="h-14 px-8 text-lg bg-green-600 hover:bg-green-700"
+              disabled={!suicidalBehavior}
               onClick={() => {
                 setPatientToFinish(activePatient);
                 setConfirmFinishOpen(true);
@@ -365,10 +406,6 @@ const handleAbandonConsultation = async (patientId: string) => {
               Finalizar Consulta
             </Button>
           </div>
-          {/* Timer — aparece após chamar */}
-          {calledAt && calledPatientIds.has(activePatient?.id) && (
-            <CalledPatientTimer calledAt={calledAt} />
-          )}
         </DialogContent>
       </Dialog>
 
@@ -382,6 +419,9 @@ const handleAbandonConsultation = async (patientId: string) => {
           {patientToFinish && (
             <div className="rounded border border-green-200 bg-green-50 p-5 text-lg">
               <p><strong>Paciente:</strong> {patientToFinish.fullName}</p>
+              {suicidalBehavior && (
+                <p><strong>Ideação ou tentativa de suicídio:</strong> {SuicidalBehaviorLabel[suicidalBehavior]}</p>
+              )}
             </div>
           )}
 
@@ -393,7 +433,8 @@ const handleAbandonConsultation = async (patientId: string) => {
               size="lg"
               className="h-14 px-8 text-lg bg-green-600 hover:bg-green-700"
               onClick={async () => {
-                await handleFinishConsultation(patientToFinish.id);
+                if (!suicidalBehavior) return;
+                await handleFinishConsultation(patientToFinish.id, suicidalBehavior);
                 setConfirmFinishOpen(false);
               }}
             >
