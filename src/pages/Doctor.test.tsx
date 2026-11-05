@@ -2,11 +2,13 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { PatientAlreadyCalledError } from '@/lib/patientErrors';
 import { Patient } from '@/types/patient';
 
 import Doctor from './Doctor';
 
 const toastMock = vi.fn();
+const callForDoctorMock = vi.fn();
 const completeConsultationMock = vi.fn();
 const abandonConsultationMock = vi.fn();
 let waitingForDoctor: Patient[] = [];
@@ -18,7 +20,7 @@ vi.mock('@/hooks/use-toast', () => ({
 vi.mock('@/contexts/PatientContext', () => ({
   usePatients: () => ({
     getWaitingForDoctor: () => waitingForDoctor,
-    callForDoctor: vi.fn(),
+    callForDoctor: callForDoctorMock,
     recallPatient: vi.fn(),
     completeConsultation: completeConsultationMock,
     abandonConsultation: abandonConsultationMock,
@@ -49,6 +51,55 @@ const openPatientModal = async () => {
   fireEvent.click(screen.getByRole('button', { name: /selecionar para consulta/i }));
   return screen.findByRole('dialog', { name: 'Chamar Paciente' });
 };
+
+describe('Doctor call modal lock', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    sessionStorage.clear();
+    waitingForDoctor = [patient];
+    callForDoctorMock.mockResolvedValue(undefined);
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ json: async () => [{ id: 1, numero: 1 }] }));
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('can be closed before the patient is called', async () => {
+    renderDoctor();
+    await openPatientModal();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Chamar Paciente' })).not.toBeInTheDocument());
+    expect(callForDoctorMock).not.toHaveBeenCalled();
+  });
+
+  it('locks after the patient is called: no close button and Esc does nothing', async () => {
+    renderDoctor();
+    const dialog = await openPatientModal();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Chamar Paciente' }));
+    await screen.findByRole('button', { name: 'Chamar novamente' });
+
+    expect(screen.queryByRole('button', { name: 'Fechar' })).not.toBeInTheDocument();
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    expect(screen.getByRole('dialog', { name: 'Chamar Paciente' })).toBeInTheDocument();
+  });
+
+  it('warns and closes the modal when another office called the patient first', async () => {
+    callForDoctorMock.mockRejectedValue(new PatientAlreadyCalledError());
+    renderDoctor();
+    await openPatientModal();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Chamar Paciente' }));
+
+    await waitFor(() =>
+      expect(toastMock).toHaveBeenCalledWith(expect.objectContaining({ title: 'Paciente já chamado', variant: 'destructive' })),
+    );
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Chamar Paciente' })).not.toBeInTheDocument());
+  });
+});
 
 describe('Doctor suicidal behavior assessment', () => {
   beforeEach(() => {
