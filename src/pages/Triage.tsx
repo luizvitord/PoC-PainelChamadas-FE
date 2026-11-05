@@ -23,6 +23,9 @@ const ATTENDANCE_OPTIONS: { value: AttendanceType; title?: string }[] = [
   { value: 'samu', title: 'Serviço de Atendimento Móvel de Urgência' },
 ];
 
+// A coluna triage_notes é VARCHAR(255): acima disso a classificação falhava com erro 500 sem aviso.
+const TRIAGE_NOTES_MAX_LENGTH = 250;
+
 export default function Triage() {
   const { getWaitingForDoctor, getWaitingForTriage, callForTriage, rechamarTriagem, assignPriority, abandonConsultation, refreshPatients } = usePatients();
   const { toast } = useToast();
@@ -34,6 +37,7 @@ export default function Triage() {
   const [confirmAbandonOpen, setConfirmAbandonOpen] = useState(false);
   const [patientToAbandon, setPatientToAbandon] = useState<{ id: string; fullName: string } | null>(null);
   const [isRecalling, setIsRecalling] = useState(false);
+  const notesRemaining = Math.max(0, TRIAGE_NOTES_MAX_LENGTH - notes.length);
   const { data: protocolos = [], isLoading: isLoadingProtocolo } = useProtocolos();
   const availableColors = getAvailablePriorities(protocolos, attendanceType);
   // Só confirma uma cor que o protocolo aceita para o tipo escolhido.
@@ -155,22 +159,6 @@ export default function Triage() {
     await refreshPatients(); 
   };
 
-  const priorityPillLabel: Record<PriorityLevel, string> = {
-    red: 'VERMELHO',
-    orange: 'LARANJA',
-    yellow: 'AMARELO',
-    green: 'VERDE',
-    blue: 'AZUL',
-  };
-
-  const priorityPillClass: Record<PriorityLevel, string> = {
-    red: 'bg-[#ff0000] text-white',
-    orange: 'bg-[#f57c00] text-white',
-    yellow: 'bg-[#e6b800] text-white',
-    green: 'bg-[#00b35a] text-white',
-    blue: 'bg-[#4f73df] text-white',
-  };
-
 
 return (
   <div className="min-h-screen bg-[#f8fafc]">
@@ -254,7 +242,7 @@ return (
                       <p className="mt-1 text-lg font-medium italic text-gray-500">{patient.cpf || 'CPF não informado'}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <PriorityBadge priority={patient.priority} showLabel={false} />
+                      <PriorityBadge priority={patient.priority} size="sm" />
                       <span className="text-xs italic text-gray-400">Reclassificar</span>
                     </div>
                   </button>
@@ -328,8 +316,9 @@ return (
                   className={`flex w-full items-center justify-between px-5 py-3 text-left ${isManchesterOpen ? 'border-b border-[#22a35d]' : ''}`}
                 >
                   <div className="flex items-center gap-4">
-                    <span className={`inline-flex min-w-[90px] items-center justify-center rounded-full px-4 py-1.5 text-lg font-black uppercase leading-none tracking-wide ${priorityPillClass[priority]}`}>
-                      {priorityPillLabel[priority]}
+                    {/* Largura fixa para o texto da cor e do tempo ficar alinhado em todas as opções. */}
+                    <span className="w-[200px] shrink-0">
+                      <PriorityBadge priority={priority} size="lg" />
                     </span>
                     <span className="text-xl font-bold leading-tight text-[#1f2a44]">
                       {PRIORITY_CONFIG[priority].label}{waitTimeLabel(priority)}
@@ -359,8 +348,8 @@ return (
                         <div className="flex w-7 justify-center text-[#4f73df]">
                           {priority === level ? <Check className="h-6 w-6" /> : null}
                         </div>
-                        <span className={`inline-flex min-w-[120px] items-center justify-center rounded-full px-4 py-1.5 text-base font-black uppercase leading-none tracking-wide ${priorityPillClass[level]}`}>
-                          {priorityPillLabel[level]}
+                        <span className="w-[200px] shrink-0">
+                          <PriorityBadge priority={level} size="lg" />
                         </span>
                         <span className="text-xl font-bold leading-tight text-[#1f2a44]">
                           {PRIORITY_CONFIG[level].label}{waitTimeLabel(level)}
@@ -381,13 +370,26 @@ return (
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label className="text-sm font-black uppercase tracking-[0.15em] text-gray-500">
-                Anotações Clínicas
-              </Label>
+              <div className="flex items-baseline justify-between gap-3">
+                <Label htmlFor="triage-notes" className="text-sm font-black uppercase tracking-[0.15em] text-gray-500">
+                  Anotações Clínicas
+                </Label>
+                <span
+                  id="triage-notes-counter"
+                  className={`text-sm font-bold tabular-nums ${
+                    notesRemaining === 0 ? 'text-red-600' : notesRemaining <= 25 ? 'text-amber-600' : 'text-gray-400'
+                  }`}
+                >
+                  {notesRemaining} {notesRemaining === 1 ? 'caractere restante' : 'caracteres restantes'}
+                </span>
+              </div>
 
               <Textarea
+                id="triage-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
+                maxLength={TRIAGE_NOTES_MAX_LENGTH}
+                aria-describedby="triage-notes-counter"
                 placeholder="Digite as observações do paciente para auxiliar o médico no atendimento..."
                 rows={3}
                 className="min-h-[84px] rounded-[10px] border-[1.5px] border-gray-200 bg-gray-50 px-5 py-3 text-lg font-medium text-gray-800 focus:border-[#008140] focus:bg-white focus:ring-4 focus:ring-[rgba(0,129,64,0.12)]"
