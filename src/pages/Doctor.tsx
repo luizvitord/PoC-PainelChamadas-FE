@@ -2,6 +2,7 @@ import BackButton from '@/components/BackButton';
 import Header from '@/components/Header';
 import { PriorityBadge } from '@/components/PriorityBadge';
 import RoomSelect from '@/components/RoomSelect';
+import { SuicidalBehaviorField } from '@/components/SuicidalBehaviorField';
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,6 +11,7 @@ import { usePatients } from '@/contexts/PatientContext';
 import { useToast } from '@/hooks/use-toast';
 import { AttendanceTypeLabel } from '@/lib/attendanceTypes';
 import { isOverdue } from '@/lib/isOverdue';
+import { SuicidalBehavior, SuicidalBehaviorLabel } from '@/lib/suicidalBehavior';
 import { PRIORITY_CONFIG } from "@/types/patient";
 import { CheckCircle, Phone } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -32,6 +34,7 @@ export default function Doctor() {
   const [patientToAbandon, setPatientToAbandon] = useState<any | null>(null);
   const [calledAt, setCalledAt] = useState<number | null>(null);
   const [timerOpen, setTimerOpen] = useState(false);
+  const [suicidalBehavior, setSuicidalBehavior] = useState<SuicidalBehavior | null>(null);
   
   // Variável adicionada pela equipe (tempo excedido)
   const [now, setNow] = useState(Date.now());
@@ -46,6 +49,7 @@ export default function Doctor() {
 
   const handleOpenCallModal = (patient: any) => {
     setActivePatient(patient);
+    setSuicidalBehavior(null); // cada paciente começa sem avaliação marcada
     setConsultationLocked(true);
   };
 
@@ -129,9 +133,9 @@ const handleRecallPatient = async () => {
   return () => clearInterval(interval);
 }, []);
 
-  const handleFinishConsultation = async (patientId: string) =>{
+  const handleFinishConsultation = async (patientId: string, behavior: SuicidalBehavior) =>{
     try{
-        await completeConsultation(patientId);
+        await completeConsultation(patientId, behavior);
         setConsultationLocked(false);
         toast({
           title: 'Finalizada',
@@ -293,7 +297,7 @@ const handleAbandonConsultation = async (patientId: string) => {
       </div>
 
       <Dialog open={consultationLocked} onOpenChange={() => {}}>
-        <DialogContent className="w-full overflow-x-hidden sm:max-w-3xl [&>button]:hidden">
+        <DialogContent className="max-h-[90vh] w-full overflow-x-hidden overflow-y-auto sm:max-w-3xl [&>button]:hidden">
           <DialogHeader>
             <DialogTitle className="text-3xl font-bold">Chamar Paciente</DialogTitle>
             <DialogDescription className="text-lg">Revise as informações de triagem</DialogDescription>
@@ -333,6 +337,10 @@ const handleAbandonConsultation = async (patientId: string) => {
             </div>
           )}
 
+          {activePatient && (
+            <SuicidalBehaviorField value={suicidalBehavior} onChange={setSuicidalBehavior} />
+          )}
+
           <div className="mt-3 flex flex-wrap gap-4">
             {activePatient && calledPatientIds.has(activePatient.id) ? (
               <Button size="lg" className="h-14 px-8 text-lg" onClick={handleRecallPatient} disabled={!activePatient} variant="secondary">
@@ -357,6 +365,7 @@ const handleAbandonConsultation = async (patientId: string) => {
             <Button
               size="lg"
               className="h-14 px-8 text-lg bg-green-600 hover:bg-green-700"
+              disabled={!suicidalBehavior}
               onClick={() => {
                 setPatientToFinish(activePatient);
                 setConfirmFinishOpen(true);
@@ -382,6 +391,9 @@ const handleAbandonConsultation = async (patientId: string) => {
           {patientToFinish && (
             <div className="rounded border border-green-200 bg-green-50 p-5 text-lg">
               <p><strong>Paciente:</strong> {patientToFinish.fullName}</p>
+              {suicidalBehavior && (
+                <p><strong>Ideação ou tentativa de suicídio:</strong> {SuicidalBehaviorLabel[suicidalBehavior]}</p>
+              )}
             </div>
           )}
 
@@ -393,7 +405,8 @@ const handleAbandonConsultation = async (patientId: string) => {
               size="lg"
               className="h-14 px-8 text-lg bg-green-600 hover:bg-green-700"
               onClick={async () => {
-                await handleFinishConsultation(patientToFinish.id);
+                if (!suicidalBehavior) return;
+                await handleFinishConsultation(patientToFinish.id, suicidalBehavior);
                 setConfirmFinishOpen(false);
               }}
             >
