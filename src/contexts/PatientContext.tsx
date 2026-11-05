@@ -4,6 +4,7 @@ import { Patient, PriorityLevel } from '@/types/patient';
 import { AttendanceTypeBackend, PriorityBackend, SuicidalBehaviorBackend } from '@/lib/utils/backendMaps';
 import { BackendPatient, mapBackendPatient } from '@/lib/utils/mapBackendPatient';
 import { SuicidalBehavior } from '@/lib/suicidalBehavior';
+import { PatientAlreadyCalledError } from '@/lib/patientErrors';
 
 import { API_BASE_URL } from '@/lib/appConfig';
 
@@ -76,7 +77,16 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [refreshPatients]);
 
   const callForDoctor = useCallback(async (patientId: string, room: string) => {
-    await api.put(`/pacientes/${patientId}/chamar?consultorioId=${room}`);
+    try {
+      await api.put(`/pacientes/${patientId}/chamar?consultorioId=${room}`);
+    } catch (error) {
+      // 409: outro consultório chamou o paciente primeiro (o back reserva o paciente de forma atômica).
+      if ((error as { response?: { status?: number } })?.response?.status === 409) {
+        await refreshPatients();
+        throw new PatientAlreadyCalledError();
+      }
+      throw error;
+    }
     await refreshPatients();
   }, [refreshPatients]);
 
