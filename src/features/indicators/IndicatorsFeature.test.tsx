@@ -23,6 +23,29 @@ vi.mock('@/hooks/useProtocolos', () => ({
   useProtocolos: () => ({ data: [] }),
 }));
 
+// Guarda os argumentos que o container passa ao hook do BE-03 e devolve um atendido fixo.
+const chamadasAtendidos: { periodo: Periodo; escopo: string; enabled: boolean }[] = [];
+vi.mock('./hooks/useAtendidosPorHorario', () => ({
+  useAtendidosPorHorario: (periodo: Periodo, escopo: string, enabled: boolean) => {
+    chamadasAtendidos.push({ periodo, escopo, enabled });
+    return {
+      data: [
+        {
+          pacienteId: 1,
+          prioridade: 'red',
+          atendimento: 'clinical',
+          chamadaConsultorioAt: '2026-09-01T08:05:00',
+          rechamadas: [{ tipo: 'CONSULTORIO', criadaEm: '2026-09-01T08:07:00' }],
+        },
+      ],
+      isPending: false,
+      error: null,
+    };
+  },
+}));
+
+const ultimaChamadaAtendidos = () => chamadasAtendidos[chamadasAtendidos.length - 1];
+
 const periodoAtual = () => periodosRepassados[periodosRepassados.length - 1];
 
 function renderIndicators() {
@@ -108,6 +131,40 @@ describe('IndicatorsFeature', () => {
       'Classificação → Médico',
       'Entrada → Médico',
     ]);
+  });
+
+  describe('atendidos por horário (IND-09)', () => {
+    it('só busca os atendidos depois de desbloquear a página', () => {
+      chamadasAtendidos.length = 0;
+      renderIndicators();
+      expect(ultimaChamadaAtendidos().enabled).toBe(false);
+
+      submitPassword('1234');
+
+      expect(ultimaChamadaAtendidos().enabled).toBe(true);
+      expect(ultimaChamadaAtendidos().escopo).toBe('GERAL');
+      expect(ultimaChamadaAtendidos().periodo).toEqual(periodoAtual());
+    });
+
+    it('repassa o escopo escolhido para a busca', () => {
+      renderIndicators();
+      submitPassword('1234');
+
+      fireEvent.click(screen.getByRole('button', { name: 'SAMU' }));
+
+      expect(ultimaChamadaAtendidos().escopo).toBe('SAMU');
+    });
+
+    it('mostra os atendidos na aba', () => {
+      renderIndicators();
+      submitPassword('1234');
+
+      fireEvent.mouseDown(screen.getByRole('tab', { name: 'Atendidos por Horário' }));
+
+      expect(screen.getByRole('heading', { name: 'Pacientes Atendidos por Horário' })).toBeInTheDocument();
+      expect(screen.getByText('01/09 08:05')).toBeInTheDocument();
+      expect(screen.getByText('Consultório 08:07')).toBeInTheDocument();
+    });
   });
 
   describe('filtro Geral / SAMU', () => {
