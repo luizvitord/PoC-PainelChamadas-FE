@@ -21,7 +21,11 @@ interface PatientContextType {
   assignPriority: (patientId: string, priority: PriorityLevel, attendanceType: 'clinical' | 'psychiatric' | 'samu', notes: string) => Promise<void>;
   callForDoctor: (patientId: string, room: string) => Promise<void>;
   recallPatient: (patientId: string, room: string) => Promise<void>;
-  completeConsultation: (patientId: string, suicidalBehavior: SuicidalBehavior) => Promise<void>;
+  completeConsultation: (
+    patientId: string,
+    suicidalBehavior: SuicidalBehavior,
+    reclassifiedPriority?: PriorityLevel | null,
+  ) => Promise<void>;
   abandonConsultation: (patientId: string) => Promise<void>;
   getWaitingForTriage: () => Patient[];
   getWaitingForDoctor: () => Patient[];
@@ -94,10 +98,16 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await api.put(`/pacientes/${patientId}/rechamar`);
   }, []);
 
-  const completeConsultation = useCallback(async (patientId: string, suicidalBehavior: SuicidalBehavior) => {
+  // reclassifiedPriority (opcional): cor do médico, que vira a cor final do paciente no back.
+  const completeConsultation = useCallback(async (
+    patientId: string,
+    suicidalBehavior: SuicidalBehavior,
+    reclassifiedPriority?: PriorityLevel | null,
+  ) => {
     console.log(`Finalizando consulta para paciente ID: ${patientId}`);
     await api.put(`/pacientes/${patientId}/finalizar`, {
       comportamentoSuicida: SuicidalBehaviorBackend[suicidalBehavior],
+      ...(reclassifiedPriority ? { riscoReclassificado: PriorityBackend[reclassifiedPriority] } : {}),
     });
     await refreshPatients();
   }, [refreshPatients]);

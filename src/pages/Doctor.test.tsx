@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PatientAlreadyCalledError } from '@/lib/patientErrors';
+import { PROTOCOLO_PADRAO } from '@/test/protocoloFixture';
 import { Patient } from '@/types/patient';
 
 import Doctor from './Doctor';
@@ -18,6 +19,10 @@ let waitingForDoctor: Patient[] = [];
 
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: toastMock }),
+}));
+
+vi.mock('@/hooks/useProtocolos', () => ({
+  useProtocolos: () => ({ data: PROTOCOLO_PADRAO, isLoading: false }),
 }));
 
 vi.mock('@/services/ConsultorioService', () => ({
@@ -145,7 +150,7 @@ describe('Doctor suicidal behavior assessment', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Sim, finalizar' }));
 
-    await waitFor(() => expect(completeConsultationMock).toHaveBeenCalledWith('1', 'ideation'));
+    await waitFor(() => expect(completeConsultationMock).toHaveBeenCalledWith('1', 'ideation', null));
   });
 
   it('registers a withdrawal without the assessment and starts the next opening unselected', async () => {
@@ -167,7 +172,67 @@ describe('Doctor suicidal behavior assessment', () => {
   });
 });
 
-describe('Doctor - consultório da próxima chamada', () => {
+describe('Doctor reclassification', () => {
+  beforeEach(() => {
+    resetMocks([{ id: 1, numero: 1 }]);
+    waitingForDoctor = [patient];
+  });
+
+  const callPatient = async () => {
+    fireEvent.click(screen.getByRole('button', { name: 'Chamar para o Consultório 1' }));
+    await screen.findByRole('button', { name: 'Chamar novamente' });
+  };
+
+  it('only offers reclassification after the patient is called', async () => {
+    renderDoctor();
+    await openPatientModal();
+
+    expect(screen.queryByRole('button', { name: 'Alterar' })).not.toBeInTheDocument();
+
+    await callPatient();
+    expect(screen.getByRole('button', { name: 'Alterar' })).toBeInTheDocument();
+  });
+
+  it('finishes with the doctor color and shows the change in the confirmation', async () => {
+    renderDoctor();
+    await openPatientModal();
+    await callPatient();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Alterar' }));
+    fireEvent.click(await screen.findByRole('radio', { name: 'Vermelho — Emergência' }));
+    expect(screen.getByText('Acolhimento:')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('radio', { name: /^sem ideação/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Finalizar Consulta' }));
+
+    const confirm = await screen.findByRole('dialog', { name: 'Confirmar finalização' });
+    expect(confirm).toHaveTextContent('Prioridade reclassificada: Muito urgente → Emergência');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sim, finalizar' }));
+    await waitFor(() => expect(completeConsultationMock).toHaveBeenCalledWith('1', 'none', 'red'));
+  });
+
+  it('Desfazer goes back to the triage color and finishes without reclassification', async () => {
+    renderDoctor();
+    await openPatientModal();
+    await callPatient();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Alterar' }));
+    fireEvent.click(await screen.findByRole('radio', { name: 'Amarelo — Urgente' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }));
+    expect(screen.queryByText('Acolhimento:')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('radio', { name: /^sem ideação/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Finalizar Consulta' }));
+    const confirm = await screen.findByRole('dialog', { name: 'Confirmar finalização' });
+    expect(confirm).not.toHaveTextContent('Prioridade reclassificada');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sim, finalizar' }));
+    await waitFor(() => expect(completeConsultationMock).toHaveBeenCalledWith('1', 'none', null));
+  });
+});
+
+describe('Doctor - seu consultório', () => {
   beforeEach(() => {
     resetMocks(CONSULTORIOS);
     waitingForDoctor = [roomPatient];

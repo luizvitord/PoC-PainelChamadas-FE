@@ -1,6 +1,7 @@
 import BackButton from '@/components/BackButton';
 import Header from '@/components/Header';
 import { PriorityBadge } from '@/components/PriorityBadge';
+import { PriorityReclassifyField } from '@/components/PriorityReclassifyField';
 import RoomSelect from '@/components/RoomSelect';
 import { SuicidalBehaviorField } from '@/components/SuicidalBehaviorField';
 import { TriageNotesPreview } from '@/components/TriageNotesPreview';
@@ -10,9 +11,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePatients } from '@/contexts/PatientContext';
 import { useToast } from '@/hooks/use-toast';
+import { useProtocolos } from '@/hooks/useProtocolos';
 import { AttendanceTypeLabel } from '@/lib/attendanceTypes';
 import { isOverdue } from '@/lib/isOverdue';
 import { PatientAlreadyCalledError } from '@/lib/patientErrors';
+import { getAvailablePriorities } from '@/lib/priorityRules';
+import { PRIORITY_CONFIG, PriorityLevel } from '@/types/patient';
 import { SuicidalBehavior, SuicidalBehaviorLabel } from '@/lib/suicidalBehavior';
 import { formatConsultorioLabel, type Consultorio } from '@/lib/consultorioLabel';
 import { CheckCircle, Loader2, Phone } from 'lucide-react';
@@ -75,7 +79,10 @@ export default function Doctor() {
   const [calledAt, setCalledAt] = useState<number | null>(null);
   const [timerOpen, setTimerOpen] = useState(false);
   const [suicidalBehavior, setSuicidalBehavior] = useState<SuicidalBehavior | null>(null);
+  // Reclassificação opcional do médico; null mantém a cor da triagem. Só é gravada ao finalizar.
+  const [reclassifiedPriority, setReclassifiedPriority] = useState<PriorityLevel | null>(null);
   const [isCalling, setIsCalling] = useState(false);
+  const { data: protocolos = [] } = useProtocolos();
 
   // Variável adicionada pela equipe (tempo excedido)
   const [now, setNow] = useState(Date.now());
@@ -108,6 +115,7 @@ export default function Doctor() {
   const handleOpenCallModal = (patient: any) => {
     setActivePatient(patient);
     setSuicidalBehavior(null); // cada paciente começa sem avaliação marcada
+    setReclassifiedPriority(null); // e com a cor da triagem
     setConsultationLocked(true);
   };
 
@@ -245,7 +253,7 @@ const handleRecallPatient = async () => {
 
   const handleFinishConsultation = async (patientId: string, behavior: SuicidalBehavior) =>{
     try{
-        await completeConsultation(patientId, behavior);
+        await completeConsultation(patientId, behavior, reclassifiedPriority);
         setConsultationLocked(false);
         toast({
           title: 'Finalizada',
@@ -293,7 +301,7 @@ const handleAbandonConsultation = async (patientId: string) => {
                 Fila de Espera Médica
               </h2>
             </div>
-            <div className="w-full lg:w-[280px] lg:shrink-0">
+            <div className="w-full lg:w-[400px] lg:shrink-0">
               <RoomSelect
                 value={room}
                 onChange={handleRoomChange}
@@ -377,7 +385,7 @@ const handleAbandonConsultation = async (patientId: string) => {
                                   </TooltipTrigger>
                                   {!hasActiveRoom && (
                                     <TooltipContent>
-                                      <p>Selecione o consultório da próxima chamada</p>
+                                      <p>Selecione o seu consultório antes de chamar</p>
                                     </TooltipContent>
                                   )}
                                 </Tooltip>
@@ -444,7 +452,15 @@ const handleAbandonConsultation = async (patientId: string) => {
                   <div>
                     <span className="text-base text-slate-500">Prioridade</span>
                     <div className="mt-2">
-                      <PriorityBadge priority={activePatient.priority} size="lg" />
+                      {activePatient.priority && (
+                        <PriorityReclassifyField
+                          triagePriority={activePatient.priority}
+                          value={reclassifiedPriority}
+                          onChange={setReclassifiedPriority}
+                          options={getAvailablePriorities(protocolos, activePatient.attendanceType)}
+                          canChange={isActivePatientCalled}
+                        />
+                      )}
                     </div>
                   </div>
                   <div>
@@ -514,7 +530,7 @@ const handleAbandonConsultation = async (patientId: string) => {
                   ? 'Chamando…'
                   : hasActiveRoom
                     ? `Chamar para o ${formatConsultorioLabel(activeConsultorio)}`
-                    : 'Selecione um consultório'}
+                    : 'Selecione o seu consultório'}
               </Button>
             )}
 
@@ -555,6 +571,12 @@ const handleAbandonConsultation = async (patientId: string) => {
               <p><strong>Paciente:</strong> {patientToFinish.fullName}</p>
               {suicidalBehavior && (
                 <p><strong>Ideação ou tentativa de suicídio:</strong> {SuicidalBehaviorLabel[suicidalBehavior]}</p>
+              )}
+              {reclassifiedPriority && patientToFinish.priority && reclassifiedPriority !== patientToFinish.priority && (
+                <p>
+                  <strong>Prioridade reclassificada:</strong>{' '}
+                  {PRIORITY_CONFIG[patientToFinish.priority].urgency} → {PRIORITY_CONFIG[reclassifiedPriority].urgency}
+                </p>
               )}
             </div>
           )}
