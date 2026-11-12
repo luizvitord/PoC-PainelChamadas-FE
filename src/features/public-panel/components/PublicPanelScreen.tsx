@@ -8,7 +8,7 @@ export function PublicPanelScreen({ currentCall, previousCalls }: PublicPanelScr
     <div className="min-h-screen bg-white text-slate-900">
       <div className="flex min-h-screen flex-col">
         <main className="flex flex-1 flex-col md:flex-row">
-          <section className="flex flex-1 flex-col items-center justify-center bg-white px-6 py-12 text-center md:px-12">
+          <section className="flex min-w-0 flex-1 flex-col items-center justify-center bg-white px-6 py-12 text-center md:px-8 lg:px-12">
             {currentCall ? (
               <>
                 <p className="mb-4 text-[1.35rem] font-bold uppercase tracking-[0.28em] text-slate-600 md:text-[1.8rem]">
@@ -20,8 +20,8 @@ export function PublicPanelScreen({ currentCall, previousCalls }: PublicPanelScr
                 </h2>
                 <div className="mb-8 h-2 w-36 rounded-full bg-[#008140]" />
                 <p className="mb-4 text-[1.8rem] font-bold uppercase text-slate-600 md:text-[2.6rem]">Comparecer ao</p>
-                <div className="rounded-2xl bg-[#008140] px-8 py-6 shadow-[0_8px_32px_rgba(0,129,64,0.35)] md:px-16">
-                  <p className="text-[1.8rem] font-black uppercase tracking-[0.12em] text-white md:text-[3.6rem]">
+                <div className="max-w-full rounded-2xl bg-[#008140] px-8 py-6 shadow-[0_8px_32px_rgba(0,129,64,0.35)] lg:px-16">
+                  <p className="break-words text-[1.8rem] font-black uppercase tracking-[0.12em] text-white md:text-[2.6rem] lg:text-[3.6rem]">
                     {currentCall.currentDestinationLabel}
                   </p>
                 </div>
@@ -31,7 +31,7 @@ export function PublicPanelScreen({ currentCall, previousCalls }: PublicPanelScr
             )}
           </section>
 
-          <aside className="flex w-full flex-col border-t-4 border-[#008140] bg-slate-100 md:w-[340px] md:border-l-4 md:border-t-0">
+          <aside className="flex w-full flex-col border-t-4 border-[#008140] bg-slate-100 md:w-[280px] md:flex-shrink-0 md:border-l-4 md:border-t-0 lg:w-[340px]">
             <div className="bg-[#008140] px-6 py-6 text-center text-base font-black uppercase tracking-[0.18em] text-white">
               Últimas Chamadas
             </div>
