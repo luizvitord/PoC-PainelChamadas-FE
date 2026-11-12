@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -82,7 +82,7 @@ describe('IndicatorsFeature', () => {
     const { unmount } = renderIndicators();
 
     submitPassword('1234');
-    expect(screen.getAllByRole('tab')).toHaveLength(4);
+    expect(screen.getAllByRole('tab')).toHaveLength(5);
 
     unmount();
     renderIndicators();
@@ -91,7 +91,7 @@ describe('IndicatorsFeature', () => {
     expect(screen.queryByRole('tab')).not.toBeInTheDocument();
   });
 
-  it('renders the four indicator tabs and switches between them', () => {
+  it('renders the five indicator tabs and switches between them', () => {
     renderIndicators();
     submitPassword('1234');
 
@@ -101,6 +101,7 @@ describe('IndicatorsFeature', () => {
       'Tempos de Espera',
       'Por Nível de Emergência',
       'Atendidos por Horário',
+      'Risco Suicida',
     ]);
     expect(screen.getByRole('heading', { name: 'Volumes e Fluxo de Atendimento' })).toBeInTheDocument();
 
@@ -126,10 +127,10 @@ describe('IndicatorsFeature', () => {
 
     fireEvent.mouseDown(screen.getByRole('tab', { name: 'Tempos de Espera' }));
 
-    expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual([
-      'Acolhimento',
-      'Classificação → Médico',
-      'Entrada → Médico',
+    expect(within(screen.getByRole('tabpanel')).getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual([
+      'Espera p/ acolhimento / classificação',
+      'Espera p/ 1º atendimento médico',
+      'Espera total (NAC → médico)',
     ]);
   });
 
@@ -163,6 +164,7 @@ describe('IndicatorsFeature', () => {
 
       expect(screen.getByRole('heading', { name: 'Pacientes Atendidos por Horário' })).toBeInTheDocument();
       expect(screen.getByText('01/09 08:05')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { expanded: false }));
       expect(screen.getByText('Consultório 08:07')).toBeInTheDocument();
     });
   });
@@ -210,7 +212,7 @@ describe('IndicatorsFeature', () => {
       submitPassword('1234');
       fireEvent.click(chip('SAMU'));
 
-      fireEvent.click(chip('Limpar'));
+      fireEvent.click(chip('Limpar Período'));
 
       expect(chip('SAMU')).toHaveAttribute('aria-pressed', 'true');
     });
@@ -271,7 +273,7 @@ describe('IndicatorsFeature', () => {
       fireEvent.change(dataInicio(), { target: { value: '2026-09-05' } });
       fireEvent.change(dataFim(), { target: { value: '2026-09-01' } });
 
-      fireEvent.click(screen.getByRole('button', { name: 'Limpar' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Limpar Período' }));
 
       expect(dataInicio().value).toBe('2026-10-22');
       expect(dataFim().value).toBe('2026-10-22');
