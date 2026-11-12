@@ -187,4 +187,34 @@ describe('Doctor - consultório da próxima chamada', () => {
     fireEvent.click(screen.getByRole('button', { name: /tentar novamente/i }));
     await waitFor(() => expect(headerSelect()).not.toBeDisabled());
   });
+
+  it('fecha pelo X antes de chamar, sem enviar nada', async () => {
+    renderDoctor();
+    await waitFor(() => expect(headerSelect()).not.toBeDisabled());
+    fireEvent.change(headerSelect(), { target: { value: '2' } });
+    fireEvent.click(screen.getByRole('button', { name: /selecionar para consulta/i }));
+
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Fechar' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(callForDoctorMock).not.toHaveBeenCalled();
+  });
+
+  it('depois de chamar, o X continua visível mas não fecha (nem Esc)', async () => {
+    renderDoctor();
+    await waitFor(() => expect(headerSelect()).not.toBeDisabled());
+    fireEvent.change(headerSelect(), { target: { value: '2' } });
+    fireEvent.click(screen.getByRole('button', { name: /selecionar para consulta/i }));
+
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Chamar para o Consultório 7' }));
+    await within(dialog).findByTestId('called-room-info');
+
+    const close = within(dialog).getByRole('button', { name: /fechar indisponível/i });
+    expect(close).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.click(close);
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
 });

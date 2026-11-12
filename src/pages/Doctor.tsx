@@ -104,6 +104,16 @@ export default function Doctor() {
     setConsultationLocked(true);
   };
 
+  // Depois de chamado, o paciente sai da fila do backend (status/consultório mudam);
+  // fechar o modal nesse ponto deixaria o atendimento sem finalização nem desistência.
+  const patientAlreadyCalled = Boolean(activePatient && calledPatientIds.has(activePatient.id));
+
+  const handleCloseCallModal = () => {
+    if (patientAlreadyCalled || isCalling) return;
+    setConsultationLocked(false);
+    setActivePatient(null);
+  };
+
   const handleConfirmCallPatient = async () => {
   // Captura o consultório no instante do clique: o ID enviado, o toast e o registro
   // local usam exatamente o mesmo valor que estava exibido como ativo.
@@ -264,12 +274,14 @@ const handleAbandonConsultation = async (patientId: string) => {
 
       <div className="section-main mx-auto w-full max-w-screen-2xl px-3 py-8">
         <div className="card overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
-          <div className="card-header flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-7 py-6">
-            <div className="flex items-center gap-3">
-              <div className="card-header-bar h-9 w-1.5 rounded bg-indigo-600" />
-              <h2 className="text-2xl font-black uppercase tracking-[0.06em] text-slate-800">Fila de Espera Médica</h2>
+          <div className="card-header flex flex-col gap-3 border-b border-slate-100 px-5 py-3 sm:px-6 sm:py-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex items-center gap-3 lg:pb-0.5">
+              <div className="card-header-bar h-8 w-1.5 rounded bg-indigo-600" />
+              <h2 className="text-xl font-black uppercase tracking-[0.06em] text-slate-800 sm:text-2xl">
+                Fila de Espera Médica
+              </h2>
             </div>
-            <div className="room-select-wrap">
+            <div className="w-full lg:w-[280px] lg:shrink-0">
               <RoomSelect
                 value={room}
                 onChange={handleRoomChange}
@@ -387,8 +399,16 @@ const handleAbandonConsultation = async (patientId: string) => {
         </div>
       </div>
 
-      <Dialog open={consultationLocked} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-3xl [&>button]:hidden">
+      <Dialog open={consultationLocked} onOpenChange={(open) => !open && handleCloseCallModal()}>
+        <DialogContent
+          className="sm:max-w-3xl"
+          closeDisabled={patientAlreadyCalled || isCalling}
+          closeDisabledReason={
+            isCalling
+              ? 'Aguarde a chamada terminar.'
+              : 'O paciente já foi chamado. Finalize a consulta ou registre desistência para fechar.'
+          }
+        >
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold sm:text-3xl">Chamar Paciente</DialogTitle>
             <DialogDescription className="text-lg">Revise as informações de triagem</DialogDescription>
@@ -431,12 +451,16 @@ const handleAbandonConsultation = async (patientId: string) => {
           {activePatient && calledPatientIds.has(activePatient.id) ? (
             // Já chamado: o backend rechama para o consultório original, então
             // mostramos esse consultório (somente leitura) em vez do seletor.
-            <p className="text-sm font-black uppercase tracking-[0.08em] text-slate-600" data-testid="called-room-info">
-              Chamado para{' '}
-              <span className="text-base text-indigo-700">
-                {roomLabelById(calledRoomByPatient[activePatient.id]) || 'o consultório da chamada original'}
-              </span>
-            </p>
+            <div
+              className="rounded-xl border-2 border-indigo-300 bg-indigo-50/70 p-4"
+              data-testid="called-room-info"
+            >
+              <p className="text-xs font-black uppercase tracking-[0.1em] text-slate-600">Consultório da chamada</p>
+              <p className="mt-1 text-lg font-black text-indigo-900">
+                {roomLabelById(calledRoomByPatient[activePatient.id]) || 'Consultório da chamada original'}
+              </p>
+              <p className="mt-1 text-sm text-slate-700">O rechamado usa o consultório original desta chamada.</p>
+            </div>
           ) : (
             <RoomSelect
               value={room}

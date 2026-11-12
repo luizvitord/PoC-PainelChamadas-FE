@@ -28,45 +28,57 @@ export default function RoomSelect({
   className,
 }: RoomSelectProps) {
   const selectId = useId();
-  const hasSelection = options.some((opt) => String(opt.id) === value);
+  const selected = options.find((opt) => String(opt.id) === value);
+  const hasSelection = Boolean(selected);
 
-  return (
-    <div className={cn('flex flex-wrap items-center gap-x-3 gap-y-1', className)}>
-      <label htmlFor={selectId} className="whitespace-nowrap text-sm font-black uppercase tracking-[0.08em] text-slate-600">
-        Consultório da próxima chamada
-      </label>
-
-      {error ? (
-        <div className="flex items-center gap-2" role="alert">
+  if (error) {
+    return (
+      <div className={cn('flex w-full flex-col gap-1 sm:w-auto sm:min-w-[260px]', className)}>
+        <span className="text-xs font-black uppercase tracking-[0.08em] text-slate-600">
+          Consultório da próxima chamada
+        </span>
+        <div className="flex flex-wrap items-center gap-2" role="alert">
           <span className="text-sm font-semibold text-red-700">{error}</span>
           {onRetry && (
-            <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+            <Button type="button" variant="outline" size="sm" onClick={onRetry} className="h-9">
               <RotateCw className="mr-1 h-4 w-4" />
               Tentar novamente
             </Button>
           )}
         </div>
-      ) : (
-        <select
-          id={selectId}
-          value={hasSelection ? value : ''}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={disabled || loading}
-          className={cn(
-            'min-w-[200px] cursor-pointer rounded-md border bg-white px-3 py-2 text-base font-semibold shadow-sm transition-colors',
-            'hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1',
-            'disabled:cursor-not-allowed disabled:opacity-60',
-            hasSelection ? 'border-indigo-300 text-indigo-700' : 'border-amber-400 text-slate-500',
-          )}
-        >
-          <option value="">{loading ? 'Carregando…' : 'Selecione um consultório'}</option>
-          {options.map((opt) => (
-            <option key={opt.id} value={String(opt.id)}>
-              {formatConsultorioLabel(opt)}
-            </option>
-          ))}
-        </select>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn('flex w-full flex-col gap-1 sm:w-auto sm:min-w-[260px]', className)}>
+      <label
+        htmlFor={selectId}
+        className="text-xs font-black uppercase tracking-[0.08em] text-slate-600"
+      >
+        Consultório da próxima chamada
+      </label>
+      <select
+        id={selectId}
+        value={hasSelection ? value : ''}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled || loading}
+        className={cn(
+          'h-11 w-full cursor-pointer rounded-lg border bg-white px-3 text-base font-semibold shadow-sm transition-colors',
+          'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1',
+          'disabled:cursor-not-allowed disabled:opacity-60',
+          hasSelection
+            ? 'border-indigo-400 text-indigo-700 hover:border-indigo-500'
+            : 'border-slate-300 text-slate-600 hover:border-indigo-300',
+        )}
+      >
+        <option value="">{loading ? 'Carregando…' : 'Selecione um consultório'}</option>
+        {options.map((opt) => (
+          <option key={opt.id} value={String(opt.id)}>
+            {formatConsultorioLabel(opt)}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

@@ -256,9 +256,9 @@ return (
     </div>
 
       <Dialog open={!!selectedPatientId} onOpenChange={(open) => !open && handleCancel()}>
-        <DialogContent className="rounded-[14px] border border-[#dbe1ea] bg-[#f8fafc] p-0 shadow-[0_32px_100px_rgba(0,0,0,0.45)] sm:max-w-4xl [&>button]:right-5 [&>button]:top-5 [&>button]:flex [&>button]:h-11 [&>button]:w-11 [&>button]:items-center [&>button]:justify-center [&>button]:rounded-[10px] [&>button]:border [&>button]:border-[#e2e8f0] [&>button]:bg-[#e9edf2] [&>button]:p-0 [&>button]:text-gray-500 [&>button]:opacity-100 [&>button:hover]:bg-[#dfe5ec] [&>button>svg]:h-5 [&>button>svg]:w-5">
+        <DialogContent className="rounded-[14px] border border-[#dbe1ea] bg-[#f8fafc] p-0 shadow-[0_32px_100px_rgba(0,0,0,0.45)] sm:max-w-4xl [&>button:hover]:bg-[#dfe5ec] [&>button>svg]:h-5 [&>button>svg]:w-5">
           <DialogHeader className="space-y-0 px-5 pb-0 pt-6 text-left sm:px-8 sm:pt-8">
-            <DialogTitle className="pr-14 text-2xl font-black uppercase tracking-[0.04em] sm:text-3xl">
+            <DialogTitle className="pr-12 text-2xl font-black uppercase tracking-[0.04em] sm:text-3xl">
               {isRetriage ? "Reclassificação de Risco" : "Acolhimento e Classificação de Risco"}
             </DialogTitle>
             <div className="mt-2 text-base font-medium text-gray-500 sm:text-lg">
@@ -380,12 +380,12 @@ return (
             </div>
           </div>
 
-          <div className="flex flex-col-reverse gap-3 px-5 pb-6 sm:flex-row sm:flex-wrap sm:justify-between sm:px-8 sm:pb-8">
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <div className="grid grid-cols-1 items-stretch gap-3 px-5 pb-6 sm:grid-cols-2 sm:px-8 sm:pb-8 lg:grid-cols-[1fr_1fr_1fr_1.8fr]">
+            <div className="contents">
               <Button
                 size="lg"
                 onClick={() => { setPatientToAbandon({ id: selectedPatient!.id, fullName: selectedPatient!.fullName }); setConfirmAbandonOpen(true); }}
-                className="h-auto min-h-14 whitespace-normal rounded-xl bg-red-600 px-8 text-lg font-black uppercase tracking-[0.08em] text-white hover:bg-red-700"
+                className="h-auto min-h-14 min-w-0 w-full whitespace-normal rounded-xl bg-red-600 px-3 py-3 text-sm font-black uppercase tracking-[0.04em] text-white hover:bg-red-700"
               >
                 Desistência
               </Button>
@@ -396,7 +396,7 @@ return (
                   variant="secondary"
                   onClick={handleRecallTriage}
                   disabled={isRecalling}
-                  className="h-auto min-h-14 whitespace-normal rounded-xl px-8 text-lg font-black uppercase tracking-[0.08em]"
+                  className="h-auto min-h-14 min-w-0 w-full whitespace-normal rounded-xl px-3 py-3 text-sm font-black uppercase tracking-[0.04em]"
                 >
                   <Phone className="h-4 w-4" />
                   Rechamar
@@ -404,12 +404,12 @@ return (
               )}
             </div>
 
-            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:ml-auto sm:flex-wrap sm:justify-end">
+            <div className="contents">
               <Button
                 size="lg"
                 variant="outline"
                 onClick={handleCancel}
-                className="h-auto min-h-14 whitespace-normal rounded-xl border-2 border-gray-200 bg-white px-8 text-lg font-black uppercase tracking-[0.08em] text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                className="h-auto min-h-14 min-w-0 w-full whitespace-normal rounded-xl border-2 border-gray-200 bg-white px-3 py-3 text-sm font-black uppercase tracking-[0.04em] text-gray-700 hover:border-gray-300 hover:bg-gray-50"
               >
                 Cancelar
               </Button>
@@ -417,7 +417,7 @@ return (
             <Button
               size="lg"
               onClick={handleConfirmTriage}
-              className="h-auto min-h-14 whitespace-normal rounded-xl bg-[#008140] px-8 text-lg font-black uppercase tracking-[0.08em] text-white hover:bg-[#006f36]"
+              className="h-auto min-h-14 min-w-0 w-full whitespace-normal rounded-xl bg-[#008140] px-3 py-3 text-sm font-black uppercase tracking-[0.04em] text-white hover:bg-[#006f36]"
             >
                {isRetriage ? "Confirmar reclassificação" : "Confirmar Classificação"}
             </Button>
