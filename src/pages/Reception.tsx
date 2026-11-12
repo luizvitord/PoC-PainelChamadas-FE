@@ -9,7 +9,6 @@ import { useToast } from '@/hooks/use-toast';
 import { api } from '@/services/Api';
 import { debug } from 'console';
 import Header from '@/components/Header';
-import BackButton from '@/components/BackButton';
 
 export default function Reception() {
   const { registerPatient, patients } = usePatients();
@@ -87,16 +86,12 @@ export default function Reception() {
 
   return (
     <div className="reception-shell">
-    <Header title="Recepção" />
-    {/* Back button */}
-    <div className="mx-auto w-full max-w-screen-2xl px-3 pt-6">
-      <BackButton />
-    </div>
+    <Header title="Recepção" showBack />
       <main className="reception-main">
         <div className="reception-container">
-          <div className="grid gap-8 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             {/* Coluna cadastro */}
-            <div className="lg:col-span-2">
+            <div className="min-w-0 lg:col-span-2">
               <Card className="border border-gray-100 bg-white rounded-2xl shadow-sm overflow-hidden">
                 <div className="flex items-center gap-4 bg-[#008140] px-6 py-5">
                   <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10">
@@ -109,7 +104,7 @@ export default function Reception() {
 
                 <CardContent className="p-8 md:p-12">
                   <form onSubmit={handleSubmit} className="space-y-10">
-                    <div className="grid gap-8 md:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                       <div className="md:col-span-2">
                         <Label
                           htmlFor="fullName"
@@ -177,7 +172,7 @@ export default function Reception() {
             </div>
 
             {/* Coluna registros recentes */}
-            <div className="lg:col-span-1">
+            <div className="min-w-0 lg:col-span-1">
               <Card className="flex h-full flex-col rounded-2xl border border-gray-100 bg-white shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between border-b border-gray-50 px-6 py-5">
                   <CardTitle className="flex items-center text-lg font-black uppercase tracking-[0.1em] text-gray-800">
