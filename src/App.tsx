@@ -9,8 +9,8 @@ import Reception from "./pages/Reception";
 import Triage from "./pages/Triage";
 import Doctor from "./pages/Doctor";
 import PublicPanel from "./pages/PublicPanel";
-import NotFound from "./pages/NotFound";
 import Indicators from "./pages/Indicators";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 

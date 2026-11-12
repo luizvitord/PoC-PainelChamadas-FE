@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 
-export default function Header({ title }) {
+export default function Header({ title }: { title: string }) {
   return (
     <header className="bg-[#008140] text-white border-b-[5px] border-[#ffcc00] flex items-center gap-6 px-8 py-3 sticky top-0 z-[100] shadow-[0_4px_24px_rgba(0,129,64,0.18)]">
       

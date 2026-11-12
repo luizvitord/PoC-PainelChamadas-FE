@@ -1,6 +1,6 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PatientAlreadyCalledError } from '@/lib/patientErrors';
 import { Patient } from '@/types/patient';
@@ -9,22 +9,29 @@ import Doctor from './Doctor';
 
 const toastMock = vi.fn();
 const callForDoctorMock = vi.fn();
+const recallPatientMock = vi.fn();
+const refreshPatientsMock = vi.fn();
 const completeConsultationMock = vi.fn();
 const abandonConsultationMock = vi.fn();
+const getConsultoriosMock = vi.fn();
 let waitingForDoctor: Patient[] = [];
 
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: toastMock }),
 }));
 
+vi.mock('@/services/ConsultorioService', () => ({
+  getConsultorios: () => getConsultoriosMock(),
+}));
+
 vi.mock('@/contexts/PatientContext', () => ({
   usePatients: () => ({
     getWaitingForDoctor: () => waitingForDoctor,
     callForDoctor: callForDoctorMock,
-    recallPatient: vi.fn(),
+    recallPatient: recallPatientMock,
     completeConsultation: completeConsultationMock,
     abandonConsultation: abandonConsultationMock,
-    refreshPatients: vi.fn().mockResolvedValue(undefined),
+    refreshPatients: refreshPatientsMock,
   }),
 }));
 
@@ -38,6 +45,14 @@ const patient: Patient = {
   attendanceType: 'psychiatric',
 };
 
+// IDs propositalmente diferentes dos números exibidos no painel público
+const CONSULTORIOS = [
+  { id: 2, numero: 7 },
+  { id: 3, numero: 8 },
+];
+
+const roomPatient: Patient = { ...patient, id: '10', priority: 'green', attendanceType: 'clinical' };
+
 const renderDoctor = () =>
   render(
     <MemoryRouter>
@@ -45,24 +60,30 @@ const renderDoctor = () =>
     </MemoryRouter>,
   );
 
+const headerSelect = () => screen.getAllByRole('combobox')[0];
+
 const openPatientModal = async () => {
   await screen.findByRole('option', { name: 'Consultório 1' });
-  fireEvent.change(screen.getByRole('combobox'), { target: { value: '1' } });
+  fireEvent.change(headerSelect(), { target: { value: '1' } });
   fireEvent.click(screen.getByRole('button', { name: /selecionar para consulta/i }));
   return screen.findByRole('dialog', { name: 'Chamar Paciente' });
 };
 
+const resetMocks = (consultorios: unknown) => {
+  vi.clearAllMocks();
+  sessionStorage.clear();
+  getConsultoriosMock.mockResolvedValue(consultorios);
+  callForDoctorMock.mockResolvedValue(undefined);
+  recallPatientMock.mockResolvedValue(undefined);
+  refreshPatientsMock.mockResolvedValue(undefined);
+  completeConsultationMock.mockResolvedValue(undefined);
+  abandonConsultationMock.mockResolvedValue(undefined);
+};
+
 describe('Doctor call modal lock', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    sessionStorage.clear();
+    resetMocks([{ id: 1, numero: 1 }]);
     waitingForDoctor = [patient];
-    callForDoctorMock.mockResolvedValue(undefined);
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ json: async () => [{ id: 1, numero: 1 }] }));
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
   });
 
   it('can be closed before the patient is called', async () => {
@@ -75,14 +96,16 @@ describe('Doctor call modal lock', () => {
     expect(callForDoctorMock).not.toHaveBeenCalled();
   });
 
-  it('locks after the patient is called: no close button and Esc does nothing', async () => {
+  it('locks after the patient is called: X stays visible but blocked, and Esc does nothing', async () => {
     renderDoctor();
     const dialog = await openPatientModal();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Chamar Paciente' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Chamar para o Consultório 1' }));
     await screen.findByRole('button', { name: 'Chamar novamente' });
 
-    expect(screen.queryByRole('button', { name: 'Fechar' })).not.toBeInTheDocument();
+    const close = within(dialog).getByRole('button', { name: /fechar indisponível/i });
+    expect(close).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.click(close);
     fireEvent.keyDown(dialog, { key: 'Escape' });
     expect(screen.getByRole('dialog', { name: 'Chamar Paciente' })).toBeInTheDocument();
   });
@@ -92,7 +115,7 @@ describe('Doctor call modal lock', () => {
     renderDoctor();
     await openPatientModal();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Chamar Paciente' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Chamar para o Consultório 1' }));
 
     await waitFor(() =>
       expect(toastMock).toHaveBeenCalledWith(expect.objectContaining({ title: 'Paciente já chamado', variant: 'destructive' })),
@@ -103,16 +126,8 @@ describe('Doctor call modal lock', () => {
 
 describe('Doctor suicidal behavior assessment', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    sessionStorage.clear();
+    resetMocks([{ id: 1, numero: 1 }]);
     waitingForDoctor = [patient];
-    completeConsultationMock.mockResolvedValue(undefined);
-    abandonConsultationMock.mockResolvedValue(undefined);
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ json: async () => [{ id: 1, numero: 1 }] }));
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
   });
 
   it('only finishes the consultation after the assessment and sends the chosen option', async () => {
@@ -150,4 +165,129 @@ describe('Doctor suicidal behavior assessment', () => {
     screen.getAllByRole('radio').forEach((radio) => expect(radio).not.toBeChecked());
     expect(screen.getByRole('button', { name: 'Finalizar Consulta' })).toBeDisabled();
   });
+});
+
+describe('Doctor - consultório da próxima chamada', () => {
+  beforeEach(() => {
+    resetMocks(CONSULTORIOS);
+    waitingForDoctor = [roomPatient];
+  });
+
+  it('começa sem consultório e bloqueia a chamada até a escolha', async () => {
+    renderDoctor();
+    await waitFor(() => expect(headerSelect()).not.toBeDisabled());
+
+    expect(headerSelect()).toHaveValue('');
+    expect(screen.getByRole('button', { name: /selecionar para consulta/i })).toBeDisabled();
+  });
+
+  it('exibe o número do consultório (o mesmo do painel), não o ID', async () => {
+    renderDoctor();
+    await waitFor(() => expect(headerSelect()).not.toBeDisabled());
+
+    expect(within(headerSelect()).getByRole('option', { name: 'Consultório 7' })).toHaveValue('2');
+    expect(within(headerSelect()).getByRole('option', { name: 'Consultório 8' })).toHaveValue('3');
+  });
+
+  it('troca de consultório e chama logo depois: envia o ID do consultório exibido', async () => {
+    renderDoctor();
+    await waitFor(() => expect(headerSelect()).not.toBeDisabled());
+
+    fireEvent.change(headerSelect(), { target: { value: '2' } });
+    expect(headerSelect()).toHaveDisplayValue('Consultório 7');
+    fireEvent.change(headerSelect(), { target: { value: '3' } });
+    expect(headerSelect()).toHaveDisplayValue('Consultório 8');
+
+    fireEvent.click(screen.getByRole('button', { name: /selecionar para consulta/i }));
+    const callButton = await screen.findByRole('button', { name: 'Chamar para o Consultório 8' });
+    fireEvent.click(callButton);
+
+    await waitFor(() => expect(callForDoctorMock).toHaveBeenCalledTimes(1));
+    expect(callForDoctorMock).toHaveBeenCalledWith('10', '3');
+    await waitFor(() =>
+      expect(toastMock).toHaveBeenCalledWith(
+        expect.objectContaining({ description: expect.stringContaining('Consultório 8') }),
+      ),
+    );
+  });
+
+  it('permite trocar o consultório dentro do modal antes de chamar', async () => {
+    renderDoctor();
+    await waitFor(() => expect(headerSelect()).not.toBeDisabled());
+    fireEvent.change(headerSelect(), { target: { value: '2' } });
+    fireEvent.click(screen.getByRole('button', { name: /selecionar para consulta/i }));
+
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.change(within(dialog).getByRole('combobox'), { target: { value: '3' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Chamar para o Consultório 8' }));
+
+    await waitFor(() => expect(callForDoctorMock).toHaveBeenCalledWith('10', '3'));
+  });
+
+  it('enquanto a chamada está pendente, bloqueia a troca e um segundo envio', async () => {
+    let resolveCall: () => void = () => {};
+    callForDoctorMock.mockImplementation(() => new Promise<void>((r) => { resolveCall = r; }));
+
+    renderDoctor();
+    await waitFor(() => expect(headerSelect()).not.toBeDisabled());
+    fireEvent.change(headerSelect(), { target: { value: '2' } });
+    fireEvent.click(screen.getByRole('button', { name: /selecionar para consulta/i }));
+
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Chamar para o Consultório 7' }));
+
+    const pending = await within(dialog).findByRole('button', { name: /chamando/i });
+    expect(pending).toBeDisabled();
+    expect(within(dialog).getByRole('combobox')).toBeDisabled();
+    fireEvent.click(pending);
+    expect(callForDoctorMock).toHaveBeenCalledTimes(1);
+
+    await act(async () => resolveCall());
+    expect(await within(dialog).findByTestId('called-room-info')).toHaveTextContent('Consultório 7');
+  });
+
+  it('mantém o consultório se a chamada falhar e informa o erro', async () => {
+    callForDoctorMock.mockRejectedValue(new Error('500'));
+    renderDoctor();
+    await waitFor(() => expect(headerSelect()).not.toBeDisabled());
+    fireEvent.change(headerSelect(), { target: { value: '3' } });
+    fireEvent.click(screen.getByRole('button', { name: /selecionar para consulta/i }));
+
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Chamar para o Consultório 8' }));
+
+    await waitFor(() =>
+      expect(toastMock).toHaveBeenCalledWith(expect.objectContaining({ variant: 'destructive' })),
+    );
+    expect(within(dialog).getByRole('button', { name: 'Chamar para o Consultório 8' })).not.toBeDisabled();
+    expect(within(dialog).queryByTestId('called-room-info')).not.toBeInTheDocument();
+  });
+
+  it('ao recarregar, restaura a escolha feita nesta aba', async () => {
+    sessionStorage.setItem('doctorActiveRoomId', '3');
+    renderDoctor();
+
+    await waitFor(() => expect(headerSelect()).toHaveDisplayValue('Consultório 8'));
+  });
+
+  it('descarta seleção salva que não existe mais no backend', async () => {
+    sessionStorage.setItem('doctorActiveRoomId', '99');
+    renderDoctor();
+
+    await waitFor(() => expect(headerSelect()).toHaveValue(''));
+    expect(sessionStorage.getItem('doctorActiveRoomId')).toBeNull();
+    expect(screen.getByRole('button', { name: /selecionar para consulta/i })).toBeDisabled();
+  });
+
+  it('se a lista de consultórios falhar, mostra o erro e mantém a chamada bloqueada', async () => {
+    getConsultoriosMock.mockResolvedValueOnce({ error: 'GET Error' });
+    renderDoctor();
+
+    expect(await screen.findByText(/não foi possível carregar os consultórios/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /selecionar para consulta/i })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole('button', { name: /tentar novamente/i }));
+    await waitFor(() => expect(headerSelect()).not.toBeDisabled());
+  });
+
 });

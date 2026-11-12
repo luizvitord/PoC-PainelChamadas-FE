@@ -27,8 +27,8 @@ export function NewConsultorioDialog({
 }: NewConsultorioDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl overflow-hidden border-0 bg-white p-0 shadow-[0_20px_60px_rgba(15,23,42,0.18)]">
-        <DialogHeader className="border-b border-slate-200 px-8 pb-5 pt-8 text-left">
+      <DialogContent className="max-w-xl border-0 bg-white p-0 shadow-[0_20px_60px_rgba(15,23,42,0.18)]">
+        <DialogHeader className="border-b border-slate-200 px-5 pb-5 pt-6 text-left sm:px-8 sm:pt-8">
           <DialogTitle className="text-2xl font-black uppercase tracking-tight text-slate-900">
             Adicionar Consultório
           </DialogTitle>
@@ -37,7 +37,7 @@ export function NewConsultorioDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 px-8 py-6">
+        <div className="space-y-6 px-5 py-6 sm:px-8">
           <div className="space-y-2">
             <label
               htmlFor="new-consultorio-numero"
@@ -110,7 +110,7 @@ export function NewConsultorioDialog({
           </div>
         </div>
 
-        <div className="flex flex-col-reverse gap-3 border-t border-slate-200 bg-slate-50 px-8 py-5 sm:flex-row sm:justify-end">
+        <div className="flex flex-col-reverse gap-3 border-t border-slate-200 bg-slate-50 px-5 py-5 sm:flex-row sm:px-8 sm:justify-end">
           <Button
             type="button"
             variant="outline"
