@@ -2,6 +2,7 @@ import BackButton from '@/components/BackButton';
 import Header from '@/components/Header';
 import { PriorityBadge } from '@/components/PriorityBadge';
 import RoomSelect from '@/components/RoomSelect';
+import { formatConsultorioLabel, type Consultorio } from '@/lib/consultorioLabel';
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -11,17 +12,56 @@ import { useToast } from '@/hooks/use-toast';
 import { AttendanceTypeLabel } from '@/lib/attendanceTypes';
 import { isOverdue } from '@/lib/isOverdue';
 import { PRIORITY_CONFIG } from "@/types/patient";
-import { CheckCircle, Phone } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { CheckCircle, Loader2, Phone } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { CalledPatientTimer } from '@/components/CalledPatientTimer';
-import { API_BASE_URL } from '@/lib/appConfig';
+import { getConsultorios } from '@/services/ConsultorioService';
+
+const ROOM_STORAGE_KEY = 'doctorActiveRoomId';
+const CALLED_ROOMS_STORAGE_KEY = 'doctorCalledRoomByPatient';
+
+function readSession(key: string): string | null {
+  try {
+    return sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeSession(key: string, value: string) {
+  try {
+    sessionStorage.setItem(key, value);
+  } catch {
+    /* armazenamento indisponível: a seleção vale só até recarregar */
+  }
+}
+
+function removeSession(key: string) {
+  try {
+    sessionStorage.removeItem(key);
+  } catch {
+    /* ignore */
+  }
+}
 
 export default function Doctor() {
   const { getWaitingForDoctor, callForDoctor, completeConsultation, abandonConsultation, refreshPatients, recallPatient } = usePatients();
   const { toast } = useToast();
-  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
-  const [room, setRoom] = useState('');
-  const [consultorios, setConsultorios] = useState<any[]>([]);
+  // Consultório ativo: nunca é escolhido automaticamente. Só é restaurado se o próprio
+  // médico o escolheu nesta aba (sessionStorage) e se ainda existir na lista do backend.
+  const [room, setRoom] = useState<string>(() => readSession(ROOM_STORAGE_KEY) ?? '');
+  const [consultorios, setConsultorios] = useState<Consultorio[]>([]);
+  const [consultoriosLoading, setConsultoriosLoading] = useState(true);
+  const [consultoriosError, setConsultoriosError] = useState<string | null>(null);
+  const [isCalling, setIsCalling] = useState(false);
+  // Consultório efetivamente usado em cada chamada (o "rechamar" do backend reutiliza o mesmo)
+  const [calledRoomByPatient, setCalledRoomByPatient] = useState<Record<string, string>>(() => {
+    try {
+      return JSON.parse(readSession(CALLED_ROOMS_STORAGE_KEY) ?? '{}');
+    } catch {
+      return {};
+    }
+  });
   const [activePatientId, setActivePatientId] = useState<string | null>(null);
   const [activeRoom, setActiveRoom] = useState<string>('');
   const [consultationLocked, setConsultationLocked] = useState(false);
@@ -44,52 +84,85 @@ export default function Doctor() {
 
   const waitingPatients = getWaitingForDoctor();
 
+  const activeConsultorio = consultorios.find((c) => String(c.id) === room);
+  // Só há consultório "ativo" quando o ID existe na lista carregada do backend
+  const hasActiveRoom = Boolean(activeConsultorio);
+
+  const handleRoomChange = (value: string) => {
+    setRoom(value);
+    if (value) writeSession(ROOM_STORAGE_KEY, value);
+    else removeSession(ROOM_STORAGE_KEY);
+  };
+
+  const roomLabelById = (id: string | undefined) => {
+    if (!id) return '';
+    return formatConsultorioLabel(consultorios.find((c) => String(c.id) === id)) || `Consultório ${id}`;
+  };
+
   const handleOpenCallModal = (patient: any) => {
     setActivePatient(patient);
     setConsultationLocked(true);
   };
 
   const handleConfirmCallPatient = async () => {
-  if (!activePatient || !room) return;
+  // Captura o consultório no instante do clique: o ID enviado, o toast e o registro
+  // local usam exatamente o mesmo valor que estava exibido como ativo.
+  const roomId = room;
+  const roomConsultorio = consultorios.find((c) => String(c.id) === roomId);
+  if (!activePatient || !roomConsultorio || isCalling) return;
 
+  setIsCalling(true);
   try {
-    await callForDoctor(activePatient.id, room);
+    await callForDoctor(activePatient.id, roomId);
     setCalledAt(Date.now());
     setTimerOpen(true);
     setActivePatientId(activePatient.id);
-    
+
     // LÓGICA ATUALIZADA: Registra que o paciente já foi chamado e salva no navegador
     setCalledPatientIds(prev => {
       const updatedSet = new Set(prev).add(activePatient.id);
       sessionStorage.setItem('calledPatientIds', JSON.stringify(Array.from(updatedSet)));
       return updatedSet;
     });
+    setCalledRoomByPatient(prev => {
+      const updated = { ...prev, [activePatient.id]: roomId };
+      writeSession(CALLED_ROOMS_STORAGE_KEY, JSON.stringify(updated));
+      return updated;
+    });
 
     await refreshPatients();
 
     toast({
       title: 'Paciente chamado',
-      description: `${activePatient.fullName} foi chamado para a sala ${room}`,
+      description: `${activePatient.fullName} foi chamado para o ${formatConsultorioLabel(roomConsultorio)}`,
     });
   } catch (error) {
     toast({
       variant: 'destructive',
       title: 'Erro',
-      description: 'Falha ao chamar o paciente',
+      description: `Falha ao chamar o paciente para o ${formatConsultorioLabel(roomConsultorio)}. Nenhuma chamada foi registrada.`,
     });
+  } finally {
+    setIsCalling(false);
   }
 };
 
 const handleRecallPatient = async () => {
-  if (!activePatient || !room) return; 
+  if (!activePatient || isCalling) return;
+  // O backend rechama para o consultório da chamada original (não recebe ID),
+  // então a mensagem precisa refletir esse consultório, não o selecionado agora.
+  const originalRoomId = calledRoomByPatient[activePatient.id];
 
+  setIsCalling(true);
   try {
-    await recallPatient(activePatient.id, room);
+    await recallPatient(activePatient.id, originalRoomId ?? room);
     setCalledAt(Date.now())
 
     toast({
       title: 'Paciente chamado novamente',
-      description: `${activePatient.fullName} foi chamado novamente para a sala ${room}`,
+      description: originalRoomId
+        ? `${activePatient.fullName} foi chamado novamente para o ${roomLabelById(originalRoomId)}`
+        : `${activePatient.fullName} foi chamado novamente`,
     });
   } catch (err) {
     toast({
@@ -97,6 +170,8 @@ const handleRecallPatient = async () => {
       title: 'Erro',
       description: 'Não foi possível rechamar o paciente',
     });
+  } finally {
+    setIsCalling(false);
   }
 };
 
@@ -107,19 +182,36 @@ const handleRecallPatient = async () => {
     return () => clearInterval(interval);
   }, [refreshPatients]);
 
-  useEffect(() => {
-    // Ajuste a URL se necessário
-    fetch(`${API_BASE_URL}/consultorios`)
-      .then(res => res.json())
-      .then(data => setConsultorios(data))
-      .catch(err => console.error("Erro ao carregar consultórios", err));
+  const loadConsultorios = useCallback(async () => {
+    setConsultoriosLoading(true);
+    setConsultoriosError(null);
+    const result = await getConsultorios().catch(() => ({ error: 'network' }));
+    if (Array.isArray(result)) {
+      setConsultorios(result);
+    } else {
+      setConsultoriosError('Não foi possível carregar os consultórios.');
+    }
+    setConsultoriosLoading(false);
   }, []);
 
   useEffect(() => {
-    if (selectedPatientId && consultorios.length > 0) {
-      setRoom(String(consultorios[0].id));
+    loadConsultorios();
+  }, [loadConsultorios]);
+
+  // Seleção restaurada da sessão que não existe mais no backend é descartada:
+  // melhor pedir uma nova escolha do que chamar para um consultório inexistente.
+  useEffect(() => {
+    if (consultoriosLoading || consultoriosError || !room) return;
+    if (!consultorios.some((c) => String(c.id) === room)) {
+      setRoom('');
+        removeSession(ROOM_STORAGE_KEY);
+      toast({
+        variant: 'destructive',
+        title: 'Consultório indisponível',
+        description: 'O consultório escolhido anteriormente não existe mais. Selecione outro.',
+      });
     }
-  }, [selectedPatientId, consultorios]);
+  }, [consultorios, consultoriosLoading, consultoriosError, room, toast]);
 
   useEffect(() => {
   const interval = setInterval(() => {
@@ -177,12 +269,15 @@ const handleAbandonConsultation = async (patientId: string) => {
               <div className="card-header-bar h-9 w-1.5 rounded bg-indigo-600" />
               <h2 className="text-2xl font-black uppercase tracking-[0.06em] text-slate-800">Fila de Espera Médica</h2>
             </div>
-            <div className="room-select-wrap flex w-full max-w-[360px] items-center justify-end gap-2">
+            <div className="room-select-wrap">
               <RoomSelect
                 value={room}
-                onChange={setRoom}
+                onChange={handleRoomChange}
                 options={consultorios}
-                label="Consultório:"
+                loading={consultoriosLoading}
+                error={consultoriosError}
+                onRetry={loadConsultorios}
+                disabled={isCalling}
               />
             </div>
           </div>
@@ -247,7 +342,7 @@ const handleAbandonConsultation = async (patientId: string) => {
                                   <TooltipTrigger asChild>
                                     <span className="inline-block">
                                       <Button
-                                        disabled={!room}
+                                        disabled={!hasActiveRoom}
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           handleOpenCallModal(patient);
@@ -259,9 +354,9 @@ const handleAbandonConsultation = async (patientId: string) => {
                                       </Button>
                                     </span>
                                   </TooltipTrigger>
-                                  {!room && (
+                                  {!hasActiveRoom && (
                                     <TooltipContent>
-                                      <p>Selecione um consultório</p>
+                                      <p>Selecione o consultório da próxima chamada</p>
                                     </TooltipContent>
                                   )}
                                 </Tooltip>
@@ -293,9 +388,9 @@ const handleAbandonConsultation = async (patientId: string) => {
       </div>
 
       <Dialog open={consultationLocked} onOpenChange={() => {}}>
-        <DialogContent className="w-full overflow-x-hidden sm:max-w-3xl [&>button]:hidden">
+        <DialogContent className="sm:max-w-3xl [&>button]:hidden">
           <DialogHeader>
-            <DialogTitle className="text-3xl font-bold">Chamar Paciente</DialogTitle>
+            <DialogTitle className="text-2xl font-bold sm:text-3xl">Chamar Paciente</DialogTitle>
             <DialogDescription className="text-lg">Revise as informações de triagem</DialogDescription>
           </DialogHeader>
 
@@ -304,11 +399,11 @@ const handleAbandonConsultation = async (patientId: string) => {
               <div className="flex items-start justify-between">
                 <div className="flex flex-col gap-2">
                   {/* <span className="text-base font-bold uppercase tracking-[0.1em] text-slate-400">Paciente</span> */}
-                  <div className="text-3xl font-bold">{activePatient.fullName}</div>
+                  <div className="break-words text-2xl font-bold sm:text-3xl">{activePatient.fullName}</div>
                 </div>
               </div>
 
-              <div className="mt-6 grid grid-cols-2 gap-6">
+              <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
                   <span className="text-base text-slate-500">Prioridade</span>
                   <div className="mt-2 flex items-center gap-3">
@@ -333,20 +428,52 @@ const handleAbandonConsultation = async (patientId: string) => {
             </div>
           )}
 
-          <div className="mt-3 flex flex-wrap gap-4">
+          {activePatient && calledPatientIds.has(activePatient.id) ? (
+            // Já chamado: o backend rechama para o consultório original, então
+            // mostramos esse consultório (somente leitura) em vez do seletor.
+            <p className="text-sm font-black uppercase tracking-[0.08em] text-slate-600" data-testid="called-room-info">
+              Chamado para{' '}
+              <span className="text-base text-indigo-700">
+                {roomLabelById(calledRoomByPatient[activePatient.id]) || 'o consultório da chamada original'}
+              </span>
+            </p>
+          ) : (
+            <RoomSelect
+              value={room}
+              onChange={handleRoomChange}
+              options={consultorios}
+              loading={consultoriosLoading}
+              error={consultoriosError}
+              onRetry={loadConsultorios}
+              disabled={isCalling}
+            />
+          )}
+
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
             {activePatient && calledPatientIds.has(activePatient.id) ? (
-              <Button size="lg" className="h-14 px-8 text-lg" onClick={handleRecallPatient} disabled={!activePatient} variant="secondary">
+              <Button size="lg" className="h-auto min-h-14 whitespace-normal px-8 text-lg" onClick={handleRecallPatient} disabled={!activePatient || isCalling} variant="secondary">
+                {isCalling && <Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden="true" />}
                 Chamar novamente
               </Button>
             ) : (
-              <Button size="lg" className="h-14 px-8 text-lg bg-indigo-600 hover:bg-indigo-700" onClick={handleConfirmCallPatient} disabled={!room}>
-                Chamar Paciente
+              <Button
+                size="lg"
+                className="h-auto min-h-14 whitespace-normal px-8 text-lg bg-indigo-600 hover:bg-indigo-700"
+                onClick={handleConfirmCallPatient}
+                disabled={!hasActiveRoom || isCalling}
+              >
+                {isCalling && <Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden="true" />}
+                {isCalling
+                  ? 'Chamando…'
+                  : hasActiveRoom
+                    ? `Chamar para o ${formatConsultorioLabel(activeConsultorio)}`
+                    : 'Selecione um consultório'}
               </Button>
             )}
 
             <Button
               size="lg"
-              className="h-14 px-8 text-lg bg-red-600 hover:bg-red-700"
+              className="h-auto min-h-14 whitespace-normal px-8 text-lg bg-red-600 hover:bg-red-700"
               onClick={() => {
                 setPatientToAbandon(activePatient);
                 setConfirmAbandonOpen(true);
@@ -356,7 +483,7 @@ const handleAbandonConsultation = async (patientId: string) => {
             </Button>
             <Button
               size="lg"
-              className="h-14 px-8 text-lg bg-green-600 hover:bg-green-700"
+              className="h-auto min-h-14 whitespace-normal px-8 text-lg bg-green-600 hover:bg-green-700"
               onClick={() => {
                 setPatientToFinish(activePatient);
                 setConfirmFinishOpen(true);
@@ -385,13 +512,13 @@ const handleAbandonConsultation = async (patientId: string) => {
             </div>
           )}
 
-          <div className="mt-4 flex justify-end gap-4">
-            <Button size="lg" className="h-14 px-8 text-lg" variant="outline" onClick={() => setConfirmFinishOpen(false)}>
+          <div className="mt-4 flex flex-col-reverse gap-3 sm:flex-row sm:flex-wrap sm:justify-end">
+            <Button size="lg" className="h-auto min-h-14 whitespace-normal px-8 text-lg" variant="outline" onClick={() => setConfirmFinishOpen(false)}>
               Não
             </Button>
             <Button
               size="lg"
-              className="h-14 px-8 text-lg bg-green-600 hover:bg-green-700"
+              className="h-auto min-h-14 whitespace-normal px-8 text-lg bg-green-600 hover:bg-green-700"
               onClick={async () => {
                 await handleFinishConsultation(patientToFinish.id);
                 setConfirmFinishOpen(false);
@@ -416,13 +543,13 @@ const handleAbandonConsultation = async (patientId: string) => {
             </div>
           )}
 
-          <div className="mt-4 flex justify-end gap-4">
-            <Button size="lg" className="h-14 px-8 text-lg" variant="outline" onClick={() => setConfirmAbandonOpen(false)}>
+          <div className="mt-4 flex flex-col-reverse gap-3 sm:flex-row sm:flex-wrap sm:justify-end">
+            <Button size="lg" className="h-auto min-h-14 whitespace-normal px-8 text-lg" variant="outline" onClick={() => setConfirmAbandonOpen(false)}>
               Não
             </Button>
             <Button
               size="lg"
-              className="h-14 px-8 text-lg bg-red-600 hover:bg-red-700"
+              className="h-auto min-h-14 whitespace-normal px-8 text-lg bg-red-600 hover:bg-red-700"
               onClick={async () => {
                 await handleAbandonConsultation(patientToAbandon.id);
                 setConfirmAbandonOpen(false);
