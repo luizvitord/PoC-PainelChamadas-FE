@@ -34,10 +34,25 @@ interface DialogContentProps extends React.ComponentPropsWithoutRef<typeof Dialo
    */
   closeDisabled?: boolean;
   closeDisabledReason?: string;
+  /** Não renderiza o X. Prefira `closeDisabled` para manter o X padronizado em todos os modais. */
+  hideCloseButton?: boolean;
 }
 
 const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Content>, DialogContentProps>(
-  ({ className, children, closeDisabled = false, closeDisabledReason, onEscapeKeyDown, onPointerDownOutside, onInteractOutside, ...props }, ref) => (
+  (
+    {
+      className,
+      children,
+      closeDisabled = false,
+      closeDisabledReason,
+      hideCloseButton = false,
+      onEscapeKeyDown,
+      onPointerDownOutside,
+      onInteractOutside,
+      ...props
+    },
+    ref,
+  ) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
@@ -62,21 +77,23 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
     >
       {children}
       {/* X padrão do sistema: mesmo tamanho, estilo e posição em todos os modais */}
-      <DialogPrimitive.Close
-        aria-disabled={closeDisabled || undefined}
-        title={closeDisabled ? closeDisabledReason : "Fechar"}
-        onClick={(e) => {
-          if (closeDisabled) e.preventDefault();
-        }}
-        className={cn(
-          "absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-[10px] border border-slate-200 bg-slate-100 text-slate-500 transition-colors",
-          "hover:bg-slate-200 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-          "aria-disabled:cursor-not-allowed aria-disabled:opacity-40 aria-disabled:hover:bg-slate-100 aria-disabled:hover:text-slate-500",
-        )}
-      >
-        <X className="h-5 w-5" aria-hidden="true" />
-        <span className="sr-only">{closeDisabled ? `Fechar indisponível: ${closeDisabledReason ?? ""}` : "Fechar"}</span>
-      </DialogPrimitive.Close>
+      {!hideCloseButton && (
+        <DialogPrimitive.Close
+          aria-disabled={closeDisabled || undefined}
+          title={closeDisabled ? closeDisabledReason : "Fechar"}
+          onClick={(e) => {
+            if (closeDisabled) e.preventDefault();
+          }}
+          className={cn(
+            "absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-[10px] border border-slate-200 bg-slate-100 text-slate-500 transition-colors",
+            "hover:bg-slate-200 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            "aria-disabled:cursor-not-allowed aria-disabled:opacity-40 aria-disabled:hover:bg-slate-100 aria-disabled:hover:text-slate-500",
+          )}
+        >
+          <X className="h-5 w-5" aria-hidden="true" />
+          <span className="sr-only">{closeDisabled ? `Fechar indisponível: ${closeDisabledReason ?? ""}` : "Fechar"}</span>
+        </DialogPrimitive.Close>
+      )}
     </DialogPrimitive.Content>
   </DialogPortal>
   ),

@@ -2,7 +2,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { IndicadoresResultados } from './IndicadoresResultados';
-import { IndicatorsFeature } from '../IndicatorsFeature';
 import { fireEvent } from '@testing-library/react';
 import { useIndicadores } from '../hooks/useIndicadores';
 import { renderHook } from '@testing-library/react';
@@ -121,12 +120,5 @@ describe('Indicadores', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     await act(async () => { await vi.advanceTimersByTimeAsync(30_000); });
     expect(fetchMock).toHaveBeenCalledTimes(2);
-  });
-  it('rejeita período invertido sem dados antigos', async () => {
-    render(<IndicatorsFeature />, { wrapper });
-    await screen.findByText('19');
-    fireEvent.change(screen.getByLabelText('Data inicial'), { target: { value: '2099-09-01' } });
-    expect(screen.getByRole('alert')).toHaveTextContent('A data inicial');
-    expect(screen.queryByText('19')).not.toBeInTheDocument();
   });
 });

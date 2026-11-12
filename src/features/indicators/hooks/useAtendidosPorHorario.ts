@@ -1,39 +1,60 @@
 import { useQuery } from '@tanstack/react-query';
+
+import { AttendanceType } from '@/lib/attendanceTypes';
 import { API_BASE_URL } from '@/lib/appConfig';
-import { INDICADORES_REFETCH_INTERVAL } from '../constants';
-import type { Escopo, Risco, TipoAtendimento } from '../types';
+import { riscoParaPrioridade } from '@/lib/utils/riscoParaPrioridade';
+import { tipoParaAtendimento } from '@/lib/utils/tipoParaAtendimento';
+import { PriorityLevel } from '@/types/patient';
 
-export interface PacienteAtendido {
-  id: number;
-  nome: string;
-  risco: Risco | null;
-  tipo: TipoAtendimento | null;
-  chegadaAt: string;
-  chamadaConsultorioAt: string;
-  rechamadasConsultorioCount: number;
+import { Escopo } from '../utils/escopo';
+import type { Periodo } from './usePeriodoFiltro';
+
+export type TipoChamada = 'TRIAGEM' | 'CONSULTORIO';
+
+/** Espelha AtendidoPorHorarioResponse (BE-03); sem nome: o paciente já foi anonimizado ao ser atendido. */
+export interface BackendAtendidoPorHorario {
+  pacienteId: number;
+  risco: string | null;
+  tipo: string | null;
+  chamadaConsultorioAt: string | null;
+  rechamadas: { tipo: TipoChamada; criadaEm: string }[];
 }
 
-interface PacienteBackend extends Partial<PacienteAtendido> {
-  status?: string;
+/** Atendido no vocabulário do front; datas continuam LocalDateTime (sem fuso). */
+export interface AtendidoPorHorario {
+  pacienteId: number;
+  prioridade: PriorityLevel | null;
+  atendimento: AttendanceType | null;
+  chamadaConsultorioAt: string | null;
+  rechamadas: { tipo: TipoChamada; criadaEm: string }[];
 }
 
-export function useAtendidosPorHorario(inicio: string, fim: string, escopo: Escopo, enabled: boolean) {
-  return useQuery<PacienteAtendido[], Error>({
-    queryKey: ['atendidos-por-horario', inicio, fim, escopo],
+export function mapBackendAtendidos(atendidos: BackendAtendidoPorHorario[]): AtendidoPorHorario[] {
+  return atendidos.map(({ pacienteId, risco, tipo, chamadaConsultorioAt, rechamadas }) => ({
+    pacienteId,
+    prioridade: risco ? riscoParaPrioridade(risco) : null,
+    atendimento: tipo ? tipoParaAtendimento(tipo) : null,
+    chamadaConsultorioAt,
+    rechamadas: rechamadas ?? [],
+  }));
+}
+
+export async function getAtendidosPorHorario({ inicio, fim }: Periodo, escopo: Escopo, signal?: AbortSignal) {
+  const params = new URLSearchParams({ inicio, fim, escopo });
+  const response = await fetch(`${API_BASE_URL}/indicadores/atendidos?${params}`, { signal });
+
+  if (!response.ok) {
+    throw new Error(`Falha ao carregar os atendidos (HTTP ${response.status})`);
+  }
+
+  return mapBackendAtendidos(await response.json());
+}
+
+// Mesmo período e escopo dos demais indicadores; só busca com a página desbloqueada.
+export function useAtendidosPorHorario(periodo: Periodo, escopo: Escopo, enabled: boolean) {
+  return useQuery({
+    queryKey: ['indicadores', 'atendidos', periodo.inicio, periodo.fim, escopo],
+    queryFn: ({ signal }) => getAtendidosPorHorario(periodo, escopo, signal),
     enabled,
-    queryFn: async ({ signal }) => {
-      const response = await fetch(`${API_BASE_URL}/pacientes`, { signal });
-      if (!response.ok) throw new Error('Não foi possível carregar os pacientes atendidos.');
-      const payload = await response.json();
-      const pacientes = Array.isArray(payload) ? payload as PacienteBackend[] : [];
-      return pacientes.filter((paciente): paciente is PacienteAtendido => {
-        if (!paciente.id || !paciente.nome || !paciente.chegadaAt || !paciente.chamadaConsultorioAt) return false;
-        const noPeriodo = paciente.chegadaAt >= inicio && paciente.chegadaAt <= fim;
-        const noEscopo = escopo === 'SAMU' ? paciente.tipo === 'SAMU' : paciente.tipo !== 'SAMU';
-        return noPeriodo && noEscopo;
-      }).map(paciente => ({ ...paciente, rechamadasConsultorioCount: paciente.rechamadasConsultorioCount ?? 0 }));
-    },
-    refetchInterval: INDICADORES_REFETCH_INTERVAL,
-    retry: false,
   });
 }

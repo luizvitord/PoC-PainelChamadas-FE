@@ -2,7 +2,9 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { PROTOCOLO_PADRAO } from '@/test/protocoloFixture';
 import { Patient } from '@/types/patient';
+import { ProtocoloTempo } from '@/types/protocolo';
 
 import Triage from './Triage';
 
@@ -31,14 +33,18 @@ vi.mock('@/contexts/PatientContext', () => ({
   }),
 }));
 
+let protocolosMock: { data?: ProtocoloTempo[]; isLoading: boolean } = { data: PROTOCOLO_PADRAO, isLoading: false };
+
+vi.mock('@/hooks/useProtocolos', () => ({
+  useProtocolos: () => protocolosMock,
+}));
+
 const buildPatient = (overrides: Partial<Patient> = {}): Patient => ({
   id: '1',
   chegadaAt: new Date('2026-10-08T10:00:00'),
-  ticketNumber: 'T-01',
   fullName: 'Maria da Silva',
   dateOfBirth: '1990-01-01',
   cpf: '123.456.789-00',
-  registeredAt: new Date('2026-10-08T10:00:00'),
   status: 'waiting-triage',
   ...overrides,
 });
@@ -55,11 +61,83 @@ const openTriageModal = async () => {
   return screen.findByRole('button', { name: /rechamar/i });
 };
 
+describe('Triage Manchester protocol', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    waitingForTriage = [buildPatient()];
+    waitingForDoctor = [];
+    protocolosMock = { data: PROTOCOLO_PADRAO, isLoading: false };
+    callForTriageMock.mockResolvedValue(undefined);
+    refreshPatientsMock.mockResolvedValue(undefined);
+  });
+
+  it('shows only the colors and times the protocol accepts for the chosen attendance type', async () => {
+    renderTriage();
+    await openTriageModal();
+
+    fireEvent.click(screen.getByLabelText('Clínico'));
+    fireEvent.click(screen.getByRole('button', { name: /vermelho \(0 min\)/i }));
+
+    expect(screen.getByRole('button', { name: /laranja \(10 min\)/i })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /\(\d+ min\)/ })).toHaveLength(3);
+    expect(screen.queryByText(/amarelo/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /confirmar classificação/i })).toBeEnabled();
+  });
+
+  it('blocks the classification when the protocol is unavailable', async () => {
+    protocolosMock = { data: [], isLoading: false };
+    renderTriage();
+    await openTriageModal();
+
+    expect(screen.getByText('Protocolo de Manchester indisponível. Não é possível classificar agora.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /confirmar classificação/i })).toBeDisabled();
+  });
+
+  it('blocks the classification while the protocol is loading', async () => {
+    protocolosMock = { data: undefined, isLoading: true };
+    renderTriage();
+    await openTriageModal();
+
+    expect(screen.getByText('Carregando o protocolo de Manchester...')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /confirmar classificação/i })).toBeDisabled();
+  });
+});
+
+describe('Triage clinical notes limit', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    waitingForTriage = [buildPatient()];
+    waitingForDoctor = [];
+    protocolosMock = { data: PROTOCOLO_PADRAO, isLoading: false };
+    callForTriageMock.mockResolvedValue(undefined);
+    refreshPatientsMock.mockResolvedValue(undefined);
+  });
+
+  it('limits the notes to 250 characters and counts down while typing', async () => {
+    renderTriage();
+    await openTriageModal();
+
+    const notes = screen.getByLabelText('Anotações Clínicas');
+    expect(notes).toHaveAttribute('maxLength', '250');
+    expect(screen.getByText('250 caracteres restantes')).toBeInTheDocument();
+
+    fireEvent.change(notes, { target: { value: 'Ansiedade' } });
+    expect(screen.getByText('241 caracteres restantes')).toBeInTheDocument();
+
+    fireEvent.change(notes, { target: { value: 'x'.repeat(249) } });
+    expect(screen.getByText('1 caractere restante')).toBeInTheDocument();
+
+    fireEvent.change(notes, { target: { value: 'x'.repeat(250) } });
+    expect(screen.getByText('0 caracteres restantes')).toHaveClass('text-red-600');
+  });
+});
+
 describe('Triage recall', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     waitingForTriage = [buildPatient()];
     waitingForDoctor = [];
+    protocolosMock = { data: PROTOCOLO_PADRAO, isLoading: false };
     callForTriageMock.mockResolvedValue(undefined);
     refreshPatientsMock.mockResolvedValue(undefined);
   });

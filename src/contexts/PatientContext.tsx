@@ -1,7 +1,10 @@
 import axios from 'axios';
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Patient, PriorityLevel } from '@/types/patient';
-import { AttendanceTypeBackend, PriorityBackend } from '@/lib/utils/backendMaps';
+import { AttendanceTypeBackend, PriorityBackend, SuicidalBehaviorBackend } from '@/lib/utils/backendMaps';
+import { BackendPatient, mapBackendPatient } from '@/lib/utils/mapBackendPatient';
+import { SuicidalBehavior } from '@/lib/suicidalBehavior';
+import { PatientAlreadyCalledError } from '@/lib/patientErrors';
 
 import { API_BASE_URL } from '@/lib/appConfig';
 
@@ -18,7 +21,7 @@ interface PatientContextType {
   assignPriority: (patientId: string, priority: PriorityLevel, attendanceType: 'clinical' | 'psychiatric' | 'samu', notes: string) => Promise<void>;
   callForDoctor: (patientId: string, room: string) => Promise<void>;
   recallPatient: (patientId: string, room: string) => Promise<void>;
-  completeConsultation: (patientId: string) => Promise<void>;
+  completeConsultation: (patientId: string, suicidalBehavior: SuicidalBehavior) => Promise<void>;
   abandonConsultation: (patientId: string) => Promise<void>;
   getWaitingForTriage: () => Patient[];
   getWaitingForDoctor: () => Patient[];
@@ -27,44 +30,18 @@ interface PatientContextType {
 
 const PatientContext = createContext<PatientContextType | undefined>(undefined);
 
-const mapBackendPriority = (risco?: string | null): PriorityLevel => {
-  const map: Record<string, PriorityLevel> = {
-    'VERMELHO': 'red', 'LARANJA': 'orange', 'AMARELO': 'yellow', 'VERDE': 'green', 'AZUL': 'blue'
-  };
-  return risco ? map[risco] || 'green' : 'green';
-};
-
 export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [patients, setPatients] = useState<Patient[]>([]);
 
   const refreshPatients = useCallback(async () => {
     try {
       const [triageRes, doctorRes] = await Promise.all([
-        api.get('/pacientes/aguardando-triagem'),
-        api.get('/pacientes/aguardando-medico')
+        api.get<BackendPatient[]>('/pacientes/aguardando-triagem'),
+        api.get<BackendPatient[]>('/pacientes/aguardando-medico')
       ]);
 
-      const triagePatients = triageRes.data.map((p: any) => ({
-        ...p,
-        id: p.id.toString(),
-        fullName: p.nome,
-        status: 'waiting-triage',
-        dateOfBirth: p.dateOfBirth,
-        registeredAt: new Date()
-      }));
-
-      const doctorPatients = doctorRes.data.map((p: any) => ({
-        ...p,
-        id: p.id.toString(),
-        fullName: p.nome,
-        status: 'waiting-doctor',
-        priority: mapBackendPriority(p.risco),
-        attendanceType: p.tipo === 'PSIQUIATRICO' ? 'psychiatric' : p.tipo === 'SAMU' ? 'samu' : 'clinical',
-        triageNotes: p.triageNotes,
-        registeredAt: new Date(),
-        classifiedAt: p.classifiedAt ? new Date(p.classifiedAt) : null,
-        prazoAtendimentoAt: p.prazoAtendimentoAt ? new Date(p.prazoAtendimentoAt) : null
-      }));
+      const triagePatients = triageRes.data.map((p) => mapBackendPatient(p, 'waiting-triage'));
+      const doctorPatients = doctorRes.data.map((p) => mapBackendPatient(p, 'waiting-doctor'));
       console.log('Fetched patients:', [...triagePatients, ...doctorPatients]);
 
       setPatients([...triagePatients, ...doctorPatients]);
@@ -76,7 +53,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => { refreshPatients(); }, [refreshPatients]);
 
   const registerPatient = useCallback(async (data: { fullName: string; dateOfBirth: string; cpf: string }) => {
-    const response = await api.post('/pacientes', {
+    const response = await api.post<BackendPatient>('/pacientes', {
       nome: data.fullName,
       cpf: data.cpf,
       dataNascimento: data.dateOfBirth
@@ -84,18 +61,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     await refreshPatients();
 
-    // Mapeamento: Pegamos o que vem do Java e transformamos para o padrão do Front
-    return {
-      ...response.data,
-      id: response.data.id.toString(),
-      // Verifique se no Java o campo é 'nome' ou 'fullName'. 
-      // Se o Java retorna 'nome', mapeamos para 'fullName' aqui:
-      fullName: response.data.nome || data.fullName,
-      // Verifique se no Java o campo é 'ticketNumber', 'senha' ou 'numeroTicket'
-      ticketNumber: `T-0${response.data.id}`,
-      registeredAt: new Date(),
-      status: 'waiting-triage'
-    } as Patient;
+    return mapBackendPatient(response.data, 'waiting-triage');
   }, [refreshPatients]);
 
   const assignPriority = useCallback(async (patientId: string, priority: PriorityLevel, attendanceType: 'clinical' | 'psychiatric' | 'samu', triageNotes: string) => {
@@ -111,7 +77,16 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [refreshPatients]);
 
   const callForDoctor = useCallback(async (patientId: string, room: string) => {
-    await api.put(`/pacientes/${patientId}/chamar?consultorioId=${room}`);
+    try {
+      await api.put(`/pacientes/${patientId}/chamar?consultorioId=${room}`);
+    } catch (error) {
+      // 409: outro consultório chamou o paciente primeiro (o back reserva o paciente de forma atômica).
+      if ((error as { response?: { status?: number } })?.response?.status === 409) {
+        await refreshPatients();
+        throw new PatientAlreadyCalledError();
+      }
+      throw error;
+    }
     await refreshPatients();
   }, [refreshPatients]);
 
@@ -119,9 +94,11 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await api.put(`/pacientes/${patientId}/rechamar`);
   }, []);
 
-  const completeConsultation = useCallback(async (patientId: string) => {
+  const completeConsultation = useCallback(async (patientId: string, suicidalBehavior: SuicidalBehavior) => {
     console.log(`Finalizando consulta para paciente ID: ${patientId}`);
-    await api.put(`/pacientes/${patientId}/finalizar`);
+    await api.put(`/pacientes/${patientId}/finalizar`, {
+      comportamentoSuicida: SuicidalBehaviorBackend[suicidalBehavior],
+    });
     await refreshPatients();
   }, [refreshPatients]);
 

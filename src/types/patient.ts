@@ -1,14 +1,16 @@
 export type PriorityLevel = 'red' | 'orange' | 'yellow' | 'green' | 'blue';
 
+// Datas já convertidas para Date em mapBackendPatient; null quando o back não registrou o momento.
 export interface Patient {
   id: string;
-  chegadaAt: Date;
-  ticketNumber: string;
+  chegadaAt: Date | null;
   fullName: string;
-  dateOfBirth: string;
+  dateOfBirth?: string;
   cpf: string;
-  registeredAt: Date;
   classifiedAt?: Date | null;
+  chamadaTriagemAt?: Date | null;
+  chamadaConsultorioAt?: Date | null;
+  atendimentoFinalizadoAt?: Date | null;
   prazoAtendimentoAt?: Date | null;
   status: 'waiting-triage' | 'in-triage' | 'waiting-doctor' | 'in-consultation' | 'completed';
   priority?: PriorityLevel;
@@ -19,7 +21,6 @@ export interface Patient {
 
 export interface TriageCall {
   callId: string;
-  ticketNumber: string;
   patientName?: string;
   type: 'triage' | 'doctor';
   room?: string;
@@ -28,10 +29,12 @@ export interface TriageCall {
   shouldAnnounce?: boolean;
 }
 
-export const PRIORITY_CONFIG: Record<PriorityLevel, { label: string; waitTime: string; order: number }> = {
-  red: { label: 'Vermelho', waitTime: '0 min', order: 1 },
-  orange: { label: 'Laranja', waitTime: '10 min', order: 2 },
-  yellow: { label: 'Amarelo', waitTime: '60 min', order: 3 },
-  green: { label: 'Verde', waitTime: '120 min', order: 4 },
-  blue: { label: 'Azul', waitTime: '240 min', order: 5 },
+// Só apresentação; o tempo máximo de cada cor por tipo vem do protocolo (GET /protocolos).
+// urgency: significado da cor no protocolo de Manchester.
+export const PRIORITY_CONFIG: Record<PriorityLevel, { label: string; urgency: string; order: number }> = {
+  red: { label: 'Vermelho', urgency: 'Emergência', order: 1 },
+  orange: { label: 'Laranja', urgency: 'Muito urgente', order: 2 },
+  yellow: { label: 'Amarelo', urgency: 'Urgente', order: 3 },
+  green: { label: 'Verde', urgency: 'Pouco urgente', order: 4 },
+  blue: { label: 'Azul', urgency: 'Não urgente', order: 5 },
 };

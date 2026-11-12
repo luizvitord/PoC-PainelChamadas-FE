@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { useIndicadores } from '../hooks/useIndicadores';
-import { useAtendidosPorHorario } from '../hooks/useAtendidosPorHorario';
+import { useAtendidosPorHorario } from '../hooks/useAtendidosPorHorarioResultados';
 import type { FiltrosIndicadores, Risco } from '../types';
 import { CORES } from '../constants';
 import { CadastradosCard } from './CadastradosCard';

@@ -7,7 +7,6 @@ describe('mapBackendPanelCall', () => {
     const call = mapBackendPanelCall({
       id: 12,
       patientName: 'Maria Silva',
-      ticketNumber: 'P-0012',
       type: 'doctor',
       destination: 'Consultorio 3',
       consultorioId: 99,
@@ -18,7 +17,6 @@ describe('mapBackendPanelCall', () => {
 
     expect(call).toEqual({
       callId: '12',
-      ticketNumber: 'P-0012',
       patientName: 'Maria Silva',
       type: 'doctor',
       room: '3',
@@ -82,7 +80,6 @@ describe('mapBackendPanelCall', () => {
 
   it('uses empty strings for missing optional text fields', () => {
     expect(mapBackendPanelCall({ id: 6 })).toMatchObject({
-      ticketNumber: '',
       patientName: '',
     });
   });

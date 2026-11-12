@@ -11,3 +11,9 @@ export const PriorityBackend = {
   green: 'VERDE',
   blue: 'AZUL',
 } as const;
+
+export const SuicidalBehaviorBackend = {
+  none: 'NENHUM',
+  ideation: 'IDEACAO',
+  attempt: 'TENTATIVA',
+} as const;
