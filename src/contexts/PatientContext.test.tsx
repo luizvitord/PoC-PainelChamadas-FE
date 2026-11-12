@@ -36,6 +36,29 @@ describe('PatientContext completeConsultation', () => {
 
     expect(putMock).toHaveBeenCalledWith('/pacientes/7/finalizar', { comportamentoSuicida: backendValue });
   });
+
+  it("sends the doctor's reclassification as riscoReclassificado", async () => {
+    getMock.mockResolvedValue({ data: [] });
+    putMock.mockResolvedValue({});
+    let context: ReturnType<typeof usePatients> | undefined;
+    const Capture = () => {
+      context = usePatients();
+      return null;
+    };
+
+    render(
+      <PatientProvider>
+        <Capture />
+      </PatientProvider>,
+    );
+    await waitFor(() => expect(context).toBeDefined());
+    await context!.completeConsultation('7', 'none', 'red');
+
+    expect(putMock).toHaveBeenCalledWith('/pacientes/7/finalizar', {
+      comportamentoSuicida: 'NENHUM',
+      riscoReclassificado: 'VERMELHO',
+    });
+  });
 });
 
 describe('PatientContext callForDoctor', () => {
