@@ -1,4 +1,3 @@
-import { PriorityBadge } from '@/components/PriorityBadge';
 import { AttendanceType, AttendanceTypeLabel } from '@/lib/attendanceTypes';
 import { getAvailablePriorities } from '@/lib/priorityRules';
 import { riscoParaPrioridade } from '@/lib/utils/riscoParaPrioridade';
@@ -10,6 +9,7 @@ import { useState } from 'react';
 import { Escopo } from '../../utils/escopo';
 import { formatarMinutos } from '../../utils/formatarMinutos';
 import { formatarPercentual } from '../../utils/formatarPercentual';
+import { caixaFiltro, cartao, chip, COR_NIVEL, estadoVazio, pontoCor, rotuloGrupo, tituloSecao } from '../estilos';
 
 // Só os campos usados do IndicadoresResponse.Detalhamento; será trocado pelo Detalhamento do IND-01.
 export interface DetalhamentoNivel {
@@ -64,12 +64,14 @@ const alternar = <T,>(conjunto: Set<T>, item: T) => {
   return novo;
 };
 
-const titleClassName =
-  'mb-4 border-b-2 border-gray-100 pb-2 text-sm font-black uppercase tracking-[0.18em] text-gray-500';
-const filtroLabelClassName = 'text-xs font-black uppercase tracking-[0.18em] text-gray-500';
-const colunaChipClassName =
-  'rounded-lg border px-4 py-2 text-sm font-black uppercase tracking-[0.08em] transition-colors aria-pressed:border-[#008140] aria-pressed:bg-[#008140] aria-pressed:text-white aria-[pressed=false]:border-gray-200 aria-[pressed=false]:bg-gray-100 aria-[pressed=false]:text-gray-400 aria-[pressed=false]:line-through';
-const thClassName = 'px-6 py-4 text-sm font-black uppercase tracking-wider text-gray-600';
+// Barra colorida do cabeçalho de cada card, como no design novo.
+const COR_ATENDIMENTO: Record<AttendanceType, string> = {
+  psychiatric: '#4c51bf',
+  clinical: '#3182ce',
+  samu: '#dd6b20',
+};
+
+const thClassName = 'px-4 py-2.5 text-right text-[12px] font-black uppercase tracking-[0.12em] text-slate-500 first:text-left';
 
 export function EmergencyLevelTab({ porRiscoETipo, escopo = 'GERAL', protocolos }: EmergencyLevelTabProps) {
   const [niveisOcultos, setNiveisOcultos] = useState<Set<PriorityLevel>>(() => new Set());
@@ -80,10 +82,8 @@ export function EmergencyLevelTab({ porRiscoETipo, escopo = 'GERAL', protocolos 
   if (linhas.length === 0) {
     return (
       <section>
-        <h2 className={titleClassName}>Por Nível de Emergência</h2>
-        <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-12 text-center text-sm font-black uppercase tracking-[0.15em] text-gray-300">
-          Sem dados para o período
-        </div>
+        <h2 className={tituloSecao}>Por Nível de Emergência</h2>
+        <div className={estadoVazio}>Sem dados para o período</div>
       </section>
     );
   }
@@ -94,11 +94,26 @@ export function EmergencyLevelTab({ porRiscoETipo, escopo = 'GERAL', protocolos 
 
   return (
     <section>
-      <h2 className={titleClassName}>Por Nível de Emergência</h2>
+      <h2 className={tituloSecao}>Por Nível de Emergência</h2>
 
-      <div className="mb-6 flex flex-wrap items-center gap-x-8 gap-y-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <span className={filtroLabelClassName}>Níveis</span>
+      <div className={`${caixaFiltro} mb-4 flex-col !items-start !gap-3`}>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={rotuloGrupo}>Exibir</span>
+          {COLUNAS.map((coluna) => (
+            <button
+              key={coluna.id}
+              type="button"
+              aria-pressed={!colunasOcultas.has(coluna.id)}
+              onClick={() => setColunasOcultas((atual) => alternar(atual, coluna.id))}
+              className={chip}
+            >
+              {coluna.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={rotuloGrupo}>Nível</span>
           {niveis.map((nivel) => (
             <button
               key={nivel}
@@ -106,79 +121,75 @@ export function EmergencyLevelTab({ porRiscoETipo, escopo = 'GERAL', protocolos 
               aria-pressed={!niveisOcultos.has(nivel)}
               aria-label={`Nível ${PRIORITY_CONFIG[nivel].label}`}
               onClick={() => setNiveisOcultos((atual) => alternar(atual, nivel))}
-              className="rounded-full transition-opacity aria-[pressed=false]:opacity-30 aria-[pressed=false]:grayscale"
+              className={chip}
             >
-              <PriorityBadge priority={nivel} label="color" size="md" />
-            </button>
-          ))}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <span className={filtroLabelClassName}>Colunas</span>
-          {COLUNAS.map((coluna) => (
-            <button
-              key={coluna.id}
-              type="button"
-              aria-pressed={!colunasOcultas.has(coluna.id)}
-              onClick={() => setColunasOcultas((atual) => alternar(atual, coluna.id))}
-              className={colunaChipClassName}
-            >
-              {coluna.label}
+              <span className={`${pontoCor} ring-2 ring-white/70`} style={{ background: COR_NIVEL[nivel] }} />
+              {PRIORITY_CONFIG[nivel].label}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+      <div className="flex flex-col gap-4">
         {atendimentos.map((atendimento) => {
           const linhasVisiveis = linhas.filter(
             (linha) => linha.atendimento === atendimento && !niveisOcultos.has(linha.prioridade),
           );
 
           return (
-            <div key={atendimento} className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-              <div className="flex items-center space-x-3 border-b border-gray-100 bg-gray-50 px-6 py-5">
-                <div className="h-6 w-1.5 rounded-full bg-[#008140]" />
-                <h3 className="text-xl font-black uppercase tracking-wider text-gray-800">{AttendanceTypeLabel[atendimento]}</h3>
+            <div key={atendimento} className={cartao}>
+              <div className="flex items-center gap-2.5 border-b border-slate-100 bg-slate-50 px-5 py-4">
+                <div className="h-[22px] w-1.5 flex-shrink-0 rounded" style={{ background: COR_ATENDIMENTO[atendimento] }} />
+                <h3 className="text-[16px] font-black uppercase tracking-[0.14em] text-slate-800">
+                  Classificação de risco {AttendanceTypeLabel[atendimento]}
+                </h3>
               </div>
 
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50">
-                    <th className={thClassName}>Nível</th>
-                    {colunasVisiveis.map((coluna) => (
-                      <th key={coluna.id} className={`${thClassName} text-right`}>{coluna.label}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {linhasVisiveis.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={colunasVisiveis.length + 1}
-                        className="px-6 py-8 text-center text-sm font-black uppercase tracking-[0.15em] text-gray-300"
-                      >
-                        Nenhum nível selecionado
-                      </td>
+              <div className="relative overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-slate-100">
+                      <th className={thClassName}>Nível</th>
+                      {colunasVisiveis.map((coluna) => (
+                        <th key={coluna.id} className={thClassName}>{coluna.label}</th>
+                      ))}
                     </tr>
-                  ) : (
-                    linhasVisiveis.map(({ prioridade, detalhamento }) => (
-                      <tr key={prioridade}>
-                        <td className="px-6 py-4">
-                          <PriorityBadge priority={prioridade} label="color" />
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {linhasVisiveis.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={colunasVisiveis.length + 1}
+                          className="px-4 py-7 text-center text-[13px] font-black uppercase tracking-[0.15em] text-slate-300"
+                        >
+                          Nenhum nível selecionado
                         </td>
-                        {colunasVisiveis.map((coluna) => (
-                          <td key={coluna.id} className="px-6 py-4 text-right text-lg font-bold tabular-nums text-gray-800">
-                            {coluna.id === 'tempoMedio' && formatarMinutos(detalhamento.tempoMedioEsperaMinutos)}
-                            {coluna.id === 'percentualFora' && formatarPercentual(detalhamento.percentualForaDoPrazo)}
-                            {coluna.id === 'total' && <span className="text-gray-500">({detalhamento.totalComProtocolo})</span>}
-                          </td>
-                        ))}
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      linhasVisiveis.map(({ prioridade, detalhamento }) => (
+                        <tr key={prioridade}>
+                          <td className="whitespace-nowrap px-4 py-3 text-[16px] font-bold text-slate-700">
+                            <span className="flex items-center gap-2.5">
+                              <span className={pontoCor} style={{ background: COR_NIVEL[prioridade] }} />
+                              {PRIORITY_CONFIG[prioridade].label} — {PRIORITY_CONFIG[prioridade].urgency}
+                            </span>
+                          </td>
+                          {colunasVisiveis.map((coluna) => (
+                            <td
+                              key={coluna.id}
+                              className="whitespace-nowrap px-4 py-3 text-right text-[17px] font-bold tabular-nums text-slate-800"
+                            >
+                              {coluna.id === 'tempoMedio' && formatarMinutos(detalhamento.tempoMedioEsperaMinutos)}
+                              {coluna.id === 'percentualFora' && formatarPercentual(detalhamento.percentualForaDoPrazo)}
+                              {coluna.id === 'total' && <span className="text-slate-400">({detalhamento.totalComProtocolo})</span>}
+                            </td>
+                          ))}
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           );
         })}
