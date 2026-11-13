@@ -28,10 +28,13 @@ const PORRISCOETIPO: DetalhamentoNivel[] = RISCOS.flatMap((risco) =>
   })),
 );
 
-const card = (titulo: string) => screen.getByRole('heading', { name: titulo }).parentElement!.parentElement!;
+// Cada card tem o título "Classificação de risco <tipo>" e as linhas "<cor> — <urgência>".
+const card = (tipo: string) => screen.getByRole('heading', { name: `Classificação de risco ${tipo}` }).parentElement!.parentElement!;
+const tiposDosCards = () =>
+  screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent!.replace('Classificação de risco ', ''));
 const linha = (titulo: string, nivel: string) => within(card(titulo)).getByRole('row', { name: new RegExp(nivel, 'i') });
 const niveisDoCard = (titulo: string) =>
-  within(card(titulo)).getAllByRole('row').slice(1).map((row) => row.querySelector('td')!.textContent);
+  within(card(titulo)).getAllByRole('row').slice(1).map((row) => row.querySelector('td')!.textContent!.split(' — ')[0]);
 
 describe('EmergencyLevelTab', () => {
   it('usa as 15 combinações na fixture', () => {
@@ -42,7 +45,8 @@ describe('EmergencyLevelTab', () => {
     it('mostra Psiquiátrico com os 5 níveis e Clínico com vermelho e laranja, na ordem do protocolo', () => {
       render(<EmergencyLevelTab protocolos={PROTOCOLO_PADRAO} porRiscoETipo={PORRISCOETIPO} />);
 
-      expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Psiquiátrico', 'Clínico']);
+      expect(tiposDosCards()).toEqual(['Psiquiátrico', 'Clínico']);
+      expect(linha('Clínico', 'Vermelho')).toHaveTextContent('Vermelho — Emergência');
       expect(niveisDoCard('Psiquiátrico')).toEqual(['Vermelho', 'Laranja', 'Amarelo', 'Verde', 'Azul']);
       expect(niveisDoCard('Clínico')).toEqual(['Vermelho', 'Laranja']);
     });
@@ -63,7 +67,7 @@ describe('EmergencyLevelTab', () => {
     it('não mostra SAMU nem Amarelo/Verde/Azul no Clínico', () => {
       render(<EmergencyLevelTab protocolos={PROTOCOLO_PADRAO} porRiscoETipo={PORRISCOETIPO} escopo="GERAL" />);
 
-      expect(screen.queryByRole('heading', { name: 'SAMU' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Classificação de risco SAMU' })).not.toBeInTheDocument();
       ['Amarelo', 'Verde', 'Azul'].forEach((nivel) => {
         expect(within(card('Clínico')).queryByRole('row', { name: new RegExp(nivel, 'i') })).not.toBeInTheDocument();
       });
@@ -74,7 +78,7 @@ describe('EmergencyLevelTab', () => {
     it('mostra só Laranja/SAMU com 50% fora do protocolo e só o chip Laranja', () => {
       render(<EmergencyLevelTab protocolos={PROTOCOLO_PADRAO} porRiscoETipo={PORRISCOETIPO} escopo="SAMU" />);
 
-      expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['SAMU']);
+      expect(tiposDosCards()).toEqual(['SAMU']);
       expect(niveisDoCard('SAMU')).toEqual(['Laranja']);
       expect(linha('SAMU', 'Laranja')).toHaveTextContent('00:12:30');
       expect(linha('SAMU', 'Laranja')).toHaveTextContent('50%');

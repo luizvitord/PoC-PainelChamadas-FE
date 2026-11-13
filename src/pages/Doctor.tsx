@@ -1,4 +1,3 @@
-import BackButton from '@/components/BackButton';
 import Header from '@/components/Header';
 import { PriorityBadge } from '@/components/PriorityBadge';
 import { PriorityReclassifyField } from '@/components/PriorityReclassifyField';
@@ -287,12 +286,9 @@ const handleAbandonConsultation = async (patientId: string) => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Header title="Painel Médico" />
-      <div className="mx-auto w-full max-w-screen-2xl px-3 pt-6">
-        <BackButton />
-      </div>
+      <Header title="Painel Médico" showBack />
 
-      <div className="section-main mx-auto w-full max-w-screen-2xl px-3 py-8">
+      <div className="section-main mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
         <div className="card overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
           <div className="card-header flex flex-col gap-3 border-b border-slate-100 px-5 py-3 sm:px-6 sm:py-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="flex items-center gap-3 lg:pb-0.5">
@@ -315,7 +311,7 @@ const handleAbandonConsultation = async (patientId: string) => {
           </div>
 
           <CardContent className="table-wrap p-0">
-            <div className="overflow-x-auto">
+            <div className="relative overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="border-b border-slate-100 bg-slate-50">
                   <tr>

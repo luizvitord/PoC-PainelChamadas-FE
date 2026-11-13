@@ -10,6 +10,11 @@ const SEED_GERAL: TemposEspera = {
   tempoMedioEntradaAteMedicoMinutos: 62.5,
 };
 
+// Nomes dos cards no design novo (indicadores 1, 2 e 3).
+const ACOLHIMENTO = 'Espera p/ acolhimento / classificação';
+const CLASSIFICACAO_MEDICO = 'Espera p/ 1º atendimento médico';
+const ENTRADA_MEDICO = 'Espera total (NAC → médico)';
+
 const card = (titulo: string) => screen.getByRole('heading', { name: titulo }).parentElement!;
 
 describe('WaitTimesTab', () => {
@@ -18,25 +23,25 @@ describe('WaitTimesTab', () => {
 
     expect(screen.getByRole('heading', { level: 2, name: 'Tempos de Espera' })).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual([
-      'Acolhimento',
-      'Classificação → Médico',
-      'Entrada → Médico',
+      ACOLHIMENTO,
+      CLASSIFICACAO_MEDICO,
+      ENTRADA_MEDICO,
     ]);
   });
 
   it('formata os minutos em HH:MM:SS', () => {
     render(<WaitTimesTab tempos={SEED_GERAL} />);
 
-    expect(card('Acolhimento')).toHaveTextContent('00:02:00');
-    expect(card('Classificação → Médico')).toHaveTextContent('00:57:30');
-    expect(card('Entrada → Médico')).toHaveTextContent('01:02:30');
+    expect(card(ACOLHIMENTO)).toHaveTextContent('00:02:00');
+    expect(card(CLASSIFICACAO_MEDICO)).toHaveTextContent('00:57:30');
+    expect(card(ENTRADA_MEDICO)).toHaveTextContent('01:02:30');
   });
 
   it('mostra --:--:-- quando o tempo vem null (sem amostras)', () => {
     render(<WaitTimesTab tempos={{ ...SEED_GERAL, tempoMedioAcolhimentoMinutos: null }} />);
 
-    expect(card('Acolhimento')).toHaveTextContent('--:--:--');
-    expect(card('Entrada → Médico')).toHaveTextContent('01:02:30');
+    expect(card(ACOLHIMENTO)).toHaveTextContent('--:--:--');
+    expect(card(ENTRADA_MEDICO)).toHaveTextContent('01:02:30');
   });
 
   it('mantém os 3 cards com --:--:-- enquanto não há dados', () => {

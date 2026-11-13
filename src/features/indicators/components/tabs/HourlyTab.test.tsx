@@ -33,33 +33,51 @@ const ATENDIDOS: AtendidoPorHorario[] = [
   },
 ];
 
-const linhas = () => screen.getAllByRole('row').slice(1);
+// Cada atendido é um botão expansível (aria-expanded); os cards de resumo ficam no role=status.
+const itens = () => screen.getAllByRole('button').filter((botao) => botao.hasAttribute('aria-expanded'));
+const resumo = (label: string) => within(screen.getByRole('status')).getByText(label).parentElement!;
 const horarioInicio = () => screen.getByLabelText('Hora Início');
 const horarioFim = () => screen.getByLabelText('Hora Fim');
 
 describe('HourlyTab', () => {
-  it('lista os atendidos com horário da chamada, nível, tipo e rechamadas', () => {
+  it('lista os atendidos com horário da chamada, nível, tipo e quantas rechamadas', () => {
     render(<HourlyTab atendidos={ATENDIDOS} />);
 
     expect(screen.getByRole('heading', { name: 'Pacientes Atendidos por Horário' })).toBeInTheDocument();
-    expect(linhas()).toHaveLength(3);
+    expect(itens()).toHaveLength(3);
 
-    const primeira = linhas()[0];
-    expect(primeira).toHaveTextContent('01/09 08:05');
-    expect(primeira).toHaveTextContent('Vermelho');
-    expect(primeira).toHaveTextContent('Clínico');
-    expect(within(primeira).getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+    const primeiro = itens()[0];
+    expect(primeiro).toHaveTextContent('Vermelho — Emergência');
+    expect(primeiro).toHaveTextContent('Clínico');
+    expect(primeiro).toHaveTextContent('01/09 08:05');
+    expect(primeiro).toHaveTextContent('3× rechamado');
+    expect(resumo('Atendidos na faixa')).toHaveTextContent('3de 3 no período');
+    expect(resumo('Total de rechamadas')).toHaveTextContent('3');
+  });
+
+  it('abre o atendido para mostrar os horários das rechamadas', () => {
+    render(<HourlyTab atendidos={ATENDIDOS} />);
+    const primeiro = itens()[0];
+    expect(primeiro).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(primeiro);
+
+    expect(primeiro).toHaveAttribute('aria-expanded', 'true');
+    const detalhe = primeiro.parentElement!;
+    expect(within(detalhe).getAllByRole('listitem').map((item) => item.textContent)).toEqual([
       'Triagem 08:03',
       'Consultório 08:07',
       'Consultório 08:09',
     ]);
-    expect(screen.getByRole('status')).toHaveTextContent('3 atendidos · 3 rechamadas');
+
+    fireEvent.click(itens()[1]);
+    expect(within(itens()[1].parentElement!).getByText('Não foi rechamado.')).toBeInTheDocument();
   });
 
   it('não mostra nome: o paciente já foi anonimizado ao ser atendido', () => {
     render(<HourlyTab atendidos={ATENDIDOS} />);
 
-    expect(screen.queryByRole('columnheader', { name: /nome|paciente/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/paciente teste|nome/i)).not.toBeInTheDocument();
   });
 
   it('filtra pela faixa de hora da chamada', () => {
@@ -68,8 +86,24 @@ describe('HourlyTab', () => {
     fireEvent.change(horarioInicio(), { target: { value: '12:00' } });
     fireEvent.change(horarioFim(), { target: { value: '16:00' } });
 
-    expect(linhas().map((linha) => linha.querySelector('td')!.textContent)).toEqual(['01/09 12:35', '01/09 15:50']);
-    expect(screen.getByRole('status')).toHaveTextContent('2 atendidos · 0 rechamadas');
+    expect(itens().map((item) => item.textContent)).toEqual([
+      expect.stringContaining('01/09 12:35'),
+      expect.stringContaining('01/09 15:50'),
+    ]);
+    expect(resumo('Atendidos na faixa')).toHaveTextContent('2de 3 no período');
+    expect(resumo('Total de rechamadas')).toHaveTextContent('0');
+    expect(screen.getByText('Faixa: 12:00 às 16:00')).toBeInTheDocument();
+  });
+
+  it('os chips de turno preenchem a faixa', () => {
+    render(<HourlyTab atendidos={ATENDIDOS} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Manhã' }));
+
+    expect(horarioInicio()).toHaveValue('06:00');
+    expect(horarioFim()).toHaveValue('11:59');
+    expect(screen.getByRole('button', { name: 'Manhã' })).toHaveAttribute('aria-pressed', 'true');
+    expect(itens()).toHaveLength(1);
   });
 
   it('avisa quando nenhum atendido cai na faixa e volta a todos os horários', () => {
@@ -82,7 +116,7 @@ describe('HourlyTab', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Todos os horários' }));
 
     expect(horarioInicio()).toHaveValue('');
-    expect(linhas()).toHaveLength(3);
+    expect(itens()).toHaveLength(3);
   });
 
   it('mostra carregando, erro e período sem atendidos', () => {

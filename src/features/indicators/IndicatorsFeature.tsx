@@ -1,4 +1,3 @@
-import BackButton from '@/components/BackButton';
 import Header from '@/components/Header';
 import { useProtocolos } from '@/hooks/useProtocolos';
 import { useState } from 'react';
@@ -27,13 +26,12 @@ export function IndicatorsFeature() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Header title={escopo === 'SAMU' ? 'Indicadores de Atendimento — SAMU' : 'Indicadores de Atendimento'} />
-      <div className="mx-auto w-full max-w-screen-2xl px-3 pt-6">
-        <BackButton />
-      </div>
+      <Header title={escopo === 'SAMU' ? 'Indicadores de Atendimento — SAMU' : 'Indicadores de Atendimento'} showBack />
 
       {isUnlocked ? (
-        <div className="mx-auto w-full max-w-screen-2xl px-3 py-8">
+        <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
+          {/* TODO IND-01: atendidos={data?.atendidos} tempoMedioEntradaAteMedicoMinutos={data?.tempoMedioEntradaAteMedicoMinutos} */}
+          <SummaryCards />
           <PeriodFilter
             dataInicio={dataInicio}
             dataFim={dataFim}
@@ -44,8 +42,6 @@ export function IndicatorsFeature() {
           >
             <EscopoFilter escopo={escopo} onEscopoChange={setEscopo} />
           </PeriodFilter>
-          {/* TODO IND-01: atendidos={data?.atendidos} tempoMedioEntradaAteMedicoMinutos={data?.tempoMedioEntradaAteMedicoMinutos} */}
-          <SummaryCards />
           {/* TODO IND-01: tempos={data} porRiscoETipo={data?.porRiscoETipo} */}
           <IndicatorsTabs
             tempos={undefined}

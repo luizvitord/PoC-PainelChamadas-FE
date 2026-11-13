@@ -35,14 +35,7 @@ export function MenuCard({
 }: MenuCardProps) {
   return (
     <Link to={to} className="block group h-full">
-      <Card
-        className={`${cardBase} border-b-8 ${borderColor} ${restricted ? 'relative overflow-hidden' : 'bg-white'}`}
-        style={
-          restricted
-            ? { backgroundImage: 'repeating-linear-gradient(-45deg, #ffffff 0, #ffffff 12px, rgba(139, 92, 246, 0.05) 12px, rgba(139, 92, 246, 0.02) 24px)' }
-            : undefined
-        }
-      >
+      <Card className={`${cardBase} border-b-8 bg-white ${borderColor} ${restricted ? 'relative overflow-hidden' : ''}`}>
         {restricted && (
           <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/80 px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-wider text-slate-500 shadow-sm backdrop-blur-sm">
             <Lock className="h-6 w-6" />

@@ -1,4 +1,3 @@
-import BackButton from '@/components/BackButton';
 import Header from '@/components/Header';
 import { PriorityBadge } from '@/components/PriorityBadge';
 import { Button } from '@/components/ui/button';
@@ -162,12 +161,9 @@ export default function Triage() {
 
 return (
   <div className="min-h-screen bg-[#f8fafc]">
-    <Header title="Acolhimento e Classificação de Risco" />
-    <div className="mx-auto w-full max-w-screen-2xl px-3 pt-6">
-      <BackButton />
-    </div>
+    <Header title="Acolhimento e Classificação de Risco" showBack />
 
-    <div className="mx-auto w-full max-w-screen-2xl px-3 py-8">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <Card className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
@@ -176,7 +172,7 @@ return (
               <h2 className="text-2xl font-black uppercase tracking-wider text-gray-800">Pacientes em Espera</h2>
             </div>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
+              <div className="relative overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50">

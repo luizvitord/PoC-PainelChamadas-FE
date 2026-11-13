@@ -48,11 +48,11 @@ const MENU_ITEMS = [
     to: '/indicators',
     icon: ChartColumn,
     title: 'Indicadores',
-    description: 'Visualização de indicadores do atendimento',
-    borderColor: 'border-purple-600',
-    iconBg: 'bg-purple-50',
-    iconBorder: 'border-purple-100',
-    iconColor: 'text-purple-600',
+    description: 'Estatísticas e métricas de atendimento',
+    borderColor: 'border-[#4c51bf]',
+    iconBg: 'bg-[#ebf0ff]',
+    iconBorder: 'border-[#c7d2fe]',
+    iconColor: 'text-[#4c51bf]',
     restricted: true,
   },
 ] as const;
@@ -70,10 +70,12 @@ export default function Index() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto w-full items-stretch">
-          {MENU_ITEMS.map((item) => (
+          {/* Ordem do design: Painel, Novo Consultório e Indicadores na segunda linha. */}
+          {MENU_ITEMS.slice(0, -1).map((item) => (
             <MenuCard key={item.to} {...item} />
           ))}
           <NewConsultorio />
+          <MenuCard {...MENU_ITEMS[MENU_ITEMS.length - 1]} />
         </div>
       </main>
     </div>
