@@ -1,11 +1,13 @@
 import type { Risco } from '../../types';
 import { Escopo, visivelNoEscopo } from '../../utils/escopo';
 import { formatarPercentual } from '../../utils/formatarPercentual';
+import { Desistencias, DesistenciasCards } from '../DesistenciasCards';
 import { tituloSecao } from '../estilos';
+import { Rechamadas, RechamadasCards } from '../RechamadasCards';
 import { CorStatCard, StatCard } from '../StatCard';
 
-// Campos do GET /indicadores usados aqui (indicadores 4–13). As desistências entram na INT-03.
-export interface VolumesFluxo {
+// Campos do GET /indicadores usados aqui: volumes (indicadores 4–13), desistências e rechamadas (INT-03).
+export interface VolumesFluxo extends Desistencias, Rechamadas {
   cadastrados: number;
   classificados: number;
   atendidos: number;
@@ -70,6 +72,9 @@ export function VolumesTab({ volumes, escopo = 'GERAL' }: VolumesTabProps) {
           <StatCard key={risco} cor={cor} label={nome} valor={volumes?.contagensPorRisco[risco] ?? sem} sub={nivel} />
         ))}
       </div>
+
+      <DesistenciasCards desistencias={volumes} escopo={escopo} />
+      <RechamadasCards rechamadas={volumes} />
     </section>
   );
 }

@@ -224,6 +224,36 @@ describe('IndicatorsFeature', () => {
       expect(card('Laranja')).toHaveTextContent('2');
     });
 
+    it('mostra desistências e rechamadas na aba Volumes, sem Acolhimento → Classificação no SAMU (INT-03)', () => {
+      renderIndicators();
+      submitPassword('1234');
+
+      expect(card('Total de desistências')).toHaveTextContent('5');
+      expect(card('Acolhimento → Classificação')).toHaveTextContent('2');
+      expect(card('Total de rechamadas')).toHaveTextContent('7');
+      expect(card('Rechamadas Vermelho')).toHaveTextContent('3');
+
+      fireEvent.click(screen.getByRole('button', { name: 'SAMU' }));
+
+      expect(screen.queryByText('Acolhimento → Classificação')).not.toBeInTheDocument();
+      expect(card('Total de desistências')).toHaveTextContent('0');
+      expect(card('Total de rechamadas')).toHaveTextContent('2');
+    });
+
+    it('mostra o risco suicida no Geral e no SAMU', () => {
+      renderIndicators();
+      submitPassword('1234');
+      abrirAba('Risco Suicida');
+
+      expect(card('Tentativa de suicídio')).toHaveTextContent('1');
+      expect(card('Não relacionado a comportamento suicida')).toHaveTextContent('10');
+
+      fireEvent.click(screen.getByRole('button', { name: 'SAMU' }));
+
+      expect(card('Tentativa de suicídio')).toHaveTextContent('0');
+      expect(card('Ideação suicida sem tentativa')).toHaveTextContent('1');
+    });
+
     it('trocar o escopo atualiza os cards e as abas com a nova resposta', () => {
       renderIndicators();
       submitPassword('1234');

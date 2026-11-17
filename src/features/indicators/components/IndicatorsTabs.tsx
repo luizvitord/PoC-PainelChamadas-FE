@@ -8,12 +8,13 @@ import { EstadoAba, EstadoIndicadores } from './EstadoIndicadores';
 import { tituloSecao } from './estilos';
 import { DetalhamentoNivel, EmergencyLevelTab } from './tabs/EmergencyLevelTab';
 import { HourlyTab } from './tabs/HourlyTab';
-import { SuicideRiskTab } from './tabs/SuicideRiskTab';
+import { RiscoSuicida, SuicideRiskTab } from './tabs/SuicideRiskTab';
 import { VolumesFluxo, VolumesTab } from './tabs/VolumesTab';
 import { TemposEspera, WaitTimesTab } from './tabs/WaitTimesTab';
 
 interface IndicatorsTabsProps {
   volumes?: VolumesFluxo;
+  riscoSuicida?: RiscoSuicida;
   tempos?: TemposEspera;
   porRiscoETipo?: DetalhamentoNivel[];
   escopo?: Escopo;
@@ -61,8 +62,11 @@ const INDICATOR_TABS: { value: string; label: string; render: (props: Indicators
       <HourlyTab atendidos={atendidos?.data} carregando={atendidos?.carregando} erro={atendidos?.erro} />
     ),
   },
-  // Aba do design novo; os números dependem de um indicador de risco suicida no back.
-  { value: 'suicide-risk', label: 'Risco Suicida', render: () => <SuicideRiskTab /> },
+  {
+    value: 'suicide-risk',
+    label: 'Risco Suicida',
+    render: comEstado('Risco Suicida (atendimento médico)', ({ riscoSuicida }) => <SuicideRiskTab risco={riscoSuicida} />),
+  },
 ];
 
 const tabTriggerClassName =

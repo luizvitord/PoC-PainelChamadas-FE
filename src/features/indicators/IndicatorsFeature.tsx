@@ -64,6 +64,7 @@ export function IndicatorsFeature() {
           </PeriodFilter>
           <IndicatorsTabs
             volumes={data}
+            riscoSuicida={data}
             tempos={data}
             porRiscoETipo={data?.porRiscoETipo}
             indicadores={estadoIndicadores}
