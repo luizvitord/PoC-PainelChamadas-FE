@@ -7,9 +7,11 @@ export class IndicadoresError extends Error {
   constructor(message: string, public status?: number) { super(message); }
 }
 
-export function useIndicadores({ inicio, fim, escopo = 'GERAL' }: FiltrosIndicadores) {
+// `enabled` deixa o container esperar a senha antes de buscar (como os atendidos do IND-09).
+export function useIndicadores({ inicio, fim, escopo = 'GERAL' }: FiltrosIndicadores, { enabled = true }: { enabled?: boolean } = {}) {
   return useQuery<IndicadoresResponse, Error>({
     queryKey: ['indicadores', inicio, fim, escopo],
+    enabled,
     queryFn: async ({ signal }) => {
       if (!inicio || !fim || inicio > fim) throw new IndicadoresError('Informe um período válido.', 400);
       const params = new URLSearchParams({ inicio, fim, escopo });
