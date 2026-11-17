@@ -9,10 +9,11 @@ import { tituloSecao } from './estilos';
 import { DetalhamentoNivel, EmergencyLevelTab } from './tabs/EmergencyLevelTab';
 import { HourlyTab } from './tabs/HourlyTab';
 import { SuicideRiskTab } from './tabs/SuicideRiskTab';
-import { VolumesTab } from './tabs/VolumesTab';
+import { VolumesFluxo, VolumesTab } from './tabs/VolumesTab';
 import { TemposEspera, WaitTimesTab } from './tabs/WaitTimesTab';
 
 interface IndicatorsTabsProps {
+  volumes?: VolumesFluxo;
   tempos?: TemposEspera;
   porRiscoETipo?: DetalhamentoNivel[];
   escopo?: Escopo;
@@ -36,11 +37,10 @@ function comEstado(titulo: string, render: (props: IndicatorsTabsProps) => React
 }
 
 const INDICATOR_TABS: { value: string; label: string; render: (props: IndicatorsTabsProps) => ReactNode }[] = [
-  // TODO IND-04: os volumes e desistências entram com os dados do IND-01.
   {
     value: 'volumes',
     label: 'Volumes e Fluxo',
-    render: comEstado('Volumes e Fluxo de Atendimento', ({ escopo }) => <VolumesTab escopo={escopo} />),
+    render: comEstado('Volumes e Fluxo de Atendimento', ({ volumes, escopo }) => <VolumesTab volumes={volumes} escopo={escopo} />),
   },
   {
     value: 'wait-times',

@@ -1,17 +1,17 @@
+import type { Risco } from '../../types';
 import { Escopo, visivelNoEscopo } from '../../utils/escopo';
 import { formatarPercentual } from '../../utils/formatarPercentual';
 import { tituloSecao } from '../estilos';
-import { StatCard } from '../StatCard';
+import { CorStatCard, StatCard } from '../StatCard';
 
-// Campos do GET /indicadores usados aqui (BE-02 para as desistências); entram com o IND-01.
+// Campos do GET /indicadores usados aqui (indicadores 4–13). As desistências entram na INT-03.
 export interface VolumesFluxo {
   cadastrados: number;
   classificados: number;
   atendidos: number;
   percentualClassificados: number;
   percentualAtendidos: number;
-  desistenciasAcolhimentoClassificacao: number;
-  desistenciasClassificacaoConsulta: number;
+  contagensPorRisco: Record<Risco, number>;
 }
 
 interface VolumesTabProps {
@@ -19,13 +19,20 @@ interface VolumesTabProps {
   escopo?: Escopo;
 }
 
-const percentualDe = (parte: number, total: number) => formatarPercentual(total ? Math.round((parte / total) * 10000) / 100 : 0);
+// As 5 cores do Manchester; NAO_CLASSIFICADO fica de fora porque não é uma cor (as 5 somam os classificados).
+const CORES_RISCO: { risco: Exclude<Risco, 'NAO_CLASSIFICADO'>; nome: string; nivel: string; cor: CorStatCard }[] = [
+  { risco: 'VERMELHO', nome: 'Vermelho', nivel: 'Emergência', cor: 'red' },
+  { risco: 'LARANJA', nome: 'Laranja', nivel: 'Muito urgente', cor: 'orange' },
+  { risco: 'AMARELO', nome: 'Amarelo', nivel: 'Urgente', cor: 'yellow' },
+  { risco: 'VERDE', nome: 'Verde', nivel: 'Pouco urgente', cor: 'green' },
+  { risco: 'AZUL', nome: 'Azul', nivel: 'Não urgente', cor: 'blue' },
+];
 
-// IND-04: volumes (indicadores 4–13) e desistências. No SAMU, cadastrados, % classificados
-// e a desistência Acolhimento → Classificação ficam escondidos (IND-10).
+// No SAMU, cadastrados e % classificados ficam escondidos (IND-10): o tipo só é definido na triagem.
 export function VolumesTab({ volumes, escopo = 'GERAL' }: VolumesTabProps) {
   const visivel = (indicador: string) => visivelNoEscopo(indicador, escopo);
   const sem = '—';
+  const percentual = (valor?: number) => (volumes && valor !== undefined ? formatarPercentual(valor) : '—%');
 
   return (
     <section>
@@ -45,7 +52,7 @@ export function VolumesTab({ volumes, escopo = 'GERAL' }: VolumesTabProps) {
           valor={volumes?.classificados ?? sem}
           sub={
             visivel('percentualClassificados')
-              ? `${volumes ? formatarPercentual(volumes.percentualClassificados) : '—%'} dos cadastrados`
+              ? `${percentual(volumes?.percentualClassificados)} dos cadastrados`
               : 'classificados na triagem'
           }
         />
@@ -53,26 +60,15 @@ export function VolumesTab({ volumes, escopo = 'GERAL' }: VolumesTabProps) {
           cor="indigo"
           label="Nº pacientes atendidos (médico)"
           valor={volumes?.atendidos ?? sem}
-          sub={`${volumes ? formatarPercentual(volumes.percentualAtendidos) : '—%'} dos cadastrados`}
+          sub={`${percentual(volumes?.percentualAtendidos)} dos cadastrados`}
         />
       </div>
 
-      <h2 className={tituloSecao}>Desistências entre etapas</h2>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        {visivel('desistenciaAcolhimentoClassificacao') && (
-          <StatCard
-            cor="red"
-            label="Desistentes: Acolhimento → Classificação"
-            valor={volumes?.desistenciasAcolhimentoClassificacao ?? sem}
-            sub={`${volumes ? percentualDe(volumes.desistenciasAcolhimentoClassificacao, volumes.cadastrados) : '—%'} dos cadastrados`}
-          />
-        )}
-        <StatCard
-          cor="orange"
-          label="Desistentes: Classificação → Consulta"
-          valor={volumes?.desistenciasClassificacaoConsulta ?? sem}
-          sub={`${volumes ? percentualDe(volumes.desistenciasClassificacaoConsulta, volumes.classificados) : '—%'} dos classificados`}
-        />
+      <h2 className={tituloSecao}>Classificados por cor</h2>
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+        {CORES_RISCO.map(({ risco, nome, nivel, cor }) => (
+          <StatCard key={risco} cor={cor} label={nome} valor={volumes?.contagensPorRisco[risco] ?? sem} sub={nivel} />
+        ))}
       </div>
     </section>
   );

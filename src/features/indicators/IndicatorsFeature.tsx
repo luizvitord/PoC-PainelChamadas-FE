@@ -63,6 +63,7 @@ export function IndicatorsFeature() {
             <EscopoFilter escopo={escopo} onEscopoChange={setEscopo} />
           </PeriodFilter>
           <IndicatorsTabs
+            volumes={data}
             tempos={data}
             porRiscoETipo={data?.porRiscoETipo}
             indicadores={estadoIndicadores}

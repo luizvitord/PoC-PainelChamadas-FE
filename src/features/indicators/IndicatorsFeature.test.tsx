@@ -209,6 +209,21 @@ describe('IndicatorsFeature', () => {
       expect(screen.queryByText('Sem dados para o período')).not.toBeInTheDocument();
     });
 
+    it('mostra os volumes na aba Volumes e esconde cadastrados no SAMU (INT-02)', () => {
+      renderIndicators();
+      submitPassword('1234');
+
+      expect(card('Nº pacientes cadastrados')).toHaveTextContent('19');
+      expect(card('Nº pacientes classificados')).toHaveTextContent('17');
+      expect(card('Laranja')).toHaveTextContent('5');
+
+      fireEvent.click(screen.getByRole('button', { name: 'SAMU' }));
+
+      expect(screen.queryByText('Nº pacientes cadastrados')).not.toBeInTheDocument();
+      expect(card('Nº pacientes classificados')).toHaveTextContent('2');
+      expect(card('Laranja')).toHaveTextContent('2');
+    });
+
     it('trocar o escopo atualiza os cards e as abas com a nova resposta', () => {
       renderIndicators();
       submitPassword('1234');
