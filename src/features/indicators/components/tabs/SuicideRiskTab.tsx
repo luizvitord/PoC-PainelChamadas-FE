@@ -1,28 +1,28 @@
+import type { ComportamentoSuicida } from '../../types';
 import { formatarPercentual } from '../../utils/formatarPercentual';
 import { nota, tituloSecao } from '../estilos';
 import { CorStatCard, StatCard } from '../StatCard';
 
-// Contagem das marcações de comportamento suicida feitas pelo médico ao finalizar a consulta.
-// O back já guarda a marcação, mas ainda não tem esse indicador no GET /indicadores.
+// Contagem das marcações de comportamento suicida feitas pelo médico ao finalizar a consulta,
+// como vem do GET /indicadores (período e escopo do filtro).
 export interface RiscoSuicida {
-  tentativa: number;
-  ideacao: number;
-  naoRelacionado: number;
-  semMarcacao: number;
+  comportamentoSuicida: Record<ComportamentoSuicida, number>;
+  atendidosSemAvaliacaoSuicida: number;
 }
 
 interface SuicideRiskTabProps {
   risco?: RiscoSuicida;
 }
 
-const OPCOES: { campo: keyof Omit<RiscoSuicida, 'semMarcacao'>; label: string; cor: CorStatCard }[] = [
-  { campo: 'tentativa', label: 'Tentativa de suicídio', cor: 'red' },
-  { campo: 'ideacao', label: 'Ideação suicida sem tentativa', cor: 'orange' },
-  { campo: 'naoRelacionado', label: 'Não relacionado a comportamento suicida', cor: 'green' },
+const OPCOES: { campo: ComportamentoSuicida; label: string; cor: CorStatCard }[] = [
+  { campo: 'TENTATIVA', label: 'Tentativa de suicídio', cor: 'red' },
+  { campo: 'IDEACAO', label: 'Ideação suicida sem tentativa', cor: 'orange' },
+  { campo: 'NENHUM', label: 'Não relacionado a comportamento suicida', cor: 'green' },
 ];
 
 export function SuicideRiskTab({ risco }: SuicideRiskTabProps) {
-  const comMarcacao = risco ? risco.tentativa + risco.ideacao + risco.naoRelacionado : undefined;
+  const contagem = risco?.comportamentoSuicida;
+  const comMarcacao = contagem ? contagem.TENTATIVA + contagem.IDEACAO + contagem.NENHUM : undefined;
   const percentual = (valor: number) =>
     formatarPercentual(comMarcacao ? Math.round((valor / comMarcacao) * 100) : 0);
 
@@ -36,8 +36,8 @@ export function SuicideRiskTab({ risco }: SuicideRiskTabProps) {
             key={campo}
             cor={cor}
             label={label}
-            valor={risco?.[campo] ?? '—'}
-            sub={`${risco ? percentual(risco[campo]) : '—%'} dos atendidos`}
+            valor={contagem?.[campo] ?? '—'}
+            sub={`${contagem ? percentual(contagem[campo]) : '—%'} dos atendidos`}
           />
         ))}
       </div>
@@ -45,7 +45,7 @@ export function SuicideRiskTab({ risco }: SuicideRiskTabProps) {
       <p className="mt-3 rounded-[10px] border border-slate-100 bg-slate-50 px-4 py-3 text-[14px] font-semibold text-slate-600">
         Total de atendidos com marcação: <strong className="text-slate-800">{comMarcacao ?? '—'}</strong>
         {' · '}Sem marcação (atendimentos anteriores à obrigatoriedade ou ainda não finalizados pelo médico):{' '}
-        <strong className="text-slate-800">{risco?.semMarcacao ?? '—'}</strong>
+        <strong className="text-slate-800">{risco?.atendidosSemAvaliacaoSuicida ?? '—'}</strong>
       </p>
       <p className={nota}>
         Contagem das opções marcadas pelo médico no atendimento, respeitando o período acima. Os percentuais são

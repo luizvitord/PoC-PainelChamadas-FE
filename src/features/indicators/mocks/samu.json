@@ -7,18 +7,32 @@
   "tempoMedioAcolhimentoMinutos": 4.0,
   "tempoMedioClassificacaoAteMedicoMinutos": 12.5,
   "tempoMedioEntradaAteMedicoMinutos": 17.5,
-  "totalRechamadas": 2,
-  "pacientesRechamadosPorRisco": {
+  "contagensPorRisco": {
     "VERMELHO": 0,
-    "LARANJA": 1,
+    "LARANJA": 2,
     "AMARELO": 0,
     "VERDE": 0,
     "AZUL": 0,
     "NAO_CLASSIFICADO": 0
   },
-  "contagensPorRisco": {
+  "totalDesistencias": 0,
+  "desistenciasPorEtapa": {
+    "AGUARDANDO_TRIAGEM": 0,
+    "AGUARDANDO_CONSULTA": 0,
+    "CHAMADO": 0
+  },
+  "totalRechamadas": 2,
+  "rechamadasPorRisco": {
     "VERMELHO": 0,
     "LARANJA": 2,
+    "AMARELO": 0,
+    "VERDE": 0,
+    "AZUL": 0,
+    "NAO_CLASSIFICADO": 0
+  },
+  "pacientesRechamadosPorRisco": {
+    "VERMELHO": 0,
+    "LARANJA": 1,
     "AMARELO": 0,
     "VERDE": 0,
     "AZUL": 0,
@@ -145,5 +159,11 @@
       "foraDoPrazo": 0,
       "percentualForaDoPrazo": 0.0
     }
-  ]
+  ],
+  "comportamentoSuicida": {
+    "NENHUM": 1,
+    "IDEACAO": 1,
+    "TENTATIVA": 0
+  },
+  "atendidosSemAvaliacaoSuicida": 0
 }

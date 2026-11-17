@@ -4,30 +4,56 @@ import { ReactNode } from 'react';
 
 import type { AtendidoPorHorario } from '../hooks/useAtendidosPorHorario';
 import { Escopo } from '../utils/escopo';
+import { EstadoAba, EstadoIndicadores } from './EstadoIndicadores';
+import { tituloSecao } from './estilos';
 import { DetalhamentoNivel, EmergencyLevelTab } from './tabs/EmergencyLevelTab';
 import { HourlyTab } from './tabs/HourlyTab';
-import { SuicideRiskTab } from './tabs/SuicideRiskTab';
-import { VolumesTab } from './tabs/VolumesTab';
+import { RiscoSuicida, SuicideRiskTab } from './tabs/SuicideRiskTab';
+import { VolumesFluxo, VolumesTab } from './tabs/VolumesTab';
 import { TemposEspera, WaitTimesTab } from './tabs/WaitTimesTab';
 
 interface IndicatorsTabsProps {
+  volumes?: VolumesFluxo;
+  riscoSuicida?: RiscoSuicida;
   tempos?: TemposEspera;
   porRiscoETipo?: DetalhamentoNivel[];
   escopo?: Escopo;
   protocolos?: ProtocoloTempo[];
   atendidos?: { data?: AtendidoPorHorario[]; carregando?: boolean; erro?: string };
+  indicadores?: EstadoIndicadores;
+}
+
+// Abas que dependem do GET /indicadores: enquanto carrega, com erro ou sem dados, o título fica e o conteúdo é trocado.
+function comEstado(titulo: string, render: (props: IndicatorsTabsProps) => ReactNode) {
+  return (props: IndicatorsTabsProps) => {
+    const estado = props.indicadores ?? {};
+    if (!estado.carregando && !estado.erro && !estado.semDados) return render(props);
+    return (
+      <section>
+        <h2 className={tituloSecao}>{titulo}</h2>
+        <EstadoAba {...estado} />
+      </section>
+    );
+  };
 }
 
 const INDICATOR_TABS: { value: string; label: string; render: (props: IndicatorsTabsProps) => ReactNode }[] = [
-  // TODO IND-04: os volumes e desistências entram com os dados do IND-01.
-  { value: 'volumes', label: 'Volumes e Fluxo', render: ({ escopo }) => <VolumesTab escopo={escopo} /> },
-  { value: 'wait-times', label: 'Tempos de Espera', render: ({ tempos }) => <WaitTimesTab tempos={tempos} /> },
+  {
+    value: 'volumes',
+    label: 'Volumes e Fluxo',
+    render: comEstado('Volumes e Fluxo de Atendimento', ({ volumes, escopo }) => <VolumesTab volumes={volumes} escopo={escopo} />),
+  },
+  {
+    value: 'wait-times',
+    label: 'Tempos de Espera',
+    render: comEstado('Tempos de Espera', ({ tempos }) => <WaitTimesTab tempos={tempos} />),
+  },
   {
     value: 'emergency-levels',
     label: 'Por Nível de Emergência',
-    render: ({ porRiscoETipo, escopo, protocolos }) => (
+    render: comEstado('Por Nível de Emergência', ({ porRiscoETipo, escopo, protocolos }) => (
       <EmergencyLevelTab porRiscoETipo={porRiscoETipo} escopo={escopo} protocolos={protocolos} />
-    ),
+    )),
   },
   {
     value: 'hourly',
@@ -36,8 +62,11 @@ const INDICATOR_TABS: { value: string; label: string; render: (props: Indicators
       <HourlyTab atendidos={atendidos?.data} carregando={atendidos?.carregando} erro={atendidos?.erro} />
     ),
   },
-  // Aba do design novo; os números dependem de um indicador de risco suicida no back.
-  { value: 'suicide-risk', label: 'Risco Suicida', render: () => <SuicideRiskTab /> },
+  {
+    value: 'suicide-risk',
+    label: 'Risco Suicida',
+    render: comEstado('Risco Suicida (atendimento médico)', ({ riscoSuicida }) => <SuicideRiskTab risco={riscoSuicida} />),
+  },
 ];
 
 const tabTriggerClassName =

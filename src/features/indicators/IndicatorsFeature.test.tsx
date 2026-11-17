@@ -4,6 +4,38 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { IndicatorsFeature } from './IndicatorsFeature';
 import type { Periodo } from './hooks/usePeriodoFiltro';
+import geralJson from './mocks/geral.json';
+import samuJson from './mocks/samu.json';
+import type { FiltrosIndicadores, IndicadoresResponse } from './types';
+
+const geral = geralJson as IndicadoresResponse;
+const samu = samuJson as IndicadoresResponse;
+
+// Mock do useIndicadores (INT-01): guarda filtros e `enabled` de cada chamada e devolve o estado escolhido no teste.
+interface EstadoMock {
+  data?: IndicadoresResponse;
+  isPending: boolean;
+  error: Error | null;
+}
+const indicadoresMock = vi.hoisted(() => ({
+  chamadas: [] as { filtros: FiltrosIndicadores; enabled?: boolean }[],
+  responder: (() => ({ isPending: false, error: null })) as (filtros: FiltrosIndicadores) => EstadoMock,
+  refetch: vi.fn(),
+}));
+vi.mock('./hooks/useIndicadores', () => ({
+  useIndicadores: (filtros: FiltrosIndicadores, opcoes?: { enabled?: boolean }) => {
+    indicadoresMock.chamadas.push({ filtros, enabled: opcoes?.enabled });
+    return { ...indicadoresMock.responder(filtros), refetch: indicadoresMock.refetch };
+  },
+}));
+
+// Por padrão o back responde com o mock do escopo pedido.
+const responderPorEscopo = (filtros: FiltrosIndicadores): EstadoMock => ({
+  data: filtros.escopo === 'SAMU' ? samu : geral,
+  isPending: false,
+  error: null,
+});
+const ultimaChamadaIndicadores = () => indicadoresMock.chamadas[indicadoresMock.chamadas.length - 1];
 
 // Envolve o hook real só para ler o período que o container repassaria ao useIndicadores (IND-01).
 const periodosRepassados: Periodo[] = [];
@@ -19,9 +51,11 @@ vi.mock('./hooks/usePeriodoFiltro', async (importOriginal) => {
   };
 });
 
-vi.mock('@/hooks/useProtocolos', () => ({
-  useProtocolos: () => ({ data: [] }),
-}));
+// A aba de nível só mostra as combinações cor × tipo que existem no protocolo.
+vi.mock('@/hooks/useProtocolos', async () => {
+  const { PROTOCOLO_PADRAO } = await import('@/test/protocoloFixture');
+  return { useProtocolos: () => ({ data: PROTOCOLO_PADRAO }) };
+});
 
 // Guarda os argumentos que o container passa ao hook do BE-03 e devolve um atendido fixo.
 const chamadasAtendidos: { periodo: Periodo; escopo: string; enabled: boolean }[] = [];
@@ -62,6 +96,12 @@ function submitPassword(password: string) {
 }
 
 describe('IndicatorsFeature', () => {
+  beforeEach(() => {
+    indicadoresMock.chamadas.length = 0;
+    indicadoresMock.responder = responderPorEscopo;
+    indicadoresMock.refetch.mockClear();
+  });
+
   it('asks for the password before showing the indicators', () => {
     renderIndicators();
 
@@ -111,17 +151,7 @@ describe('IndicatorsFeature', () => {
     expect(screen.queryByRole('heading', { name: 'Volumes e Fluxo de Atendimento' })).not.toBeInTheDocument();
   });
 
-  it('shows the empty state in the emergency level tab while there is no data (IND-01)', () => {
-    renderIndicators();
-    submitPassword('1234');
-
-    fireEvent.mouseDown(screen.getByRole('tab', { name: 'Por Nível de Emergência' }));
-
-    expect(screen.getByRole('heading', { name: 'Por Nível de Emergência' })).toBeInTheDocument();
-    expect(screen.getByText('Sem dados para o período')).toBeInTheDocument();
-  });
-
-  it('shows the three wait time cards without values while there is no data (IND-01)', () => {
+  it('shows the three wait time cards', () => {
     renderIndicators();
     submitPassword('1234');
 
@@ -132,6 +162,163 @@ describe('IndicatorsFeature', () => {
       'Espera p/ 1º atendimento médico',
       'Espera total (NAC → médico)',
     ]);
+  });
+
+  describe('dados do GET /indicadores (INT-01)', () => {
+    const card = (titulo: string) => screen.getByText(titulo).parentElement!;
+    const abrirAba = (nome: string) => fireEvent.mouseDown(screen.getByRole('tab', { name: nome }));
+
+    it('só busca depois de desbloquear, com o período e o escopo do filtro', () => {
+      renderIndicators();
+      expect(ultimaChamadaIndicadores().enabled).toBe(false);
+
+      submitPassword('1234');
+
+      expect(ultimaChamadaIndicadores().enabled).toBe(true);
+      expect(ultimaChamadaIndicadores().filtros).toEqual({ ...periodoAtual(), escopo: 'GERAL' });
+    });
+
+    it('trocar o período e o escopo repassa os novos filtros ao hook', () => {
+      renderIndicators();
+      submitPassword('1234');
+
+      fireEvent.change(screen.getByLabelText('Data Início'), { target: { value: '2026-09-01' } });
+      fireEvent.change(screen.getByLabelText('Data Fim'), { target: { value: '2026-09-03' } });
+      fireEvent.click(screen.getByRole('button', { name: 'SAMU' }));
+
+      expect(ultimaChamadaIndicadores().filtros).toEqual({
+        inicio: '2026-09-01T00:00:00',
+        fim: '2026-09-03T23:59:59.999999999',
+        escopo: 'SAMU',
+      });
+    });
+
+    it('mostra os números da resposta nos cards e nas abas', () => {
+      renderIndicators();
+      submitPassword('1234');
+
+      expect(card('Total de Atendimentos')).toHaveTextContent('14');
+      expect(card('Tempo Médio de Espera')).toHaveTextContent('01:02:30');
+
+      abrirAba('Tempos de Espera');
+      expect(card('Espera p/ acolhimento / classificação')).toHaveTextContent('00:02:00');
+      expect(card('Espera p/ 1º atendimento médico')).toHaveTextContent('00:57:30');
+      expect(card('Espera total (NAC → médico)')).toHaveTextContent('01:02:30');
+
+      abrirAba('Por Nível de Emergência');
+      expect(screen.queryByText('Sem dados para o período')).not.toBeInTheDocument();
+    });
+
+    it('mostra os volumes na aba Volumes e esconde cadastrados no SAMU (INT-02)', () => {
+      renderIndicators();
+      submitPassword('1234');
+
+      expect(card('Nº pacientes cadastrados')).toHaveTextContent('19');
+      expect(card('Nº pacientes classificados')).toHaveTextContent('17');
+      expect(card('Laranja')).toHaveTextContent('5');
+
+      fireEvent.click(screen.getByRole('button', { name: 'SAMU' }));
+
+      expect(screen.queryByText('Nº pacientes cadastrados')).not.toBeInTheDocument();
+      expect(card('Nº pacientes classificados')).toHaveTextContent('2');
+      expect(card('Laranja')).toHaveTextContent('2');
+    });
+
+    it('mostra desistências e rechamadas na aba Volumes, sem Acolhimento → Classificação no SAMU (INT-03)', () => {
+      renderIndicators();
+      submitPassword('1234');
+
+      expect(card('Total de desistências')).toHaveTextContent('5');
+      expect(card('Acolhimento → Classificação')).toHaveTextContent('2');
+      expect(card('Total de rechamadas')).toHaveTextContent('7');
+      expect(card('Rechamadas Vermelho')).toHaveTextContent('3');
+
+      fireEvent.click(screen.getByRole('button', { name: 'SAMU' }));
+
+      expect(screen.queryByText('Acolhimento → Classificação')).not.toBeInTheDocument();
+      expect(card('Total de desistências')).toHaveTextContent('0');
+      expect(card('Total de rechamadas')).toHaveTextContent('2');
+    });
+
+    it('mostra o risco suicida no Geral e no SAMU', () => {
+      renderIndicators();
+      submitPassword('1234');
+      abrirAba('Risco Suicida');
+
+      expect(card('Tentativa de suicídio')).toHaveTextContent('1');
+      expect(card('Não relacionado a comportamento suicida')).toHaveTextContent('10');
+
+      fireEvent.click(screen.getByRole('button', { name: 'SAMU' }));
+
+      expect(card('Tentativa de suicídio')).toHaveTextContent('0');
+      expect(card('Ideação suicida sem tentativa')).toHaveTextContent('1');
+    });
+
+    it('trocar o escopo atualiza os cards e as abas com a nova resposta', () => {
+      renderIndicators();
+      submitPassword('1234');
+      abrirAba('Tempos de Espera');
+
+      fireEvent.click(screen.getByRole('button', { name: 'SAMU' }));
+
+      expect(card('Total de Atendimentos')).toHaveTextContent('2');
+      expect(card('Tempo Médio de Espera')).toHaveTextContent('00:17:30');
+      expect(card('Espera p/ acolhimento / classificação')).toHaveTextContent('00:04:00');
+    });
+
+    it('mostra skeleton nos cards e nas abas enquanto carrega, sem números', () => {
+      indicadoresMock.responder = () => ({ isPending: true, error: null });
+      renderIndicators();
+      submitPassword('1234');
+
+      expect(screen.getAllByRole('status', { name: 'Carregando indicadores' })).toHaveLength(2);
+      expect(screen.queryByText('Total de Atendimentos')).not.toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Volumes e Fluxo de Atendimento' })).toBeInTheDocument();
+    });
+
+    it('com erro mostra a mensagem, esconde os números e permite tentar de novo', () => {
+      indicadoresMock.responder = () => ({
+        data: geral,
+        isPending: false,
+        error: new Error('Não foi possível carregar os indicadores. Tente novamente.'),
+      });
+      renderIndicators();
+      submitPassword('1234');
+
+      expect(screen.getByRole('alert')).toHaveTextContent('Não foi possível carregar os indicadores. Tente novamente.');
+      expect(card('Total de Atendimentos')).toHaveTextContent('—');
+      expect(card('Tempo Médio de Espera')).toHaveTextContent('--:--:--');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }));
+      expect(indicadoresMock.refetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('período sem dados mostra 0 nos cards e o aviso nas abas', () => {
+      indicadoresMock.responder = () => ({
+        data: { ...geral, cadastrados: 0, classificados: 0, atendidos: 0, tempoMedioEntradaAteMedicoMinutos: null },
+        isPending: false,
+        error: null,
+      });
+      renderIndicators();
+      submitPassword('1234');
+
+      expect(card('Total de Atendimentos')).toHaveTextContent('0');
+      expect(card('Tempo Médio de Espera')).toHaveTextContent('--:--:--');
+      expect(screen.getByText('Sem dados para o período')).toBeInTheDocument();
+
+      abrirAba('Tempos de Espera');
+      expect(screen.getByText('Sem dados para o período')).toBeInTheDocument();
+    });
+
+    it('a aba de horários não depende do GET /indicadores', () => {
+      indicadoresMock.responder = () => ({ isPending: false, error: new Error('Falhou') });
+      renderIndicators();
+      submitPassword('1234');
+
+      abrirAba('Atendidos por Horário');
+
+      expect(screen.getByText('01/09 08:05')).toBeInTheDocument();
+    });
   });
 
   describe('atendidos por horário (IND-09)', () => {
