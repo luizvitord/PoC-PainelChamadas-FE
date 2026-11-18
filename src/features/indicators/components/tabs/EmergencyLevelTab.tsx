@@ -180,7 +180,9 @@ export function EmergencyLevelTab({ porRiscoETipo, escopo = 'GERAL', protocolos 
                               className="whitespace-nowrap px-4 py-3 text-right text-[17px] font-bold tabular-nums text-slate-800"
                             >
                               {coluna.id === 'tempoMedio' && formatarMinutos(detalhamento.tempoMedioEsperaMinutos)}
-                              {coluna.id === 'percentualFora' && formatarPercentual(detalhamento.percentualForaDoPrazo)}
+                              {/* Sem ninguém atendido na combinação, 0% enganaria: não há amostra. */}
+                              {coluna.id === 'percentualFora' &&
+                                (detalhamento.totalComProtocolo === 0 ? '—' : formatarPercentual(detalhamento.percentualForaDoPrazo))}
                               {coluna.id === 'total' && <span className="text-slate-400">({detalhamento.totalComProtocolo})</span>}
                             </td>
                           ))}

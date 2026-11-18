@@ -13,7 +13,7 @@ interface WaitTimesTabProps {
   tempos?: TemposEspera;
 }
 
-// Indicadores 1–3 com os nomes do design novo; null (sem amostras) vira --:--:--.
+// Indicadores 1–3 com os nomes do design novo; null (sem amostras) vira "—".
 const TEMPOS: { campo: keyof TemposEspera; label: string; descricao: string; cor: CorStatCard }[] = [
   {
     campo: 'tempoMedioAcolhimentoMinutos',

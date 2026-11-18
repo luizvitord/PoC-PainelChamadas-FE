@@ -1,4 +1,5 @@
-const SEM_VALOR = '--:--:--';
+// Sem amostras o back manda null: mostra "—", nunca 00:00:00 (que seria espera zero de verdade).
+const SEM_VALOR = '—';
 
 /** Minutos (com fração) em HH:MM:SS, arredondando ao segundo; as horas podem passar de 24. */
 export function formatarMinutos(minutos: number | null): string {
