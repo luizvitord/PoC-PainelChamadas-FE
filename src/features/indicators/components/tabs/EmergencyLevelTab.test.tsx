@@ -33,6 +33,9 @@ const card = (tipo: string) => screen.getByRole('heading', { name: `Classificaç
 const tiposDosCards = () =>
   screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent!.replace('Classificação de risco ', ''));
 const linha = (titulo: string, nivel: string) => within(card(titulo)).getByRole('row', { name: new RegExp(nivel, 'i') });
+// Valores da linha sem a coluna Nível: [tempo médio, % fora, (n)].
+const celulas = (titulo: string, nivel: string) =>
+  within(linha(titulo, nivel)).getAllByRole('cell').slice(1).map((cell) => cell.textContent);
 const niveisDoCard = (titulo: string) =>
   within(card(titulo)).getAllByRole('row').slice(1).map((row) => row.querySelector('td')!.textContent!.split(' — ')[0]);
 
@@ -160,11 +163,23 @@ describe('EmergencyLevelTab', () => {
       expect(screen.getByText('Sem dados para o período')).toBeInTheDocument();
     });
 
-    it('mostra --:--:-- quando a média é null', () => {
+    it('mostra — quando a média é null', () => {
       const semMedia = PORRISCOETIPO.map((d) => (d.risco === 'VERMELHO' && d.tipo === 'CLINICO' ? { ...d, tempoMedioEsperaMinutos: null } : d));
       render(<EmergencyLevelTab protocolos={PROTOCOLO_PADRAO} porRiscoETipo={semMedia} />);
 
-      expect(linha('Clínico', 'Vermelho')).toHaveTextContent('--:--:--');
+      expect(celulas('Clínico', 'Vermelho')).toEqual(['—', '50%', '(2)']);
+    });
+
+    it('combinação sem ninguém atendido mostra — no tempo e no %, nunca 0%', () => {
+      const semAtendidos = PORRISCOETIPO.map((d) =>
+        d.risco === 'LARANJA' && d.tipo === 'CLINICO'
+          ? { ...d, tempoMedioEsperaMinutos: null, percentualForaDoPrazo: 0, totalComProtocolo: 0 }
+          : d,
+      );
+      render(<EmergencyLevelTab protocolos={PROTOCOLO_PADRAO} porRiscoETipo={semAtendidos} />);
+
+      expect(celulas('Clínico', 'Laranja')).toEqual(['—', '—', '(0)']);
+      expect(celulas('Clínico', 'Vermelho')).toEqual(['00:02:30', '50%', '(2)']);
     });
   });
 });

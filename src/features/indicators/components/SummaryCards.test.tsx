@@ -14,17 +14,17 @@ describe('SummaryCards', () => {
     expect(card('Tempo Médio de Espera')).toHaveTextContent('01:02:30');
   });
 
-  it('mostra 0 atendidos e --:--:-- quando o período não tem amostras', () => {
+  it('mostra 0 atendidos e — quando o período não tem amostras', () => {
     render(<SummaryCards atendidos={0} tempoMedioEntradaAteMedicoMinutos={null} />);
 
     expect(card('Total de Atendimentos')).toHaveTextContent('0');
-    expect(card('Tempo Médio de Espera')).toHaveTextContent('--:--:--');
+    expect(card('Tempo Médio de Espera')).toHaveTextContent('—');
   });
 
-  it('mostra — e --:--:-- enquanto não há dados', () => {
+  it('mostra — nos dois cards enquanto não há dados', () => {
     render(<SummaryCards />);
 
     expect(card('Total de Atendimentos')).toHaveTextContent('—');
-    expect(card('Tempo Médio de Espera')).toHaveTextContent('--:--:--');
+    expect(card('Tempo Médio de Espera')).toHaveTextContent('—');
   });
 });

@@ -287,7 +287,7 @@ describe('IndicatorsFeature', () => {
 
       expect(screen.getByRole('alert')).toHaveTextContent('Não foi possível carregar os indicadores. Tente novamente.');
       expect(card('Total de Atendimentos')).toHaveTextContent('—');
-      expect(card('Tempo Médio de Espera')).toHaveTextContent('--:--:--');
+      expect(card('Tempo Médio de Espera')).toHaveTextContent('—');
 
       fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }));
       expect(indicadoresMock.refetch).toHaveBeenCalledTimes(1);
@@ -303,7 +303,7 @@ describe('IndicatorsFeature', () => {
       submitPassword('1234');
 
       expect(card('Total de Atendimentos')).toHaveTextContent('0');
-      expect(card('Tempo Médio de Espera')).toHaveTextContent('--:--:--');
+      expect(card('Tempo Médio de Espera')).toHaveTextContent('—');
       expect(screen.getByText('Sem dados para o período')).toBeInTheDocument();
 
       abrirAba('Tempos de Espera');

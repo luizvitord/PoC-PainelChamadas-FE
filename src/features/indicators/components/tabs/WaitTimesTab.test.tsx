@@ -37,16 +37,16 @@ describe('WaitTimesTab', () => {
     expect(card(ENTRADA_MEDICO)).toHaveTextContent('01:02:30');
   });
 
-  it('mostra --:--:-- quando o tempo vem null (sem amostras)', () => {
+  it('mostra — quando o tempo vem null (sem amostras)', () => {
     render(<WaitTimesTab tempos={{ ...SEED_GERAL, tempoMedioAcolhimentoMinutos: null }} />);
 
-    expect(card(ACOLHIMENTO)).toHaveTextContent('--:--:--');
+    expect(card(ACOLHIMENTO)).toHaveTextContent('—');
     expect(card(ENTRADA_MEDICO)).toHaveTextContent('01:02:30');
   });
 
-  it('mantém os 3 cards com --:--:-- enquanto não há dados', () => {
+  it('mantém os 3 cards com — enquanto não há dados', () => {
     render(<WaitTimesTab />);
 
-    expect(screen.getAllByText('--:--:--')).toHaveLength(3);
+    expect(screen.getAllByText('—')).toHaveLength(3);
   });
 });

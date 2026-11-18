@@ -18,7 +18,8 @@ describe('formatarMinutos', () => {
     expect(formatarMinutos(1.0091)).toBe('00:01:01');
   });
 
-  it('mostra --:--:-- quando não há média', () => {
-    expect(formatarMinutos(null)).toBe('--:--:--');
+  it('mostra — quando não há média (sem amostras), não 00:00:00', () => {
+    expect(formatarMinutos(null)).toBe('—');
+    expect(formatarMinutos(Number.NaN)).toBe('—');
   });
 });
